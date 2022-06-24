@@ -46,15 +46,11 @@ export const errorHandler = (error) => {
         throw error;
     }
 
-    const connectionInformations = getConnectionInformations(server, port);
-
     switch (error.code) {
-        case 'EACCESS':
-            console.error(`${connectionInformations} requires elevated privileges.`);
-            process.exit(1);
         case 'EADDRINUSE':
-            console.error(`${connectionInformations} is already in use.`);
+            console.error(`Address is already in use.`);
             process.exit(1);
+            break;
         default:
             throw error;
     }
