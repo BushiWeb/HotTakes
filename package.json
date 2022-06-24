@@ -2,10 +2,11 @@
     "name": "projet5-hottakes-emericfrancisod",
     "version": "1.0.0",
     "description": "Sixth project for the OpenClassrooms' web developper training",
-    "main": "server.js",
+    "main": "src/server.js",
     "type": "module",
     "scripts": {
-        "test": "jest"
+        "test": "jest",
+        "start": "nodemon src/server.js"
     },
     "repository": {
         "type": "git",
