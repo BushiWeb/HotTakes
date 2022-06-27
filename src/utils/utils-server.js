@@ -1,4 +1,4 @@
-import process from 'node:process';
+import { exit } from 'node:process';
 
 /**
  * Return the port value as a number.
@@ -49,7 +49,7 @@ export const errorHandler = (error) => {
     switch (error.code) {
         case 'EADDRINUSE':
             console.error(`Address is already in use.`);
-            process.exit(1);
+            exit(1);
             break;
         default:
             throw error;

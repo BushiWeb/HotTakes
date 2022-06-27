@@ -78,9 +78,8 @@ describe('Server utils test suite', () => {
             }
         }
 
-        const mockConsoleError = jest.spyOn(console, 'error');
-        const mockProcessExit = jest.spyOn(process, 'exit');
-        mockProcessExit.mockImplementation(() => {});
+        const mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+        const mockProcessExit = jest.spyOn(process, 'exit').mockImplementation(() => {});
 
         beforeEach(() => {
             mockConsoleError.mockClear();
