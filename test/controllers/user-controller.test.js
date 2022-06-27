@@ -1,7 +1,7 @@
 import { signup } from '../../src/controllers/user-controller.js';
 import { mockResponse, mockRequest, mockNext } from '../mocks/express-mocks.js';
 import User from '../../src/models/User.js';
-import bcrypt, { hash } from 'bcrypt';
+import bcrypt from 'bcrypt';
 import { flushPromise } from '../flush-promise.js';
 
 const mockUserSave = jest.spyOn(User.prototype, 'save');

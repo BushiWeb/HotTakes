@@ -1,8 +1,6 @@
 import bcrypt from 'bcrypt';
 import User from '../models/User.js';
 
-import mongoose from 'mongoose';
-
 /**
  * User signup controller.
  * Checks the email and password format.
@@ -15,10 +13,12 @@ import mongoose from 'mongoose';
 export async function signup(req, res, next) {
     try {
         const passwordHash = await bcrypt.hash(req.body.password, 10);
+
         const user = new User({
             email: req.body.email,
             password: passwordHash,
         });
+
         try {
             await user.save();
             res.status(201).json({ message: 'Nouvel utilisateur créé!' });
