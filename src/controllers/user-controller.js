@@ -1,5 +1,7 @@
 import bcrypt from 'bcrypt';
 import User from '../models/User.js';
+import { validationResult } from 'express-validator';
+import { errorFormatter } from '../utils/utils-validation.js';
 
 /**
  * User signup controller.
@@ -11,21 +13,34 @@ import User from '../models/User.js';
  * @param next - Next middleware to execute.
  */
 export async function signup(req, res, next) {
+    // Field validation handling
     try {
-        const passwordHash = await bcrypt.hash(req.body.password, 10);
+        validationResult(req).throw();
+    } catch (error) {
+        res.status(400).json({ error: error.formatWith(errorFormatter).array() });
+        return;
+    }
 
-        const user = new User({
-            email: req.body.email,
-            password: passwordHash,
-        });
-
-        try {
-            await user.save();
-            res.status(201).json({ message: 'Nouvel utilisateur créé!' });
-        } catch (error) {
-            res.status(400).json({ error });
-        }
+    // Password hash
+    let passwordHash = '';
+    try {
+        passwordHash = await bcrypt.hash(req.body.password, 10);
     } catch (error) {
         res.status(500).json({ error });
+        return;
+    }
+
+    // User creation
+    const user = new User({
+        email: req.body.email,
+        password: passwordHash,
+    });
+
+    try {
+        await user.save();
+        res.status(201).json({ message: 'Nouvel utilisateur créé!' });
+    } catch (error) {
+        res.status(400).json({ error });
+        return;
     }
 }
