@@ -7,18 +7,23 @@ import userRouter from './routes/user-routes.js';
 
 const app = express();
 
-mongoose
-    .connect(
-        'mongodb+srv://HotTakesUser:qwoQGIIkBsXfBoSt@project.ejqe6sd.mongodb.net/HotTakes?retryWrites=true&w=majority',
-        {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        }
-    )
-    .then(() => console.log('MongoDB connection successful.'))
-    .catch((error) => {
-        console.error('MongoDB connection failed: ', error.message);
-    });
+// Only connect to mongoDB if we are not testing
+if (process.env.NODE_ENV !== 'test') {
+    mongoose
+        .connect(
+            'mongodb+srv://HotTakesUser:qwoQGIIkBsXfBoSt@project.ejqe6sd.mongodb.net/HotTakes?retryWrites=true&w=majority',
+            {
+                useNewUrlParser: true,
+                useUnifiedTopology: true,
+            }
+        )
+        .then(() => console.log('MongoDB connection successful.'))
+        .catch((error) => {
+            console.error('MongoDB connection failed: ', error.message);
+        });
+} else {
+    console.log('Testing environment, no connection required.');
+}
 
 /* Store the root folder absolute path in the app.
  * Since we are using ES modules, __dirname is unavailable.
