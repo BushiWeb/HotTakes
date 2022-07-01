@@ -1,6 +1,6 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { signup } from '../controllers/user-controller.js';
+import { signup, login } from '../controllers/user-controller.js';
 import { validateFields } from '../middlewares/field-validation.js';
 
 const router = express.Router();
@@ -36,6 +36,34 @@ router.post(
         ),
     validateFields,
     signup
+);
+
+/**
+ * Login route.
+ * Validates data:
+ *      email is required and should have the right format,
+ *      password is required.
+ * Uses login user controller.
+ */
+router.post(
+    '/login',
+    body('email')
+        .exists({ checkNull: true })
+        .withMessage('Email is required')
+        .bail()
+        .isString()
+        .withMessage('Email should be a string')
+        .bail()
+        .isEmail()
+        .withMessage('Email should use the right email format'),
+    body('password')
+        .exists({ checkNull: true })
+        .withMessage('Password is required')
+        .bail()
+        .isString()
+        .withMessage('Password should be a string'),
+    validateFields,
+    login
 );
 
 export default router;
