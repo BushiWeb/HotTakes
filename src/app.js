@@ -22,7 +22,7 @@ if (process.env.NODE_ENV !== 'test') {
             console.error('MongoDB connection failed: ', error.message);
         });
 } else {
-    console.log('Testing environment, no connection required.');
+    console.log('Testing environment, no database connection required.');
 }
 
 /* Store the root folder absolute path in the app.
