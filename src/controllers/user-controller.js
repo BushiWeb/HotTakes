@@ -5,22 +5,13 @@ import { errorFormatter } from '../utils/utils-validation.js';
 
 /**
  * User signup controller.
- * Checks the email and password format.
  * Encrypts the password and save a new user.
- * Sends a message to the client with status 201 if the request is successful, and an error with the status 422 otherwise.
+ * Sends a message to the client with status 201 if the request is successful, and an error with the status 400 or 500 otherwise.
  * @param {Express.Request} req - Express request object.
  * @param {Express.Response} res - Express response object.
  * @param next - Next middleware to execute.
  */
 export async function signup(req, res, next) {
-    // Field validation handling
-    try {
-        validationResult(req).throw();
-    } catch (error) {
-        res.status(400).json({ error: error.formatWith(errorFormatter).array() });
-        return;
-    }
-
     // Password hash
     let passwordHash = '';
     try {

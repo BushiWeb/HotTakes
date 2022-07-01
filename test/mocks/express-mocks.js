@@ -10,4 +10,4 @@ export const mockResponse = () => {
     return res;
 };
 
-export const mockNext = jest.fn();
+export const mockNext = () => jest.fn();

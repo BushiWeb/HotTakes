@@ -1,6 +1,7 @@
 import express from 'express';
 import { body } from 'express-validator';
 import { signup } from '../controllers/user-controller.js';
+import { validateFields } from '../middlewares/field-validation.js';
 
 const router = express.Router();
 
@@ -33,6 +34,7 @@ router.post(
         .withMessage(
             'Password should be at least 8 characters long, with at least 1 lowercase letter, 1 uppercase letter, 1 number and 1 symbol'
         ),
+    validateFields,
     signup
 );
 
