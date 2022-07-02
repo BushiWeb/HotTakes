@@ -14,6 +14,8 @@ export const validateFields = (req, res, next) => {
         validationResult(req).throw();
         next();
     } catch (error) {
-        res.status(400).json({ error: error.formatWith(errorFormatter).array() });
+        error = error.formatWith(errorFormatter).array();
+        error.status = 400;
+        return next(error);
     }
 };

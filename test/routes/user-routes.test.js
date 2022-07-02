@@ -54,7 +54,7 @@ describe('Authentication routes test suite', () => {
         });
 
         test('Responds with an error and status 500 if the password hash fails', async () => {
-            const mockBcryptHash = jest.spyOn(bcrypt, 'hash').mockRejectedValueOnce(new Error('Hash fail'));
+            const mockBcryptHash = jest.spyOn(bcrypt, 'hash').mockRejectedValueOnce({ message: 'Hash fail' });
             const requestBody = { email: 'test@email.com', password: 'P@55w0r$' };
             const response = await request(app).post('/api/auth/signup').send(requestBody);
 
@@ -66,7 +66,7 @@ describe('Authentication routes test suite', () => {
         });
 
         test('Responds with an error and status 400 if the saving fails', async () => {
-            mockUserSave.mockRejectedValueOnce(new Error('Save fail'));
+            mockUserSave.mockRejectedValueOnce({ message: 'Save fail', name: 'ValidationError' });
             const requestBody = { email: 'test@email.com', password: 'P@55w0r$' };
             const response = await request(app).post('/api/auth/signup').send(requestBody);
 
@@ -146,7 +146,7 @@ describe('Authentication routes test suite', () => {
 
         test('Responds with an error and status 500 if user fetching fails', async () => {
             const requestBody = { email: userData.email, password: userData.clearPassword };
-            mockUserFindOne.mockRejectedValueOnce(new Error('Fetch fails'));
+            mockUserFindOne.mockRejectedValueOnce({ message: 'Fetch fails' });
             const response = await request(app).post('/api/auth/login').send(requestBody);
 
             expect(response.status).toBe(500);
@@ -155,7 +155,7 @@ describe('Authentication routes test suite', () => {
         });
 
         test('Responds with an error and status 500 if bcrypt comparison fails', async () => {
-            const mockBcryptCompare = jest.spyOn(bcrypt, 'compare').mockRejectedValueOnce(new Error('Compare fail'));
+            const mockBcryptCompare = jest.spyOn(bcrypt, 'compare').mockRejectedValueOnce({ message: 'Compare fails' });
             const requestBody = { email: userData.email, password: userData.clearPassword };
             mockUserFindOne.mockResolvedValueOnce(userData);
             const response = await request(app).post('/api/auth/login').send(requestBody);

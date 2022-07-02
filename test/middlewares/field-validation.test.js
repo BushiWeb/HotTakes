@@ -26,13 +26,13 @@ describe('validateFields test suite', () => {
         validateFields(request, response, next);
 
         expect(next).toHaveBeenCalled();
-        expect(response.status).not.toHaveBeenCalled();
-        expect(response.json).not.toHaveBeenCalled();
+        expect(next.mock.calls[0].length).toBe(0);
     });
 
-    test('Sends a response containing status 400 and an error if the validation fails, the next function is not calld', () => {
+    test('Calls the next function with an error containing the status 400 if the validation fails', () => {
         const errorMessage = 'Validation error message';
         const validationError = mockResultError(errorMessage);
+        const expectedResult = { status: 400, ...validationError };
 
         mockValidationResultThrow.mockImplementation(() => {
             throw validationError;
@@ -40,12 +40,7 @@ describe('validateFields test suite', () => {
 
         validateFields(request, response, next);
 
-        expect(response.status).toHaveBeenCalled();
-        expect(response.status).toHaveBeenCalledWith(400);
-        expect(response.json).toHaveBeenCalled();
-        expect(response.json.mock.calls[0][0]).toHaveProperty('error');
-        expect(response.json.mock.calls[0][0].error).toHaveProperty('message');
-        expect(response.json.mock.calls[0][0].error.message).toBe(errorMessage);
-        expect(next).not.toHaveBeenCalled();
+        expect(next).toHaveBeenCalled();
+        expect(next).toHaveBeenCalledWith(expectedResult);
     });
 });

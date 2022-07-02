@@ -4,6 +4,7 @@ import path from 'node:path';
 import mongoose from 'mongoose';
 
 import userRouter from './routes/user-routes.js';
+import { errorHandler } from './middlewares/error-handler.js';
 
 const app = express();
 
@@ -49,5 +50,8 @@ app.use('/images', express.static(path.join(app.get('root'), '../images')));
 
 // API routes
 app.use('/api/auth', userRouter);
+
+// Error handling
+app.use(errorHandler);
 
 export default app;

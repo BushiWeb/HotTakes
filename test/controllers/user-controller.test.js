@@ -45,9 +45,9 @@ describe('User controllers test suite', () => {
             expect(response.json.mock.calls[0][0]).toHaveProperty('message');
         });
 
-        test('Sends a response containing status 400 and an error if user saving fails', async () => {
+        test('Calls the next middleware with an error containing status 400 if user already exits', async () => {
             const errorMessage = 'User save error message';
-            const saveError = new Error(errorMessage);
+            const saveError = { message: errorMessage, name: 'ValidationError' };
             mockBcryptHash.mockResolvedValue('hash');
             mockUserSave.mockRejectedValue(saveError);
 
@@ -55,29 +55,35 @@ describe('User controllers test suite', () => {
 
             await flushPromise();
 
-            expect(response.status).toHaveBeenCalled();
-            expect(response.status).toHaveBeenCalledWith(400);
-            expect(response.json).toHaveBeenCalled();
-            expect(response.json.mock.calls[0][0]).toHaveProperty('error');
-            expect(response.json.mock.calls[0][0].error).toHaveProperty('message');
-            expect(response.json.mock.calls[0][0].error.message).toBe(errorMessage);
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith({ status: 400, ...saveError });
         });
 
-        test('Sends a response containing status 500 and an error if password hash fails', async () => {
+        test('Calls the next middleware with an error if saving fails', async () => {
+            const errorMessage = 'User save error message';
+            const saveError = { message: errorMessage };
+            mockBcryptHash.mockResolvedValue('hash');
+            mockUserSave.mockRejectedValue(saveError);
+
+            signup(request, response, next);
+
+            await flushPromise();
+
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(saveError);
+        });
+
+        test('Calls the next middleware with an error if password hash fails', async () => {
             const errorMessage = 'Hash error message';
-            const hashError = new Error(errorMessage);
+            const hashError = { message: errorMessage };
             mockBcryptHash.mockRejectedValue(hashError);
 
             signup(request, response, next);
 
             await flushPromise();
 
-            expect(response.status).toHaveBeenCalled();
-            expect(response.status).toHaveBeenCalledWith(500);
-            expect(response.json).toHaveBeenCalled();
-            expect(response.json.mock.calls[0][0]).toHaveProperty('error');
-            expect(response.json.mock.calls[0][0].error).toHaveProperty('message');
-            expect(response.json.mock.calls[0][0].error.message).toBe(errorMessage);
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(hashError);
 
             expect(mockUserSave).not.toHaveBeenCalled();
         });
@@ -100,7 +106,7 @@ describe('User controllers test suite', () => {
             expect(response.json.mock.calls[0][0]).toHaveProperty('userId');
         });
 
-        test("Sends a response containing status 404 and an error if user doesn't exist", async () => {
+        test("Calls the next middleware with an error containing status 404 if user doesn't exist", async () => {
             mockBcryptCompare.mockResolvedValue(true);
             mockUserFindOne.mockResolvedValue(null);
 
@@ -108,15 +114,12 @@ describe('User controllers test suite', () => {
 
             await flushPromise();
 
-            expect(response.status).toHaveBeenCalled();
-            expect(response.status).toHaveBeenCalledWith(404);
-            expect(response.json).toHaveBeenCalled();
-            expect(response.json.mock.calls[0][0]).toHaveProperty('error');
-            expect(mockBcryptCompare).not.toHaveBeenCalled();
-            expect(mockJWTSign).not.toHaveBeenCalled();
+            expect(next).toHaveBeenCalled();
+            expect(next.mock.calls[0][0]).toHaveProperty('message');
+            expect(next.mock.calls[0][0]).toHaveProperty('status', 404);
         });
 
-        test('Sends a response containing status 401 and an error if the password is invalid', async () => {
+        test('Calls the next middleware with an error containing status 401 if the password is invalid', async () => {
             mockBcryptCompare.mockResolvedValue(false);
             mockUserFindOne.mockResolvedValue({ _id: '1' });
 
@@ -124,16 +127,14 @@ describe('User controllers test suite', () => {
 
             await flushPromise();
 
-            expect(response.status).toHaveBeenCalled();
-            expect(response.status).toHaveBeenCalledWith(401);
-            expect(response.json).toHaveBeenCalled();
-            expect(response.json.mock.calls[0][0]).toHaveProperty('error');
-            expect(mockJWTSign).not.toHaveBeenCalled();
+            expect(next).toHaveBeenCalled();
+            expect(next.mock.calls[0][0]).toHaveProperty('message');
+            expect(next.mock.calls[0][0]).toHaveProperty('status', 401);
         });
 
-        test('Sends a response containing status 500 and an error if password compare fails', async () => {
+        test('Calls the next middleware with an error if password compare fails', async () => {
             const errorMessage = 'Compare error message';
-            const compareError = new Error(errorMessage);
+            const compareError = { message: errorMessage };
             mockBcryptCompare.mockRejectedValue(compareError);
             mockUserFindOne.mockResolvedValue({ _id: '1' });
 
@@ -141,31 +142,23 @@ describe('User controllers test suite', () => {
 
             await flushPromise();
 
-            expect(response.status).toHaveBeenCalled();
-            expect(response.status).toHaveBeenCalledWith(500);
-            expect(response.json).toHaveBeenCalled();
-            expect(response.json.mock.calls[0][0]).toHaveProperty('error');
-            expect(response.json.mock.calls[0][0].error).toHaveProperty('message');
-            expect(response.json.mock.calls[0][0].error.message).toBe(errorMessage);
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(compareError);
 
             expect(mockJWTSign).not.toHaveBeenCalled();
         });
 
-        test('Sends a response containing status 500 and an error if the user query fails', async () => {
+        test('Calls the next middleware with an error if the user query fails', async () => {
             const errorMessage = 'Querry error message';
-            const querryError = new Error(errorMessage);
+            const querryError = { message: errorMessage };
             mockUserFindOne.mockRejectedValue(querryError);
 
             login(request, response, next);
 
             await flushPromise();
 
-            expect(response.status).toHaveBeenCalled();
-            expect(response.status).toHaveBeenCalledWith(500);
-            expect(response.json).toHaveBeenCalled();
-            expect(response.json.mock.calls[0][0]).toHaveProperty('error');
-            expect(response.json.mock.calls[0][0].error).toHaveProperty('message');
-            expect(response.json.mock.calls[0][0].error.message).toBe(errorMessage);
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(querryError);
 
             expect(mockBcryptCompare).not.toHaveBeenCalled();
             expect(mockJWTSign).not.toHaveBeenCalled();
