@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 
 import userRouter from './routes/user-routes.js';
 import { errorHandler } from './middlewares/error-handler.js';
-import { requestLoggerMiddleware } from './logger/logger.js';
+import { requestLoggerMiddleware, errorLoggerMiddleware } from './logger/logger.js';
 
 const app = express();
 
@@ -56,6 +56,7 @@ app.use('/images', express.static(path.join(app.get('root'), '../images')));
 app.use('/api/auth', userRouter);
 
 // Error handling
+app.use(errorLoggerMiddleware);
 app.use(errorHandler);
 
 export default app;

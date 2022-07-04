@@ -19,33 +19,44 @@ if (process.env.NODE_ENV === 'production') {
     expressWinston.responseWhitelist.push('statusCode', 'body');
 }
 
-/* Create request logger transports. Depending on the environment, the transports will be different:
+// Format to use for the logging
+let loggerFormat = winston.format.combine(winston.format.timestamp(), winston.format.json());
+
+/* Create request and error logger transports. Depending on the environment, the transports will be different:
         In testing, it will be done in files in the test folder.
         In production, it will be done in files.
         In development, it will be done in the console.
 */
 let requestLoggerTransports = [];
-let loggerFormat = winston.format.combine(
-    winston.format.label({ label: 'Request log' }),
-    winston.format.timestamp(),
-    winston.format.json()
-);
-let dailyRotateFileOptions = {
-    datePattern: 'YYYY-MM-DD-HH',
+let requestDailyRotateFileOptions = {
+    datePattern: 'YYYY-MM-DD',
     filename: 'request-%DATE%.log',
     dirname: './logs/request',
     maxFiles: '14d',
     maxSize: '20m',
     format: loggerFormat,
 };
+let errorLoggerTransports = [];
+let errorDailyRotateFileOptions = {
+    datePattern: 'YYYY-MM-DD',
+    filename: 'error-%DATE%.log',
+    dirname: './logs/error',
+    maxFiles: '14d',
+    maxSize: '20m',
+    format: loggerFormat,
+};
 
 if (process.env.NODE_ENV === 'test') {
-    dailyRotateFileOptions.dirname = './test/logs/request';
-    requestLoggerTransports.push(new winston.transports.DailyRotateFile(dailyRotateFileOptions));
+    requestDailyRotateFileOptions.dirname = './test/logs/request';
+    errorDailyRotateFileOptions.dirname = './test/logs/error';
+    requestLoggerTransports.push(new winston.transports.DailyRotateFile(requestDailyRotateFileOptions));
+    errorLoggerTransports.push(new winston.transports.DailyRotateFile(errorDailyRotateFileOptions));
 } else if (process.env.NODE_ENV === 'development') {
     requestLoggerTransports.push(new winston.transports.Console({ format: winston.format.simple() }));
+    errorLoggerTransports.push(new winston.transports.Console({ format: winston.format.simple() }));
 } else {
-    requestLoggerTransports.push(new winston.transports.DailyRotateFile(dailyRotateFileOptions));
+    requestLoggerTransports.push(new winston.transports.DailyRotateFile(requestDailyRotateFileOptions));
+    errorLoggerTransports.push(new winston.transports.DailyRotateFile(errorDailyRotateFileOptions));
 }
 
 // Request logger and it's associated middleware
@@ -57,4 +68,13 @@ export const requestLoggerMiddleware = expressWinston.logger({
     winstonInstance: requestLogger,
     meta: true,
     msg: 'HTTP {{req.mehod}} {{req.url}}',
+});
+
+// Error logger and it's associated middleware
+const errorLogger = winston.createLogger({ transports: errorLoggerTransports });
+
+export const errorLoggerMiddleware = expressWinston.errorLogger({
+    winstonInstance: errorLogger,
+    meta: true,
+    msg: 'Error : {{err.message}}, HTTP {{req.method}} {{req.url}}',
 });

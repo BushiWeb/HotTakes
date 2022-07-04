@@ -32,7 +32,7 @@ describe('validateFields test suite', () => {
     test('Calls the next function with an error containing the status 400 if the validation fails', () => {
         const errorMessage = 'Validation error message';
         const validationError = mockResultError(errorMessage);
-        const expectedResult = { status: 400, ...validationError };
+        const expectedResult = { message: 'User input validation error', status: 400, ...validationError };
 
         mockValidationResultThrow.mockImplementation(() => {
             throw validationError;
@@ -41,6 +41,8 @@ describe('validateFields test suite', () => {
         validateFields(request, response, next);
 
         expect(next).toHaveBeenCalled();
-        expect(next).toHaveBeenCalledWith(expectedResult);
+        expect(next.mock.calls[0][0]).toHaveProperty('message');
+        expect(next.mock.calls[0][0]).toHaveProperty('status', 400);
+        expect(next.mock.calls[0][0]).toMatchObject(validationError);
     });
 });

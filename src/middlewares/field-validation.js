@@ -16,6 +16,7 @@ export const validateFields = (req, res, next) => {
     } catch (error) {
         error = error.formatWith(errorFormatter).array();
         error.status = 400;
+        error.message = 'User input validation error';
         return next(error);
     }
 };
