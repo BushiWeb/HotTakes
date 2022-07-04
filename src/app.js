@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 
 import userRouter from './routes/user-routes.js';
 import { errorHandler } from './middlewares/error-handler.js';
+import { requestLoggerMiddleware } from './logger/logger.js';
 
 const app = express();
 
@@ -44,6 +45,9 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     next();
 });
+
+// Request logger
+app.use(requestLoggerMiddleware);
 
 // Static routes
 app.use('/images', express.static(path.join(app.get('root'), '../images')));
