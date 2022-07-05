@@ -50,7 +50,7 @@ app.use((req, res, next) => {
 app.use(requestLoggerMiddleware);
 
 // Static routes
-app.use('/images', express.static(path.join(app.get('root'), '../images')));
+app.use('/images', express.static(path.join(app.get('root'), '../images'), { fallthrough: false }));
 
 // API routes
 app.use('/api/auth', userRouter);
