@@ -33,6 +33,24 @@ export default class ConfigManager {
     }
 
     /**
+     * Compare the givent environment with the current environment.
+     * @param {string} environment - The environment name to test.
+     * @return {boolean} Returns true if the given environment is the current environment, and false otherwise.
+     * @static
+     */
+    static compareEnvironment(environment) {
+        if (!environment && typeof environment !== 'string' && !(environment instanceof String)) {
+            throw { message: 'Configuration access error: the setting name must be a valid string.' };
+        }
+
+        if (environment === process.env.NODE_ENV || (!process.env.NODE_ENV && environment === 'development')) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Returns the fetched configuration setting.
      *   Searches first in the environment variables.
      *   Then searches in the configuration settings.

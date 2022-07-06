@@ -15,7 +15,7 @@ const configManager = new ConfigManager();
 app.set('config', configManager);
 
 // Only connect to mongoDB if we are not testing
-if (configManager.getConfig('env') !== 'test') {
+if (!ConfigManager.compareEnvironment('test')) {
     mongoose
         .connect(
             'mongodb+srv://HotTakesUser:qwoQGIIkBsXfBoSt@project.ejqe6sd.mongodb.net/HotTakes?retryWrites=true&w=majority',

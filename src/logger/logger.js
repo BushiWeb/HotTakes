@@ -3,8 +3,6 @@ import 'winston-daily-rotate-file';
 import expressWinston from 'express-winston';
 import ConfigManager from '../config/ConfigManager.js';
 
-const configManager = new ConfigManager();
-
 /*
    Setup the whitelists:
         In testing and development, log the minimum amount of informations for readability.
@@ -14,7 +12,7 @@ expressWinston.bodyWhitelist = [];
 expressWinston.requestWhitelist = [];
 expressWinston.responseWhitelist = [];
 
-if (configManager.getConfig('env') === 'production') {
+if (ConfigManager.compareEnvironment('production')) {
     expressWinston.requestWhitelist.push('url', 'headers', 'method', 'originalUrl', 'query', 'httpVersion');
     expressWinston.responseWhitelist.push('statusCode');
 } else {
@@ -49,12 +47,12 @@ let errorDailyRotateFileOptions = {
     format: loggerFormat,
 };
 
-if (configManager.getConfig('env') === 'test') {
+if (ConfigManager.compareEnvironment('test')) {
     requestDailyRotateFileOptions.dirname = './test/logs/request';
     errorDailyRotateFileOptions.dirname = './test/logs/error';
     requestLoggerTransports.push(new winston.transports.DailyRotateFile(requestDailyRotateFileOptions));
     errorLoggerTransports.push(new winston.transports.DailyRotateFile(errorDailyRotateFileOptions));
-} else if (configManager.getConfig('env') === 'development') {
+} else if (ConfigManager.compareEnvironment('development')) {
     requestLoggerTransports.push(new winston.transports.Console({ format: winston.format.simple() }));
     errorLoggerTransports.push(new winston.transports.Console({ format: winston.format.simple() }));
 } else {
