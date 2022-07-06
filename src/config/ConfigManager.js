@@ -36,7 +36,7 @@ export default class ConfigManager {
      * Returns the fetched configuration setting.
      *   Searches first in the environment variables.
      *   Then searches in the configuration settings.
-     * @param {string} [setting=''] - Setting path. It should follow the JavaScript notation. If the property is nested inside others, the path should look like 'ancestor.parent.property'. If one propety is an element of an array, the path should be 'parent[i]' where i is the index in the array. An empty string is equivalent to the root of the settings and returns the entire configurationSettings property.
+     * @param {string} [setting=''] - Setting path. It should follow the JavaScript notation. If the property is nested inside others, the path should look like 'ancestor.parent.property'. If one propety is an element of an array, the path should be 'parent[i]' where i is the index in the array. An empty string is equivalent to the root of the settings and returns the entire configurationSettings property. To get the environment, you can use the 'env' value.
      * @returns Returns the value of the setting. If the setting is an array, returns the array. If the settings contains other settings, return an object containing all the settings.
      * @throws {Object} Throws an error if the setting path is invalid or if the setting doesn't exists.
      */

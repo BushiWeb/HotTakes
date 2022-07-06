@@ -1,6 +1,9 @@
 import winston from 'winston';
 import 'winston-daily-rotate-file';
 import expressWinston from 'express-winston';
+import ConfigManager from '../config/ConfigManager.js';
+
+const configManager = new ConfigManager();
 
 /*
    Setup the whitelists:
@@ -11,7 +14,7 @@ expressWinston.bodyWhitelist = [];
 expressWinston.requestWhitelist = [];
 expressWinston.responseWhitelist = [];
 
-if (process.env.NODE_ENV === 'production') {
+if (configManager.getConfig('env') === 'production') {
     expressWinston.requestWhitelist.push('url', 'headers', 'method', 'originalUrl', 'query', 'httpVersion');
     expressWinston.responseWhitelist.push('statusCode');
 } else {
@@ -46,12 +49,12 @@ let errorDailyRotateFileOptions = {
     format: loggerFormat,
 };
 
-if (process.env.NODE_ENV === 'test') {
+if (configManager.getConfig('env') === 'test') {
     requestDailyRotateFileOptions.dirname = './test/logs/request';
     errorDailyRotateFileOptions.dirname = './test/logs/error';
     requestLoggerTransports.push(new winston.transports.DailyRotateFile(requestDailyRotateFileOptions));
     errorLoggerTransports.push(new winston.transports.DailyRotateFile(errorDailyRotateFileOptions));
-} else if (process.env.NODE_ENV === 'development') {
+} else if (configManager.getConfig('env') === 'development') {
     requestLoggerTransports.push(new winston.transports.Console({ format: winston.format.simple() }));
     errorLoggerTransports.push(new winston.transports.Console({ format: winston.format.simple() }));
 } else {

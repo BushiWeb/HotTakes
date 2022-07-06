@@ -4,8 +4,9 @@ import { normalizePort, getConnectionInformations, errorHandler } from './utils/
 
 let port;
 try {
-    port = normalizePort(process.env.PORT);
+    port = normalizePort(app.get('config').getConfig('PORT'));
 } catch (error) {
+    console.error(error);
     port = normalizePort('3000');
 }
 

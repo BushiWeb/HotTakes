@@ -6,11 +6,16 @@ import mongoose from 'mongoose';
 import userRouter from './routes/user-routes.js';
 import { errorHandler } from './middlewares/error-handler.js';
 import { requestLoggerMiddleware, errorLoggerMiddleware } from './logger/logger.js';
+import ConfigManager from './config/ConfigManager.js';
 
 const app = express();
 
+// Create a configguration manager and store it in the app
+const configManager = new ConfigManager();
+app.set('config', configManager);
+
 // Only connect to mongoDB if we are not testing
-if (process.env.NODE_ENV !== 'test') {
+if (configManager.getConfig('env') !== 'test') {
     mongoose
         .connect(
             'mongodb+srv://HotTakesUser:qwoQGIIkBsXfBoSt@project.ejqe6sd.mongodb.net/HotTakes?retryWrites=true&w=majority',
