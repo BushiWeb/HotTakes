@@ -39,8 +39,8 @@ export default class ConfigManager {
      * @static
      */
     static compareEnvironment(environment) {
-        if (!environment && typeof environment !== 'string' && !(environment instanceof String)) {
-            throw { message: 'Configuration access error: the setting name must be a valid string.' };
+        if (typeof environment !== 'string' && !(environment instanceof String)) {
+            throw { message: 'Configuration access error: the environment name must be a valid string.' };
         }
 
         if (environment === process.env.NODE_ENV || (!process.env.NODE_ENV && environment === 'development')) {
@@ -48,6 +48,27 @@ export default class ConfigManager {
         }
 
         return false;
+    }
+
+    /**
+     * Static method to return the value of an environment variable.
+     * @param {string} variableName - Name of the environment variable. It is case insensitive.
+     * @returns Returns the value of the environment variable.
+     * @throws Throws an error if the variable name isn't a valid string or if the environment variable doesn't exist.
+     * @static
+     */
+    static getEnvVariable(variableName) {
+        //Throw an error if the setting path is not a string
+        if (typeof variableName !== 'string' && !(variableName instanceof String)) {
+            throw { message: 'Configuration access error: the variable name must be a valid string.' };
+        }
+
+        //Return the environment variable if there is one
+        if (process.env[variableName]) {
+            return process.env[variableName];
+        }
+
+        throw { message: `Configuration access error: the environment variable ${variableName} doesn't exist` };
     }
 
     /**

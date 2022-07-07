@@ -1,3 +1,4 @@
+import { exceptions } from 'winston';
 import ConfigManager from '../../src/config/ConfigManager.js';
 import CONFIG from '../mocks/config.js';
 
@@ -24,7 +25,50 @@ describe('ConfigManager Test Suite', () => {
             delete process.env.NODE_ENV;
             expect(ConfigManager.compareEnvironment('test')).toBe(false);
         });
+
+        test('Throws an error if the parameter is not a string', () => {
+            expect(() => {
+                ConfigManager.compareEnvironment(true);
+            }).toThrow();
+        });
+
+        test('Throws an error if the parameter is missing', () => {
+            expect(() => {
+                ConfigManager.compareEnvironment();
+            }).toThrow();
+        });
     });
+
+    describe('getEnvVariable test suite', () => {
+        test('Returns the value of the corresponding environment variable', () => {
+            const environmentVariableName = Object.keys(process.env)[0];
+            expect(ConfigManager.getEnvVariable(environmentVariableName)).toEqual(process.env[environmentVariableName]);
+        });
+
+        test('Throws an error if the parameter is not a string', () => {
+            expect(() => {
+                ConfigManager.getEnvVariable(true);
+            }).toThrow();
+        });
+
+        test('Throws an error if the parameter is missing', () => {
+            expect(() => {
+                ConfigManager.getEnvVariable();
+            }).toThrow();
+        });
+
+        test("Throws an error if the environment variable doesn't exist", () => {
+            const environmentVariableName = 'aaaaa';
+            if (process.env[environmentVariableName]) {
+                throw `The test can\'t be conducted, the environment variable ${environmentVariableName} exists`;
+            }
+
+            expect(() => {
+                ConfigManager.getEnvVariable(environmentVariableName);
+            }).toThrow();
+        });
+    });
+
     describe('getConfig test suite', () => {
         test('The methods returns the configuration setting', () => {
             const config = new ConfigManager(CONFIG);
