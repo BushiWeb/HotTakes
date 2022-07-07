@@ -39,7 +39,7 @@ describe('ConfigManager Test Suite', () => {
         });
     });
 
-    describe('getEnvVariable test suite', () => {
+    describe('Static getEnvVariable test suite', () => {
         test('Returns the value of the corresponding environment variable', () => {
             const environmentVariableName = Object.keys(process.env)[0];
             expect(ConfigManager.getEnvVariable(environmentVariableName)).toEqual(process.env[environmentVariableName]);
@@ -69,6 +69,40 @@ describe('ConfigManager Test Suite', () => {
         });
     });
 
+    describe('getEnvVariable test suite', () => {
+        test('Returns the value of the corresponding environment variable', () => {
+            const environmentVariableName = Object.keys(process.env)[0];
+            const configManager = new ConfigManager();
+            expect(configManager.getEnvVariable(environmentVariableName)).toEqual(process.env[environmentVariableName]);
+        });
+
+        test('Throws an error if the parameter is not a string', () => {
+            const configManager = new ConfigManager();
+            expect(() => {
+                configManager.getEnvVariable(true);
+            }).toThrow();
+        });
+
+        test('Throws an error if the parameter is missing', () => {
+            const configManager = new ConfigManager();
+            expect(() => {
+                configManager.getEnvVariable();
+            }).toThrow();
+        });
+
+        test("Throws an error if the environment variable doesn't exist", () => {
+            const configManager = new ConfigManager();
+            const environmentVariableName = 'aaaaa';
+            if (process.env[environmentVariableName]) {
+                throw `The test can\'t be conducted, the environment variable ${environmentVariableName} exists`;
+            }
+
+            expect(() => {
+                configManager.getEnvVariable(environmentVariableName);
+            }).toThrow();
+        });
+    });
+
     describe('getConfig test suite', () => {
         test('The methods returns the configuration setting', () => {
             const config = new ConfigManager(CONFIG);
@@ -88,13 +122,6 @@ describe('ConfigManager Test Suite', () => {
             expect(settingValue).toEqual(CONFIG.propertyArray[0]);
         });
 
-        test('The methods returns the environment variable', () => {
-            const settingName = Object.keys(process.env)[0];
-            const config = new ConfigManager();
-            const settingValue = config.getConfig(settingName);
-            expect(settingValue).toEqual(process.env[settingName]);
-        });
-
         test('The methods returns all the settings with the root selector', () => {
             const config = new ConfigManager(CONFIG);
             const settingValue = config.getConfig('');
@@ -104,7 +131,7 @@ describe('ConfigManager Test Suite', () => {
         test("The methods throws an error if the setting doesn't exists", () => {
             const config = new ConfigManager();
             expect(() => {
-                config.getConfig('models');
+                config.getConfig('testSetting');
             }).toThrow();
         });
 
@@ -118,7 +145,7 @@ describe('ConfigManager Test Suite', () => {
         test('The methods throws an error if the fetched setting is not a valid string', () => {
             const config = new ConfigManager();
             expect(() => {
-                config.getConfig(null);
+                config.getConfig(true);
             }).toThrow();
         });
 
@@ -126,25 +153,6 @@ describe('ConfigManager Test Suite', () => {
             const config = new ConfigManager();
             const allSettings = config.getConfig('');
             expect(allSettings).toEqual({});
-        });
-
-        test('Returns the value of NODE_ENV if the parameter is env', () => {
-            const config = new ConfigManager();
-            const envNode = config.getConfig('env');
-            expect(envNode).toBe('test');
-        });
-
-        test('Returns the value of NODE_ENV if the parameter is NODE_ENV', () => {
-            const config = new ConfigManager();
-            const envNode = config.getConfig('NODE_ENV');
-            expect(envNode).toBe('test');
-        });
-
-        test('Returns development if NODE_ENV is not defined', () => {
-            delete process.env.NODE_ENV;
-            const config = new ConfigManager();
-            const envNode = config.getConfig('NODE_ENV');
-            expect(envNode).toBe('development');
         });
     });
 });
