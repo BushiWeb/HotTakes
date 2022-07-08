@@ -29,7 +29,7 @@ export default class ConfigManager {
      */
     static compareEnvironment(environment) {
         if (typeof environment !== 'string' && !(environment instanceof String)) {
-            throw { message: 'Configuration access error: the environment name must be a valid string.' };
+            throw { name: 'Configuration access error', message: 'The environment name must be a valid string.' };
         }
 
         if (environment === process.env.NODE_ENV || (!process.env.NODE_ENV && environment === 'development')) {
@@ -49,7 +49,7 @@ export default class ConfigManager {
     static getEnvVariable(variableName) {
         //Throw an error if the setting path is not a string
         if (typeof variableName !== 'string' && !(variableName instanceof String)) {
-            throw { message: 'Configuration access error: the variable name must be a valid string.' };
+            throw { name: 'Configuration access error', message: 'The variable name must be a valid string.' };
         }
 
         //Return the environment variable if there is one
@@ -57,7 +57,7 @@ export default class ConfigManager {
             return process.env[variableName];
         }
 
-        throw { message: `Configuration access error: the environment variable ${variableName} doesn't exist` };
+        throw { name: 'Configuration access error', message: `The environment variable ${variableName} doesn't exist` };
     }
 
     /**
@@ -77,7 +77,7 @@ export default class ConfigManager {
     getConfig(setting = '') {
         //Throw an error if the setting path is not a string
         if (typeof setting !== 'string' && !(setting instanceof String)) {
-            throw { message: 'Configuration access error: the setting name must be a valid string.' };
+            throw { name: 'Configuration access error', message: 'The setting name must be a valid string.' };
         }
 
         //Return all the settings if the value is an empty string
@@ -94,7 +94,8 @@ export default class ConfigManager {
 
             if (!currentSetting[settingNodeDetails[0]]) {
                 throw {
-                    message: `Configuration access error: the setting or environment variable ${setting} doesn't exist.`,
+                    name: 'Configuration access error',
+                    message: `The setting or environment variable ${setting} doesn't exist.`,
                 };
             }
 
@@ -104,7 +105,8 @@ export default class ConfigManager {
                 let settingIndex = parseInt(settingNodeDetails[1], 10);
                 if (isNaN(settingIndex)) {
                     throw {
-                        message: `Configuration access error: the index of the setting node ${settingNodeDetails[0]} must be a valid number.`,
+                        name: 'Configuration access error',
+                        message: `The index of the setting node ${settingNodeDetails[0]} must be a valid number.`,
                     };
                 }
                 currentSetting = currentSetting[settingIndex];
