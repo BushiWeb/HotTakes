@@ -11,7 +11,8 @@ const createDBUrl = () => {
 
 export const mongoDBConnect = async () => {
     try {
-        await mongoose.connect(createDBUrl(), {
+        const dbUrl = createDBUrl();
+        await mongoose.connect(dbUrl, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         });
