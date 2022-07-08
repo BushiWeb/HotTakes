@@ -1,8 +1,7 @@
 import express from 'express';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import mongoose from 'mongoose';
-
+import { mongoDBConnect } from './utils/utils-database.js';
 import userRouter from './routes/user-routes.js';
 import { errorHandler } from './middlewares/error-handler.js';
 import { requestLoggerMiddleware, errorLoggerMiddleware } from './logger/logger.js';
@@ -16,18 +15,7 @@ app.set('config', configManager);
 
 // Only connect to mongoDB if we are not testing
 if (!ConfigManager.compareEnvironment('test')) {
-    mongoose
-        .connect(
-            'mongodb+srv://HotTakesUser:qwoQGIIkBsXfBoSt@project.ejqe6sd.mongodb.net/HotTakes?retryWrites=true&w=majority',
-            {
-                useNewUrlParser: true,
-                useUnifiedTopology: true,
-            }
-        )
-        .then(() => console.log('MongoDB connection successful.'))
-        .catch((error) => {
-            console.error('MongoDB connection failed: ', error.message);
-        });
+    mongoDBConnect();
 } else {
     console.log('Testing environment, no database connection required.');
 }
