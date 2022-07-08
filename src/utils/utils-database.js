@@ -9,14 +9,14 @@ const createDBUrl = () => {
     )}?retryWrites=true&w=majority`;
 };
 
-export const mongoDBConnect = () => {
-    mongoose
-        .connect(createDBUrl(), {
+export const mongoDBConnect = async () => {
+    try {
+        await mongoose.connect(createDBUrl(), {
             useNewUrlParser: true,
             useUnifiedTopology: true,
-        })
-        .then(() => console.log('MongoDB connection successful.'))
-        .catch((error) => {
-            console.error('MongoDB connection failed: ', error.message);
         });
+        console.log('MongoDB connection successful.');
+    } catch (error) {
+        console.error(`MongoDB connection failed: [${error.name}] ${error.message}`);
+    }
 };
