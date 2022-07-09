@@ -1,3 +1,5 @@
+import { validateStringArgument } from '../utils/utils-functions.js';
+
 /**
  * Manages server configuration.
  * Allows for easy access to configuration settings, as well as all environment variable.
@@ -28,7 +30,7 @@ export default class ConfigManager {
      * @static
      */
     static compareEnvironment(environment) {
-        if (typeof environment !== 'string' && !(environment instanceof String)) {
+        if (!validateStringArgument(environment)) {
             throw { name: 'Configuration access error', message: 'The environment name must be a valid string.' };
         }
 
@@ -47,12 +49,10 @@ export default class ConfigManager {
      * @static
      */
     static getEnvVariable(variableName) {
-        //Throw an error if the setting path is not a string
-        if (typeof variableName !== 'string' && !(variableName instanceof String)) {
+        if (!validateStringArgument(variableName)) {
             throw { name: 'Configuration access error', message: 'The variable name must be a valid string.' };
         }
 
-        //Return the environment variable if there is one
         if (process.env[variableName]) {
             return process.env[variableName];
         }
@@ -75,8 +75,7 @@ export default class ConfigManager {
      * @throws {Object} Throws an error if the setting path is invalid or if the setting doesn't exists.
      */
     getConfig(setting = '') {
-        //Throw an error if the setting path is not a string
-        if (typeof setting !== 'string' && !(setting instanceof String)) {
+        if (!validateStringArgument(setting)) {
             throw { name: 'Configuration access error', message: 'The setting name must be a valid string.' };
         }
 
