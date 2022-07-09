@@ -1,6 +1,6 @@
-import { exceptions } from 'winston';
 import ConfigManager from '../../src/config/ConfigManager.js';
 import CONFIG from '../mocks/config.js';
+import ConfigurationError from '../../src/errors/ConfigurationError.js';
 
 afterEach(() => {
     process.env.NODE_ENV = 'test';
@@ -21,7 +21,7 @@ describe('ConfigManager Test Suite', () => {
             expect(ConfigManager.compareEnvironment('development')).toBe(true);
         });
 
-        test("Returns true if the environment is not set and the parameter isn't development", () => {
+        test("Returns false if the environment is not set and the parameter isn't development", () => {
             delete process.env.NODE_ENV;
             expect(ConfigManager.compareEnvironment('test')).toBe(false);
         });
@@ -29,13 +29,13 @@ describe('ConfigManager Test Suite', () => {
         test('Throws an error if the parameter is not a string', () => {
             expect(() => {
                 ConfigManager.compareEnvironment(true);
-            }).toThrow();
+            }).toThrow(ConfigurationError);
         });
 
         test('Throws an error if the parameter is missing', () => {
             expect(() => {
                 ConfigManager.compareEnvironment();
-            }).toThrow();
+            }).toThrow(ConfigurationError);
         });
     });
 
@@ -48,13 +48,13 @@ describe('ConfigManager Test Suite', () => {
         test('Throws an error if the parameter is not a string', () => {
             expect(() => {
                 ConfigManager.getEnvVariable(true);
-            }).toThrow();
+            }).toThrow(ConfigurationError);
         });
 
         test('Throws an error if the parameter is missing', () => {
             expect(() => {
                 ConfigManager.getEnvVariable();
-            }).toThrow();
+            }).toThrow(ConfigurationError);
         });
 
         test("Throws an error if the environment variable doesn't exist", () => {
@@ -65,7 +65,7 @@ describe('ConfigManager Test Suite', () => {
 
             expect(() => {
                 ConfigManager.getEnvVariable(environmentVariableName);
-            }).toThrow();
+            }).toThrow(ConfigurationError);
         });
     });
 
@@ -80,14 +80,14 @@ describe('ConfigManager Test Suite', () => {
             const configManager = new ConfigManager();
             expect(() => {
                 configManager.getEnvVariable(true);
-            }).toThrow();
+            }).toThrow(ConfigurationError);
         });
 
         test('Throws an error if the parameter is missing', () => {
             const configManager = new ConfigManager();
             expect(() => {
                 configManager.getEnvVariable();
-            }).toThrow();
+            }).toThrow(ConfigurationError);
         });
 
         test("Throws an error if the environment variable doesn't exist", () => {
@@ -99,7 +99,7 @@ describe('ConfigManager Test Suite', () => {
 
             expect(() => {
                 configManager.getEnvVariable(environmentVariableName);
-            }).toThrow();
+            }).toThrow(ConfigurationError);
         });
     });
 
@@ -132,21 +132,21 @@ describe('ConfigManager Test Suite', () => {
             const config = new ConfigManager();
             expect(() => {
                 config.getConfig('testSetting');
-            }).toThrow();
+            }).toThrow(ConfigurationError);
         });
 
         test('The methods throws an error if an index is not an index', () => {
             const config = new ConfigManager();
             expect(() => {
                 config.getConfig('logging.login.output[a]');
-            }).toThrow();
+            }).toThrow(ConfigurationError);
         });
 
         test('The methods throws an error if the fetched setting is not a valid string', () => {
             const config = new ConfigManager();
             expect(() => {
                 config.getConfig(true);
-            }).toThrow();
+            }).toThrow(ConfigurationError);
         });
 
         test('No settings are saved if the object is empty', () => {
