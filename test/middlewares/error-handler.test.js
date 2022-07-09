@@ -40,4 +40,16 @@ describe('Error handler test suite', () => {
             },
         });
     });
+
+    test('Sends a response containing status 500 and a message in a JSON object if the error is an instance of error', () => {
+        const error = new Error('Error message');
+
+        errorHandler(error, request, response, next);
+
+        expect(response.status).toHaveBeenCalled();
+        expect(response.status).toHaveBeenCalledWith(500);
+        expect(response.json).toHaveBeenCalled();
+        expect(response.json.mock.calls[0][0]).toHaveProperty('error');
+        expect(response.json.mock.calls[0][0].error).toHaveProperty('message');
+    });
 });
