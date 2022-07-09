@@ -128,6 +128,12 @@ describe('ConfigManager Test Suite', () => {
             expect(settingValue).toEqual(CONFIG);
         });
 
+        test('The methods returns all the settings if no selector is given', () => {
+            const config = new ConfigManager(CONFIG);
+            const settingValue = config.getConfig();
+            expect(settingValue).toEqual(CONFIG);
+        });
+
         test("The methods throws an error if the setting doesn't exists", () => {
             const config = new ConfigManager();
             expect(() => {
@@ -136,9 +142,9 @@ describe('ConfigManager Test Suite', () => {
         });
 
         test('The methods throws an error if an index is not an index', () => {
-            const config = new ConfigManager();
+            const config = new ConfigManager(CONFIG);
             expect(() => {
-                config.getConfig('logging.login.output[a]');
+                config.getConfig('propertyArray[a]');
             }).toThrow(ConfigurationError);
         });
 

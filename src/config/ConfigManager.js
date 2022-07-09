@@ -19,9 +19,7 @@ export default class ConfigManager {
      * @param {Object} [config={}] - Configuration object. Default to empty object if no configuration object is used.
      */
     constructor(config = {}) {
-        if (config) {
-            this.#configurationSettings = config;
-        }
+        this.#configurationSettings = config;
     }
 
     /**
