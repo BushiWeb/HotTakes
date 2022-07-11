@@ -1,5 +1,5 @@
-export const mockRequest = (body) => {
-    const req = { body };
+export const mockRequest = (body = {}, headers = {}) => {
+    const req = { body, headers };
     return req;
 };
 
