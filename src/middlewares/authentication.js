@@ -1,5 +1,5 @@
 import jsonWebToken from 'jsonwebtoken';
-import Sauce from '../models/Sauce.js';
+import { Model } from 'mongoose';
 
 /**
  * Middleware, checks that the user is authenticated while making the request, by checking that the authentication token is valid.
@@ -24,26 +24,40 @@ export const checkAuthentication = (req, res, next) => {
 };
 
 /**
- * Middleware, checks that the user owns the request subject.
- * Fetches the subject from the database and compares it's userId with the request's userId.
- * Go to the next middleware if the user owns the subject, and to the next error middleware otherwise.
- * @param {Express.Request} req - Express request object.
- * @param {Express.Response} res - Express response object.
- * @param next - Next middleware to execute.
+ * Returns a middleware checking that the user owns the request subject.
+ * This middleware fetches the subject from the database and compares it's userId with the request's userId.
+ * Depending on the result, it either goes to the next middleware or the next error middleware.
+ * To create a middleware that can checks any type of model, we use dependency injection: checkOwnership gets the name of the model to use and imports it, so that the middleware can use it.
+ * @param {string} modelName - Name of the file containing the model to use for checking. The file should be stored in the models folder.
  */
-export const checkOwnership = async (req, res, next) => {
+export const checkOwnership = async (modelName) => {
+    let model;
     try {
-        const sauce = await Sauce.findById(req.params.id).exec();
-        if (!sauce) {
-            throw { message: "The ressource you're requesting doesn't exist", status: 404 };
-        }
-
-        if (sauce.userId !== req.auth.userId) {
-            throw { message: "Invalid request, you dont't have the right to access this ressource", status: 403 };
-        }
-
-        next();
+        const module = await import(`../models/${modelName}.js`);
+        model = module.default;
     } catch (error) {
-        return next(error);
+        model = new Error(error.message);
+        model.name = 'Model import error';
     }
+
+    return async (req, res, next) => {
+        try {
+            if (model instanceof Error) {
+                throw model;
+            }
+
+            const sauce = await model.findById(req.params.id).exec();
+            if (!sauce) {
+                throw { message: "The ressource you're requesting doesn't exist", status: 404 };
+            }
+
+            if (sauce.userId !== req.auth.userId) {
+                throw { message: "Invalid request, you dont't have the right to access this ressource", status: 403 };
+            }
+
+            next();
+        } catch (error) {
+            return next(error);
+        }
+    };
 };
