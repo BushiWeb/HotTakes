@@ -3,7 +3,6 @@ import { mockResponse, mockRequest, mockNext } from '../mocks/express-mocks.js';
 import User from '../../src/models/User.js';
 import bcrypt from 'bcrypt';
 import jsonWebToken from 'jsonwebtoken';
-import { flushPromise } from '../flush-promise.js';
 
 const mockUserSave = jest.spyOn(User.prototype, 'save');
 const mockUserFindOne = jest.spyOn(User, 'findOne');
@@ -35,9 +34,7 @@ describe('User controllers test suite', () => {
             mockBcryptHash.mockResolvedValue('hash');
             mockUserSave.mockResolvedValue(null);
 
-            signup(request, response, next);
-
-            await flushPromise();
+            await signup(request, response, next);
 
             expect(response.status).toHaveBeenCalled();
             expect(response.status).toHaveBeenCalledWith(201);
@@ -51,9 +48,7 @@ describe('User controllers test suite', () => {
             mockBcryptHash.mockResolvedValue('hash');
             mockUserSave.mockRejectedValue(saveError);
 
-            signup(request, response, next);
-
-            await flushPromise();
+            await signup(request, response, next);
 
             expect(next).toHaveBeenCalled();
             expect(next).toHaveBeenCalledWith({ status: 400, ...saveError });
@@ -65,9 +60,7 @@ describe('User controllers test suite', () => {
             mockBcryptHash.mockResolvedValue('hash');
             mockUserSave.mockRejectedValue(saveError);
 
-            signup(request, response, next);
-
-            await flushPromise();
+            await signup(request, response, next);
 
             expect(next).toHaveBeenCalled();
             expect(next).toHaveBeenCalledWith(saveError);
@@ -78,9 +71,7 @@ describe('User controllers test suite', () => {
             const hashError = { message: errorMessage };
             mockBcryptHash.mockRejectedValue(hashError);
 
-            signup(request, response, next);
-
-            await flushPromise();
+            await signup(request, response, next);
 
             expect(next).toHaveBeenCalled();
             expect(next).toHaveBeenCalledWith(hashError);
@@ -95,9 +86,7 @@ describe('User controllers test suite', () => {
             mockUserFindOne.mockResolvedValue({ _id: '1' });
             mockJWTSign.mockReturnValue('token');
 
-            login(request, response, next);
-
-            await flushPromise();
+            await login(request, response, next);
 
             expect(response.status).toHaveBeenCalled();
             expect(response.status).toHaveBeenCalledWith(200);
@@ -110,9 +99,7 @@ describe('User controllers test suite', () => {
             mockBcryptCompare.mockResolvedValue(true);
             mockUserFindOne.mockResolvedValue(null);
 
-            login(request, response, next);
-
-            await flushPromise();
+            await login(request, response, next);
 
             expect(next).toHaveBeenCalled();
             expect(next.mock.calls[0][0]).toHaveProperty('message');
@@ -123,9 +110,7 @@ describe('User controllers test suite', () => {
             mockBcryptCompare.mockResolvedValue(false);
             mockUserFindOne.mockResolvedValue({ _id: '1' });
 
-            login(request, response, next);
-
-            await flushPromise();
+            await login(request, response, next);
 
             expect(next).toHaveBeenCalled();
             expect(next.mock.calls[0][0]).toHaveProperty('message');
@@ -138,9 +123,7 @@ describe('User controllers test suite', () => {
             mockBcryptCompare.mockRejectedValue(compareError);
             mockUserFindOne.mockResolvedValue({ _id: '1' });
 
-            login(request, response, next);
-
-            await flushPromise();
+            await login(request, response, next);
 
             expect(next).toHaveBeenCalled();
             expect(next).toHaveBeenCalledWith(compareError);
@@ -153,9 +136,7 @@ describe('User controllers test suite', () => {
             const querryError = { message: errorMessage };
             mockUserFindOne.mockRejectedValue(querryError);
 
-            login(request, response, next);
-
-            await flushPromise();
+            await login(request, response, next);
 
             expect(next).toHaveBeenCalled();
             expect(next).toHaveBeenCalledWith(querryError);
