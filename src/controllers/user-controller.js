@@ -5,7 +5,7 @@ import jsonWebToken from 'jsonwebtoken';
 /**
  * User signup controller.
  * Encrypts the password and save a new user.
- * Sends a message to the client with status 201 if the request is successful, or calls the error handler middleware if an arror occurs.
+ * Sends a message to the client with status 201 if the request is successful, or calls the error handler middleware if an error occurs.
  * @param {Express.Request} req - Express request object.
  * @param {Express.Response} res - Express response object.
  * @param next - Next middleware to execute.

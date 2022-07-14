@@ -1,5 +1,6 @@
-export const mockRequest = (body = {}, headers = {}) => {
-    const req = { body, headers };
+export const mockRequest = (body = {}, headers = {}, file = {}, protocol = '') => {
+    const req = { body, headers, file, protocol };
+    req.get = jest.fn().mockImplementation((parameter) => parameter);
     return req;
 };
 
