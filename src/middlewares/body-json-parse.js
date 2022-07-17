@@ -6,8 +6,8 @@
  * If the property doesn't exist, the error handler is called.
  * @param {string} propertyName - Name of the property to parse.
  */
-export const bodyJsonParse = async (propertyName) => {
-    return async (req, res, next) => {
+export const bodyJsonParse = (propertyName) => {
+    return (req, res, next) => {
         if (req.body[propertyName] === undefined) {
             next(new Error(`The body property ${propertyName} doesn't exist.`));
         }
