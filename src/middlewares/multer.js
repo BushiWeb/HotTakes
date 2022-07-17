@@ -1,4 +1,19 @@
 import multer from 'multer';
+import { MulterError } from 'multer';
+import ConfigManager from '../config/ConfigManager.js';
+
+/**
+ * Creates an multer error.
+ * @param {string} message - Message of the error.
+ * @param {string} code - Error's code.
+ * @param {string} [field=undefined] - Field name.
+ * @returns {MulterError} Returns an error that
+ */
+const createMulterError = (message, code, field = undefined) => {
+    const error = new MulterError(code, field);
+    error.message = message;
+    return error;
+};
 
 /*
  * Array of accepted MIME-types
@@ -19,12 +34,16 @@ const MIME_TYPES = {
  */
 const storage = multer.diskStorage({
     destination: (req, file, callback) => {
-        callback(null, 'images');
+        let folderName = 'images';
+        if (ConfigManager.compareEnvironment('test')) {
+            folderName = 'test/images/temp_img';
+        }
+        callback(null, folderName);
     },
     filename: (req, file, callback) => {
         const name = file.originalname.split(' ').join('_');
         const extension = MIME_TYPES[file.mimetype];
-        const fileName = `${name}${Date.now}.${extension}`;
+        const fileName = `${name}${Date.now()}.${extension}`;
         callback(null, fileName);
     },
 });
@@ -36,7 +55,12 @@ const storage = multer.diskStorage({
  */
 const fileFilter = (req, file, callback) => {
     if (!MIME_TYPES[file.mimetype]) {
-        callback(null, false);
+        const fileTypeError = createMulterError(
+            'This file type is not accepted. Please, use one of the following format: jpeg, png, webp, avif',
+            'INVALID_FILE_TYPE',
+            file.fieldName
+        );
+        callback(fileTypeError);
     }
 
     callback(null, true);
@@ -54,3 +78,18 @@ export default multer({
         fileSize: 5242880,
     },
 }).single('image');
+
+/**
+ * Validator middleware checking that a file has been sent. If has been sent, then calls the next middleware, and calls the error middleware otherwise.
+ * @param {Express.Request} req - Express request object.
+ * @param {Express.Response} res - Express response object.
+ * @param next - Next middleware to execute.
+ */
+export const multerCheckFileExists = (req, res, next) => {
+    if (!req.file) {
+        const fileMissingError = createMulterError('The file is required.', 'FILE_MISSING');
+        return next(fileMissingError);
+    }
+
+    next();
+};

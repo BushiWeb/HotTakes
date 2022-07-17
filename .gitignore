@@ -3,4 +3,6 @@ node_modules
 coverage
 logs
 test/logs
+test/images/temp_img
 .env
+images/*

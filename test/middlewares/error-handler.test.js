@@ -1,3 +1,4 @@
+import { MulterError } from 'multer';
 import { errorHandler } from '../../src/middlewares/error-handler.js';
 import { mockResponse, mockRequest, mockNext } from '../mocks/express-mocks.js';
 
@@ -51,5 +52,43 @@ describe('Error handler test suite', () => {
         expect(response.json).toHaveBeenCalled();
         expect(response.json.mock.calls[0][0]).toHaveProperty('error');
         expect(response.json.mock.calls[0][0].error).toHaveProperty('message');
+    });
+
+    test('Sends a response containing status 400 and a message in a JSON object if the error is an instance of MulterError', () => {
+        const error = new MulterError('CODE', 'fieldName');
+        error.message = 'Error message';
+
+        errorHandler(error, request, response, next);
+
+        expect(response.status).toHaveBeenCalled();
+        expect(response.status).toHaveBeenCalledWith(400);
+        expect(response.json).toHaveBeenCalled();
+        expect(response.json).toHaveBeenCalledWith({
+            error: {
+                message: error.message,
+                code: error.code,
+                name: error.name,
+                field: error.field,
+            },
+        });
+    });
+
+    test('Sends a response containing status 400 and a message in a JSON object if the error is an instance of MulterError, but with no field', () => {
+        const error = new MulterError('CODE');
+        error.message = 'Error message';
+
+        errorHandler(error, request, response, next);
+
+        expect(response.status).toHaveBeenCalled();
+        expect(response.status).toHaveBeenCalledWith(400);
+        expect(response.json).toHaveBeenCalled();
+        expect(response.json).toHaveBeenCalledWith({
+            error: {
+                message: error.message,
+                code: error.code,
+                name: error.name,
+                field: undefined,
+            },
+        });
     });
 });

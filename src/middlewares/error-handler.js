@@ -1,3 +1,5 @@
+import { MulterError } from 'multer';
+
 /**
  * Error handling middleware. It catches the errors thrown by the different middlewares and handles them.
  * Sets the response status to 500 by default, or to the value of the status property of the err parameter.
@@ -9,6 +11,16 @@
  */
 export function errorHandler(err, req, res, next) {
     let status = 500;
+
+    if (err instanceof MulterError) {
+        err = {
+            status: 400,
+            message: err.message,
+            code: err.code,
+            name: err.name,
+            field: err.field,
+        };
+    }
 
     if (err instanceof Error) {
         err = {
