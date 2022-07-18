@@ -1,6 +1,7 @@
 import multer from 'multer';
 import { MulterError } from 'multer';
 import ConfigManager from '../config/ConfigManager.js';
+import validator from 'validator';
 
 /**
  * Creates an multer error.
@@ -36,12 +37,16 @@ const storage = multer.diskStorage({
     destination: (req, file, callback) => {
         let folderName = 'images';
         if (ConfigManager.compareEnvironment('test')) {
-            folderName = 'test/images/temp_img';
+            folderName = 'test/temp/img';
         }
         callback(null, folderName);
     },
     filename: (req, file, callback) => {
-        const name = file.originalname.split(' ').join('_');
+        let name = file.originalname;
+        name = validator.trim(name);
+        name = name.split(' ').join('_');
+        name = validator.whitelist(name, 'A-Za-z0-9._-');
+        name = name.replace(/\.[^/.]+$/, '');
         const extension = MIME_TYPES[file.mimetype];
         const fileName = `${name}${Date.now()}.${extension}`;
         callback(null, fileName);

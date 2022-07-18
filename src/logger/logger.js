@@ -48,8 +48,8 @@ let errorDailyRotateFileOptions = {
 };
 
 if (ConfigManager.compareEnvironment('test')) {
-    requestDailyRotateFileOptions.dirname = './test/logs/request';
-    errorDailyRotateFileOptions.dirname = './test/logs/error';
+    requestDailyRotateFileOptions.dirname = './test/temp/logs/request';
+    errorDailyRotateFileOptions.dirname = './test/temp/logs/error';
     requestLoggerTransports.push(new winston.transports.DailyRotateFile(requestDailyRotateFileOptions));
     errorLoggerTransports.push(new winston.transports.DailyRotateFile(errorDailyRotateFileOptions));
 } else if (ConfigManager.compareEnvironment('development')) {
