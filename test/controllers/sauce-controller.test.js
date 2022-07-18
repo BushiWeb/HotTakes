@@ -5,6 +5,7 @@ import Sauce from '../../src/models/Sauce.js';
 const mockSauceSave = jest.spyOn(Sauce.prototype, 'save');
 
 const request = mockRequest();
+request.auth = { userId: '123456' };
 const response = mockResponse();
 const next = mockNext();
 
@@ -26,7 +27,7 @@ describe('Sauce controllers test suite', () => {
                 heat: 3,
             };
 
-            request.body.sauce = JSON.stringify(sauceData);
+            request.body.sauce = sauceData;
             request.file.filename = 'sauceImage.png';
             request.protocol = 'http';
         });

@@ -13,10 +13,10 @@ export async function createSauce(req, res, next) {
     const imageUrl = `${req.protocol}://${req.get('host')}/images/${req.file.filename}`;
 
     // Sauce creation
-    const sauceData = JSON.parse(req.body.sauce);
     const sauce = new Sauce({
-        ...sauceData,
+        ...req.body.sauce,
         imageUrl: imageUrl,
+        userId: req.auth.userId,
     });
 
     try {

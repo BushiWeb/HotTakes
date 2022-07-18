@@ -24,8 +24,8 @@ export function errorHandler(err, req, res, next) {
 
     if (err instanceof Error) {
         err = {
-            message:
-                'An internal error has occured. You may try again. If the problem persists, feel free to contact us.',
+            message: err.message,
+            name: err.name,
         };
     }
 

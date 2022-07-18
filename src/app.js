@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { mongoDBConnect } from './utils/utils-database.js';
 import userRouter from './routes/user-routes.js';
+import sauceRouter from './routes/sauce-routes.js';
 import { errorHandler } from './middlewares/error-handler.js';
 import { requestLoggerMiddleware, errorLoggerMiddleware } from './logger/logger.js';
 import ConfigManager from './config/ConfigManager.js';
@@ -47,6 +48,7 @@ app.use('/images', express.static(path.join(app.get('root'), '../images'), { fal
 
 // API routes
 app.use('/api/auth', userRouter);
+app.use('/api/sauces', sauceRouter);
 
 // Error handling
 app.use(errorLoggerMiddleware);

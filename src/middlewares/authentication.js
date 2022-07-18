@@ -1,5 +1,4 @@
 import jsonWebToken from 'jsonwebtoken';
-import { Model } from 'mongoose';
 
 /**
  * Middleware, checks that the user is authenticated while making the request, by checking that the authentication token is valid.
