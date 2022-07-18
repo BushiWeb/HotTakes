@@ -29,3 +29,18 @@ export async function createSauce(req, res, next) {
         return next(error);
     }
 }
+
+/**
+ * Sauce fetching controller.
+ * @param {Express.Request} req - Express request object.
+ * @param {Express.Response} res - Express response object.
+ * @param next - Next middleware to execute.
+ */
+export async function getAllSauces(req, res, next) {
+    try {
+        const sauces = await Sauce.find();
+        res.status(200).json(sauces);
+    } catch (error) {
+        return next(error);
+    }
+}

@@ -1,8 +1,10 @@
-import { createSauce } from '../../src/controllers/sauce-controller.js';
+import { createSauce, getAllSauces } from '../../src/controllers/sauce-controller.js';
 import { mockResponse, mockRequest, mockNext } from '../mocks/express-mocks.js';
 import Sauce from '../../src/models/Sauce.js';
+import SAUCE_DATA from '../mocks/sauce-data.js';
 
 const mockSauceSave = jest.spyOn(Sauce.prototype, 'save');
+const mockSauceFind = jest.spyOn(Sauce, 'find');
 
 const request = mockRequest();
 request.auth = { userId: '123456' };
@@ -11,6 +13,7 @@ const next = mockNext();
 
 beforeEach(() => {
     mockSauceSave.mockReset();
+    mockSauceFind.mockReset();
     response.status.mockClear();
     response.json.mockClear();
     next.mockClear();
@@ -19,14 +22,14 @@ beforeEach(() => {
 describe('Sauce controllers test suite', () => {
     describe('createSauce controller test suite', () => {
         beforeEach(() => {
-            const sauceData = {
-                name: 'tabasco',
-                manufacturer: "I don't know",
-                description: 'Popular sauce',
-                mainPepper: "I don't know either",
-                heat: 3,
-            };
-
+            const sauceData = JSON.parse(JSON.stringify(SAUCE_DATA[0]));
+            delete sauceData._id;
+            delete sauceData.userId;
+            delete sauceData.imageUrl;
+            delete sauceData.likes;
+            delete sauceData.dislikes;
+            delete sauceData.usersLiked;
+            delete sauceData.usersDisliked;
             request.body.sauce = sauceData;
             request.file.filename = 'sauceImage.png';
             request.protocol = 'http';
@@ -63,6 +66,41 @@ describe('Sauce controllers test suite', () => {
 
             expect(next).toHaveBeenCalled();
             expect(next).toHaveBeenCalledWith({ status: 400, ...saveError });
+        });
+    });
+
+    describe('getAllSauces controller test suite', () => {
+        test('Sends a response containing status 200 and the sauce array', async () => {
+            mockSauceFind.mockResolvedValue(SAUCE_DATA);
+
+            await getAllSauces(request, response, next);
+
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(200);
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toEqual(SAUCE_DATA);
+        });
+
+        test('Sends a response containing status 200 and empty array if there is no sauce', async () => {
+            mockSauceFind.mockResolvedValue([]);
+
+            await getAllSauces(request, response, next);
+
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(200);
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toEqual([]);
+        });
+
+        test('Calls the next middleware with an error if fetching fails', async () => {
+            const errorMessage = 'Sauces fetching error message';
+            const fetchError = { message: errorMessage };
+            mockSauceFind.mockRejectedValue(fetchError);
+
+            await getAllSauces(request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(fetchError);
         });
     });
 });
