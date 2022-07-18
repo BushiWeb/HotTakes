@@ -38,7 +38,7 @@ export async function createSauce(req, res, next) {
  */
 export async function getAllSauces(req, res, next) {
     try {
-        const sauces = await Sauce.find();
+        const sauces = await Sauce.find({}, '-__v');
         res.status(200).json(sauces);
     } catch (error) {
         return next(error);
