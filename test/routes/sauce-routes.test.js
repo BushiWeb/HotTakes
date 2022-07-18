@@ -62,6 +62,8 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error[0]).toHaveProperty('message');
+            expect(response.body.error[0].message).toMatch(/name/);
         });
 
         test('Responds with an error and status 400 if the heat is invalid', async () => {
@@ -76,6 +78,8 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error[0]).toHaveProperty('message');
+            expect(response.body.error[0].message).toMatch(/heat/);
         });
 
         test('Responds with an error and status 400 if the heat is absent', async () => {
@@ -90,6 +94,8 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error[0]).toHaveProperty('message');
+            expect(response.body.error[0].message).toMatch(/heat/);
         });
 
         test('Responds with an error and status 400 if the heat is outside the boundaries', async () => {
@@ -104,6 +110,8 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error[0]).toHaveProperty('message');
+            expect(response.body.error[0].message).toMatch(/heat/);
         });
 
         test('Responds with an error and status 400 if the file is missing', async () => {
@@ -129,6 +137,8 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error[0]).toHaveProperty('message');
+            expect(response.body.error[0].message).toMatch(/description/);
         });
 
         test('Responds with an error and status 400 if the description is absent', async () => {
@@ -143,6 +153,8 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error[0]).toHaveProperty('message');
+            expect(response.body.error[0].message).toMatch(/description/);
         });
 
         test('Responds with an error and status 400 if the manufacturer is invalid', async () => {
@@ -157,6 +169,8 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error[0]).toHaveProperty('message');
+            expect(response.body.error[0].message).toMatch(/manufacturer/);
         });
 
         test('Responds with an error and status 400 if the manufacturer is absent', async () => {
@@ -171,6 +185,8 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error[0]).toHaveProperty('message');
+            expect(response.body.error[0].message).toMatch(/manufacturer/);
         });
 
         test('Responds with an error and status 400 if the main pepper is invalid', async () => {
@@ -185,6 +201,8 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error[0]).toHaveProperty('message');
+            expect(response.body.error[0].message).toMatch(/mainPepper/);
         });
 
         test('Responds with an error and status 400 if the main pepper is absent', async () => {
@@ -199,6 +217,8 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error[0]).toHaveProperty('message');
+            expect(response.body.error[0].message).toMatch(/mainPepper/);
         });
 
         test('Responds with an error and status 401 if the jwt is invalid', async () => {
