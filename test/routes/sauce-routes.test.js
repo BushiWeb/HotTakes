@@ -4,18 +4,21 @@ import Sauce from '../../src/models/Sauce.js';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import jsonWebToken from 'jsonwebtoken';
+import SAUCE_DATA from '../mocks/sauce-data.js';
 
 const mockSauceSave = jest.spyOn(Sauce.prototype, 'save').mockResolvedValue();
+const mockSauceFind = jest.spyOn(Sauce, 'find');
 
 describe('Sauce routes test suite', () => {
     describe('POST api/sauces', () => {
-        const sauceData = {
-            name: 'tabasco',
-            manufacturer: "I don't know",
-            description: 'Popular sauce',
-            mainPepper: "I don't know either",
-            heat: 3,
-        };
+        const sauceData = JSON.parse(JSON.stringify(SAUCE_DATA[0]));
+        delete sauceData._id;
+        delete sauceData.userId;
+        delete sauceData.imageUrl;
+        delete sauceData.likes;
+        delete sauceData.dislikes;
+        delete sauceData.usersLiked;
+        delete sauceData.usersDisliked;
 
         const imagePath = join(dirname(fileURLToPath(import.meta.url)), '../images/test.png');
 
@@ -236,7 +239,7 @@ describe('Sauce routes test suite', () => {
             expect(response.body).toHaveProperty('error');
         });
 
-        test("Responds with an error and status 401 if the jwt does,'t contain the userId", async () => {
+        test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
             const invalidJwt = jsonWebToken.sign({ useless: '123' }, 'RANDOM_SECRET_KEY', {
                 expiresIn: '24h',
             });
@@ -271,6 +274,59 @@ describe('Sauce routes test suite', () => {
                 .set('Authorization', authorizationHeader)
                 .field('sauce', JSON.stringify(sauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
+
+            expect(response.status).toBe(500);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+    });
+
+    describe('GET api/sauces', () => {
+        const jwt = jsonWebToken.sign({ userId: '123' }, 'RANDOM_SECRET_KEY', {
+            expiresIn: '24h',
+        });
+        const authorizationHeader = `Bearer ${jwt}`;
+
+        beforeEach(() => {
+            mockSauceFind.mockReset();
+        });
+
+        test('Responds with a message in JSON format, and status 200', async () => {
+            mockSauceFind.mockResolvedValue(SAUCE_DATA);
+            const response = await request(app).get('/api/sauces/').set('Authorization', authorizationHeader);
+
+            expect(response.status).toBe(200);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toEqual(SAUCE_DATA);
+        });
+
+        test('Responds with an error and status 401 if the jwt is invalid', async () => {
+            const invalidJwt = jsonWebToken.sign({ userId: '123' }, 'WRONG_KEY', {
+                expiresIn: '24h',
+            });
+            const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
+            const response = await request(app).get('/api/sauces/').set('Authorization', invalidAuthorizationHeader);
+
+            expect(response.status).toBe(401);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
+            const invalidJwt = jsonWebToken.sign({ useless: '123' }, 'RANDOM_SECRET_KEY', {
+                expiresIn: '24h',
+            });
+            const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
+            const response = await request(app).get('/api/sauces/').set('Authorization', invalidAuthorizationHeader);
+
+            expect(response.status).toBe(401);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        test('Responds with an error and status 500 if the fetching fails', async () => {
+            mockSauceFind.mockRejectedValueOnce({ message: 'Fetch fails' });
+            const response = await request(app).get('/api/sauces/').set('Authorization', authorizationHeader);
 
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);

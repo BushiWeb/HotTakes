@@ -1,6 +1,6 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { createSauce } from '../controllers/sauce-controller.js';
+import { createSauce, getAllSauces } from '../controllers/sauce-controller.js';
 import { validateFields } from '../middlewares/field-validation.js';
 import { bodyJsonParse } from '../middlewares/body-json-parse.js';
 import { checkAuthentication, checkOwnership } from '../middlewares/authentication.js';
@@ -8,6 +8,13 @@ import multer from '../middlewares/multer.js';
 import { multerCheckFileExists } from '../middlewares/multer.js';
 
 const router = express.Router();
+
+/**
+ * Fetches all sauces.
+ * Checks that the user is authenticated.
+ * Uses the getAllSauces controller.
+ */
+router.get('/', checkAuthentication, getAllSauces);
 
 /**
  * Creates a sauce.
