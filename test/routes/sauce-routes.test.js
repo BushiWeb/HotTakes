@@ -390,10 +390,30 @@ describe('Sauce routes test suite', () => {
 
         test("Responds with an error and status 404 if the document can't be found", async () => {
             const badRequestUrl = '/api/sauces/000000000';
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Fetch fails', name: 'DocumentNotFoundError' });
-            const response = await request(app).get(requestUrl).set('Authorization', authorizationHeader);
+            mockSauceFindById.mockResolvedValueOnce(null);
+            const response = await request(app).get(badRequestUrl).set('Authorization', authorizationHeader);
 
             expect(response.status).toBe(404);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        test("Responds with an error and status 404 if the document can't be found and an error is thrown", async () => {
+            const badRequestUrl = '/api/sauces/000000000';
+            mockSauceFindById.mockRejectedValueOnce({ message: 'Fetch fails', name: 'DocumentNotFoundError' });
+            const response = await request(app).get(badRequestUrl).set('Authorization', authorizationHeader);
+
+            expect(response.status).toBe(404);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        test('Responds with an error and status 400 if the id is incorrect', async () => {
+            const badRequestUrl = '/api/sauces/000000000';
+            mockSauceFindById.mockRejectedValueOnce({ message: 'Cast fails', name: 'CastError' });
+            const response = await request(app).get(badRequestUrl).set('Authorization', authorizationHeader);
+
+            expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
         });

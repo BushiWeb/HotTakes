@@ -54,10 +54,19 @@ export async function getAllSauces(req, res, next) {
 export async function getSauce(req, res, next) {
     try {
         const sauce = await Sauce.findById(req.params.id, '-__v');
+        if (sauce === null) {
+            throw {
+                message: `Can't find the suace with id ${req.params.id}`,
+                name: 'DocumentNotFoundError',
+            };
+        }
         res.status(200).json(sauce);
     } catch (error) {
         if (error.name && error.name === 'DocumentNotFoundError') {
             error.status = 404;
+        }
+        if (error.name && error.name === 'CastError') {
+            error.status = 400;
         }
         return next(error);
     }

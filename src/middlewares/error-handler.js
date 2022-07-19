@@ -26,6 +26,7 @@ export function errorHandler(err, req, res, next) {
         err = {
             message: err.message,
             name: err.name,
+            status: err.status || undefined,
         };
     }
 

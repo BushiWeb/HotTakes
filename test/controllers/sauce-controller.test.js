@@ -125,12 +125,34 @@ describe('Sauce controllers test suite', () => {
         test('Calls the next middleware with an error if the document is not found', async () => {
             const errorMessage = 'Not found';
             const fetchError = { message: errorMessage, name: 'DocumentNotFoundError' };
+            mockSauceFindById.mockResolvedValue(null);
+
+            await getSauce(request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next.mock.calls[0][0]).toHaveProperty('status', 404);
+        });
+
+        test('Calls the next middleware with an error if the document is not found and an error is thrown', async () => {
+            const errorMessage = 'Not found';
+            const fetchError = { message: errorMessage, name: 'DocumentNotFoundError' };
             mockSauceFindById.mockRejectedValue(fetchError);
 
             await getSauce(request, response, next);
 
             expect(next).toHaveBeenCalled();
             expect(next).toHaveBeenCalledWith({ status: 404, ...fetchError });
+        });
+
+        test('Calls the next middleware with an error if the id is invalid', async () => {
+            const errorMessage = 'Not found';
+            const fetchError = { message: errorMessage, name: 'CastError' };
+            mockSauceFindById.mockRejectedValue(fetchError);
+
+            await getSauce(request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith({ status: 400, ...fetchError });
         });
 
         test('Calls the next middleware with an error if fetching fails', async () => {
