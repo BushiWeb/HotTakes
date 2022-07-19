@@ -1,6 +1,6 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { createSauce, getAllSauces } from '../controllers/sauce-controller.js';
+import { createSauce, getAllSauces, getSauce } from '../controllers/sauce-controller.js';
 import { validateFields } from '../middlewares/field-validation.js';
 import { bodyJsonParse } from '../middlewares/body-json-parse.js';
 import { checkAuthentication, checkOwnership } from '../middlewares/authentication.js';
@@ -15,6 +15,13 @@ const router = express.Router();
  * Uses the getAllSauces controller.
  */
 router.get('/', checkAuthentication, getAllSauces);
+
+/**
+ * Fetches one sauce using it's id.
+ * Checks that the user is authenticated.
+ * Uses the getSauce controller.
+ */
+router.get('/:id', checkAuthentication, getSauce);
 
 /**
  * Creates a sauce.
