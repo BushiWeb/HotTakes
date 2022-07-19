@@ -44,3 +44,21 @@ export async function getAllSauces(req, res, next) {
         return next(error);
     }
 }
+
+/**
+ * Sauce fetching one by ID controller.
+ * @param {Express.Request} req - Express request object.
+ * @param {Express.Response} res - Express response object.
+ * @param next - Next middleware to execute.
+ */
+export async function getSauce(req, res, next) {
+    try {
+        const sauce = await Sauce.findById(req.params.id, '-__v');
+        res.status(200).json(sauce);
+    } catch (error) {
+        if (error.name && error.name === 'DocumentNotFoundError') {
+            error.status = 404;
+        }
+        return next(error);
+    }
+}

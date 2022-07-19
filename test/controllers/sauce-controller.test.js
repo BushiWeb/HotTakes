@@ -1,10 +1,11 @@
-import { createSauce, getAllSauces } from '../../src/controllers/sauce-controller.js';
+import { createSauce, getAllSauces, getSauce } from '../../src/controllers/sauce-controller.js';
 import { mockResponse, mockRequest, mockNext } from '../mocks/express-mocks.js';
 import Sauce from '../../src/models/Sauce.js';
 import SAUCE_DATA from '../mocks/sauce-data.js';
 
 const mockSauceSave = jest.spyOn(Sauce.prototype, 'save');
 const mockSauceFind = jest.spyOn(Sauce, 'find');
+const mockSauceFindById = jest.spyOn(Sauce, 'findById');
 
 const request = mockRequest();
 request.auth = { userId: '123456' };
@@ -14,6 +15,7 @@ const next = mockNext();
 beforeEach(() => {
     mockSauceSave.mockReset();
     mockSauceFind.mockReset();
+    mockSauceFindById.mockReset();
     response.status.mockClear();
     response.json.mockClear();
     next.mockClear();
@@ -98,6 +100,45 @@ describe('Sauce controllers test suite', () => {
             mockSauceFind.mockRejectedValue(fetchError);
 
             await getAllSauces(request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(fetchError);
+        });
+    });
+
+    describe('getSauce controller test suite', () => {
+        afterAll(() => {
+            delete request.params.id;
+        });
+        test('Sends a response containing status 200 and the sauce informations', async () => {
+            mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
+            request.params.id = '123';
+
+            await getSauce(request, response, next);
+
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(200);
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toEqual(SAUCE_DATA[0]);
+        });
+
+        test('Calls the next middleware with an error if the document is not found', async () => {
+            const errorMessage = 'Not found';
+            const fetchError = { message: errorMessage, name: 'DocumentNotFoundError' };
+            mockSauceFindById.mockRejectedValue(fetchError);
+
+            await getSauce(request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith({ status: 404, ...fetchError });
+        });
+
+        test('Calls the next middleware with an error if fetching fails', async () => {
+            const errorMessage = 'Sauces fetching error message';
+            const fetchError = { message: errorMessage };
+            mockSauceFindById.mockRejectedValue(fetchError);
+
+            await getSauce(request, response, next);
 
             expect(next).toHaveBeenCalled();
             expect(next).toHaveBeenCalledWith(fetchError);
