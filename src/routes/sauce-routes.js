@@ -42,7 +42,7 @@ router.post(
     multer,
     multerCheckFileExists,
     bodyJsonParse('sauce'),
-    body(['sauce.name', 'sauce.manufacturer', 'sauce.description', 'sauce.mainPepper'])
+    body(['name', 'manufacturer', 'description', 'mainPepper'])
         .exists({ checkNull: true })
         .withMessage((value, { req, location, path }) => {
             return `The ${path} parameter is required`;
@@ -54,7 +54,7 @@ router.post(
         })
         .bail()
         .escape(),
-    body('sauce.heat')
+    body('heat')
         .exists({ checkNull: true })
         .withMessage("The sauce's heat is required")
         .bail()
