@@ -89,8 +89,7 @@ describe('checkOwnership returned middleware  test suite', () => {
         const sauce = { name: 'Tabasco', userId: '123' };
         mockExec.mockResolvedValue(sauce);
 
-        const middleware = await checkOwnership('Sauce');
-        await middleware(request, response, next);
+        await checkOwnership(request, response, next);
 
         expect(next).toHaveBeenCalled();
         expect(next.mock.calls[0].length).toBe(0);
@@ -102,8 +101,7 @@ describe('checkOwnership returned middleware  test suite', () => {
         const sauce = { name: 'Tabasco', userId: '123' };
         mockExec.mockResolvedValue(sauce);
 
-        const middleware = await checkOwnership('Sauce');
-        await middleware(request, response, next);
+        await checkOwnership(request, response, next);
 
         expect(next).toHaveBeenCalled();
         expect(next.mock.calls[0][0]).toHaveProperty('message');
@@ -115,19 +113,10 @@ describe('checkOwnership returned middleware  test suite', () => {
         request.params = { id: 'sauceId' };
         mockExec.mockResolvedValue(null);
 
-        const middleware = await checkOwnership('Sauce');
-        await middleware(request, response, next);
+        await checkOwnership(request, response, next);
 
         expect(next).toHaveBeenCalled();
         expect(next.mock.calls[0][0]).toHaveProperty('message');
         expect(next.mock.calls[0][0]).toHaveProperty('status', 404);
-    });
-
-    test("Calls the next function with an error if the model doesn't exist", async () => {
-        const middleware = await checkOwnership('thisModelDoesNotExist');
-        await middleware(request, response, next);
-
-        expect(next).toHaveBeenCalled();
-        expect(next.mock.calls[0][0]).toBeInstanceOf(Error);
     });
 });
