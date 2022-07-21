@@ -45,12 +45,12 @@ export const checkOwnership = async (modelName) => {
                 throw model;
             }
 
-            const sauce = await model.findById(req.params.id).exec();
-            if (!sauce) {
+            const document = await model.findById(req.params.id).exec();
+            if (!document) {
                 throw { message: "The ressource you're requesting doesn't exist", status: 404 };
             }
 
-            if (sauce.userId !== req.auth.userId) {
+            if (document.userId !== req.auth.userId) {
                 throw { message: "Invalid request, you dont't have the right to access this ressource", status: 403 };
             }
 
