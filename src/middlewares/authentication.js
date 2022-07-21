@@ -33,7 +33,7 @@ export const checkAuthentication = (req, res, next) => {
  */
 export const checkOwnership = async (req, res, next) => {
     try {
-        const sauce = await Sauce.findById(req.params.id).exec();
+        const sauce = await Sauce.findById(req.params.id);
         if (!sauce) {
             throw { message: "The ressource you're requesting doesn't exist", status: 404 };
         }

@@ -7,8 +7,7 @@ import { Query, Model } from 'mongoose';
 const mockJWTVerify = jest.spyOn(jsonWebToken, 'verify');
 const authorizationHeader = 'Bearer 123312';
 
-const mockFindById = jest.spyOn(Model, 'findById').mockImplementation(() => new Query());
-const mockExec = jest.spyOn(Query.prototype, 'exec');
+const mockFindById = jest.spyOn(Model, 'findById');
 
 const request = mockRequest({}, { authorization: authorizationHeader });
 const response = mockResponse();
@@ -20,7 +19,6 @@ beforeEach(() => {
     response.json.mockClear();
     next.mockClear();
     mockFindById.mockClear();
-    mockExec.mockClear();
     delete request.auth;
 });
 
@@ -87,7 +85,7 @@ describe('checkOwnership returned middleware  test suite', () => {
         request.auth = { userId: '123' };
         request.params = { id: 'sauceId' };
         const sauce = { name: 'Tabasco', userId: '123' };
-        mockExec.mockResolvedValue(sauce);
+        mockFindById.mockResolvedValue(sauce);
 
         await checkOwnership(request, response, next);
 
@@ -99,7 +97,7 @@ describe('checkOwnership returned middleware  test suite', () => {
         request.auth = { userId: '456' };
         request.params = { id: 'sauceId' };
         const sauce = { name: 'Tabasco', userId: '123' };
-        mockExec.mockResolvedValue(sauce);
+        mockFindById.mockResolvedValue(sauce);
 
         await checkOwnership(request, response, next);
 
@@ -111,7 +109,7 @@ describe('checkOwnership returned middleware  test suite', () => {
     test("Calls the next function with an error containing the status 404 if the element doesn't exist", async () => {
         request.auth = { userId: '456' };
         request.params = { id: 'sauceId' };
-        mockExec.mockResolvedValue(null);
+        mockFindById.mockResolvedValue(null);
 
         await checkOwnership(request, response, next);
 
