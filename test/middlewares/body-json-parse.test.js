@@ -62,7 +62,7 @@ describe('bodyJsonParse returned middleware  test suite', () => {
         expect(request.body).not.toHaveProperty('property');
     });
 
-    test("Calls the next function with an error if the property doesn't exist", () => {
+    test("Calls the next function with an error if the property doesn't exist and the second parameter isn't set", () => {
         request.body.property = { name: 'name' };
 
         const middleware = bodyJsonParse('otherProperty');
@@ -71,6 +71,27 @@ describe('bodyJsonParse returned middleware  test suite', () => {
         expect(next).toHaveBeenCalled();
         expect(next.mock.calls[0][0]).toBeInstanceOf(Error);
         expect(next.mock.calls.length).toBe(1);
+    });
+
+    test("Calls the next function with an error if the property doesn't exist and the second parameter is true", () => {
+        request.body.property = { name: 'name' };
+
+        const middleware = bodyJsonParse('otherProperty', true);
+        middleware(request, response, next);
+
+        expect(next).toHaveBeenCalled();
+        expect(next.mock.calls[0][0]).toBeInstanceOf(Error);
+        expect(next.mock.calls.length).toBe(1);
+    });
+
+    test('Calls the next function with no parameters if the property is undefined but the second paramter is false', () => {
+        request.body.property = { name: 'name' };
+
+        const middleware = bodyJsonParse('otherProperty', false);
+        middleware(request, response, next);
+
+        expect(next).toHaveBeenCalled();
+        expect(next.mock.calls[0].length).toBe(0);
     });
 
     test('Calls the next function with an error if the parsing fails', () => {
