@@ -39,7 +39,7 @@ export const checkOwnership = async (req, res, next) => {
         }
 
         if (sauce.userId !== req.auth.userId) {
-            throw { message: "Invalid request, you dont't have the right to access this ressource", status: 403 };
+            throw { message: "Invalid request, you don't have the right to access this ressource", status: 403 };
         }
 
         next();

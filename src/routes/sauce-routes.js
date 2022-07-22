@@ -1,6 +1,6 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { createSauce, getAllSauces, getSauce } from '../controllers/sauce-controller.js';
+import { createSauce, getAllSauces, getSauce, updateSauce } from '../controllers/sauce-controller.js';
 import { validateFields } from '../middlewares/field-validation.js';
 import { bodyJsonParse } from '../middlewares/body-json-parse.js';
 import { checkAuthentication, checkOwnership } from '../middlewares/authentication.js';
@@ -29,11 +29,8 @@ router.get('/:id', checkAuthentication, getSauce);
  * Use the multer middleware to parse the request body and save the image.
  * Parses the body to JSON.
  * Validates and sanitize data:
- *      name is required and is a string,
- *      manufacturer is required and is a string,
- *      description is required and is a string,
- *      mainPepper is required and is a string
- *      heat is required and is a number between 1 and 10
+ *      name, manufacturer, description and mainPepper are required, should be strings and are escaped;
+ *      heat is required, should be a number between 1 and 10 and is converted to an integer.
  * Uses the createSauce controller.
  */
 router.post(
@@ -64,6 +61,40 @@ router.post(
         .toInt(),
     validateFields,
     createSauce
+);
+
+/**
+ * Updates a sauce.
+ * Checks that the user is authenticated and owns the sauce.
+ * Use the multer middleware to parse the request body and save the image.
+ * Parses the body to JSON, but don't throw if the paramter is undefined.
+ * Validates and sanitize data:
+ *      name, manufacturer, description and mainPepper should be strings and are escaped;
+ *      heat should be a number between 1 and 10 and is converted to an integer.
+ * Uses the updateSauce controller.
+ */
+router.put(
+    '/:id',
+    checkAuthentication,
+    checkOwnership,
+    multer,
+    bodyJsonParse('sauce', false),
+    body(['name', 'manufacturer', 'description', 'mainPepper'])
+        .optional()
+        .isString()
+        .withMessage((value, { req, location, path }) => {
+            return `The ${path} parameter should be a string`;
+        })
+        .bail()
+        .escape(),
+    body('heat')
+        .optional()
+        .isInt({ min: 1, max: 10 })
+        .withMessage("The sauce's heat should be a number between 1 and 10")
+        .bail()
+        .toInt(),
+    validateFields,
+    updateSauce
 );
 
 export default router;
