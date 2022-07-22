@@ -94,8 +94,8 @@ export async function updateSauce(req, res, next) {
 
     let previousImageUrl = '';
     try {
-        // Get the previous image URL
-        let sauce = await Sauce.findById(req.params.id);
+        // Get the previous image URL from the request cache or from the database
+        let sauce = req.cache?.sauces?.[req.params.id] || (await Sauce.findById(req.params.id));
         previousImageUrl = sauce.imageUrl;
 
         // Updates

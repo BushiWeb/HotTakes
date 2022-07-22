@@ -93,6 +93,19 @@ describe('checkOwnership returned middleware  test suite', () => {
         expect(next.mock.calls[0].length).toBe(0);
     });
 
+    test('Saves the sauce in the request if the user id is right', async () => {
+        request.auth = { userId: '123' };
+        request.params = { id: 'sauceId' };
+        const sauce = { name: 'Tabasco', userId: '123', _id: request.params.id };
+        mockFindById.mockResolvedValue(sauce);
+
+        await checkOwnership(request, response, next);
+
+        expect(request).toHaveProperty('cache');
+        expect(request.cache).toHaveProperty('sauces');
+        expect(request.cache.sauces).toHaveProperty(request.params.id, sauce);
+    });
+
     test('Calls the next function with an error containing the status 403 if the user id is wrong', async () => {
         request.auth = { userId: '456' };
         request.params = { id: 'sauceId' };

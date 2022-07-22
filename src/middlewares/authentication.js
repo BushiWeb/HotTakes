@@ -42,6 +42,10 @@ export const checkOwnership = async (req, res, next) => {
             throw { message: "Invalid request, you don't have the right to access this ressource", status: 403 };
         }
 
+        // Saves the sauce in the request for later use
+        req.cache ??= { sauces: {} };
+        req.cache.sauces ??= {};
+        req.cache.sauces[sauce._id] = sauce;
         next();
     } catch (error) {
         return next(error);
