@@ -465,7 +465,6 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(200);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('message');
-            expect(mockSauceFindById).toHaveBeenCalled();
             expect(mockSauceUpdateOne).toHaveBeenCalled();
             expect(mockSauceUpdateOne.mock.calls[0][1]).toHaveProperty('imageUrl');
         });
@@ -482,7 +481,6 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(200);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('message');
-            expect(mockSauceFindById).toHaveBeenCalled();
             expect(mockSauceUpdateOne).toHaveBeenCalled();
         });
 
