@@ -1,4 +1,10 @@
-import { createSauce, getAllSauces, getSauce, updateSauce } from '../../src/controllers/sauce-controller.js';
+import {
+    createSauce,
+    getAllSauces,
+    getSauce,
+    updateSauce,
+    deleteSauce,
+} from '../../src/controllers/sauce-controller.js';
 import { mockResponse, mockRequest, mockNext } from '../mocks/express-mocks.js';
 import Sauce from '../../src/models/Sauce.js';
 import SAUCE_DATA from '../mocks/sauce-data.js';
@@ -8,6 +14,7 @@ const mockSauceSave = jest.spyOn(Sauce.prototype, 'save');
 const mockSauceFind = jest.spyOn(Sauce, 'find');
 const mockSauceFindById = jest.spyOn(Sauce, 'findById');
 const mockSauceUpdateOne = jest.spyOn(Sauce, 'updateOne');
+const mockSauceDeleteOne = jest.spyOn(Sauce, 'deleteOne');
 const mockFsUnlink = jest.spyOn(fs, 'unlink');
 
 const request = mockRequest();
@@ -20,6 +27,7 @@ beforeEach(() => {
     mockSauceFind.mockReset();
     mockSauceFindById.mockReset();
     mockSauceUpdateOne.mockReset();
+    mockSauceDeleteOne.mockReset();
     mockFsUnlink.mockReset();
     response.status.mockClear();
     response.json.mockClear();
@@ -272,6 +280,17 @@ describe('Sauce controllers test suite', () => {
             expect(mockFsUnlink).not.toHaveBeenCalled();
         });
 
+        test("Don't call the unlink method if no image is sent", async () => {
+            mockSauceUpdateOne.mockResolvedValue(null);
+            mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
+
+            delete request.file;
+
+            await updateSauce(request, response, next);
+
+            expect(mockFsUnlink).not.toHaveBeenCalled();
+        });
+
         test('Calls the next middleware with an error if updating fails', async () => {
             const errorMessage = 'Sauce update error message';
             const updateError = { message: errorMessage };
@@ -324,6 +343,106 @@ describe('Sauce controllers test suite', () => {
             mockSauceFindById.mockRejectedValue(fetchError);
 
             await updateSauce(request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith({ status: 404, ...fetchError });
+        });
+    });
+
+    describe('delete controller test suite', () => {
+        beforeEach(() => {
+            request.params.id = '123';
+        });
+
+        afterAll(() => {
+            delete request.params.id;
+        });
+
+        test('Sends a response containing status 200 and a message', async () => {
+            mockSauceDeleteOne.mockResolvedValue(null);
+            mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
+
+            await deleteSauce(request, response, next);
+
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(200);
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('message');
+            expect(mockSauceFindById).toHaveBeenCalled();
+            expect(mockSauceFindById).toHaveBeenCalledWith(request.params.id);
+            expect(mockSauceDeleteOne).toHaveBeenCalled();
+            expect(mockSauceDeleteOne).toHaveBeenCalledWith({ _id: request.params.id });
+        });
+
+        test("Sends a response containing status 200 and a message and don't fetch the image if it is in req.cache", async () => {
+            mockSauceDeleteOne.mockResolvedValue(null);
+
+            request.cache = { sauces: {} };
+            request.cache.sauces[request.params.id] = SAUCE_DATA[0];
+
+            await deleteSauce(request, response, next);
+
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(200);
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('message');
+            expect(mockSauceFindById).not.toHaveBeenCalled();
+            expect(mockSauceDeleteOne).toHaveBeenCalled();
+            expect(mockSauceDeleteOne).toHaveBeenCalledWith({ _id: request.params.id });
+
+            delete request.cache;
+        });
+
+        test('Call the unlink method', async () => {
+            mockSauceDeleteOne.mockResolvedValue(null);
+            mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
+
+            await deleteSauce(request, response, next);
+
+            expect(mockFsUnlink).toHaveBeenCalled();
+            expect(mockFsUnlink.mock.calls[0][0]).toMatch(new RegExp(SAUCE_DATA[0].imageUrl.split('/images/')[1]));
+        });
+
+        test('Calls the next middleware with an error if deleting fails', async () => {
+            const errorMessage = 'Sauce delete error message';
+            const deleteError = { message: errorMessage };
+            mockSauceDeleteOne.mockRejectedValue(deleteError);
+            mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
+
+            await deleteSauce(request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(deleteError);
+        });
+
+        test('Calls the next middleware with an error if fetching fails', async () => {
+            const errorMessage = 'Sauce fetch error message';
+            const fetchError = { message: errorMessage };
+            mockSauceFindById.mockRejectedValue(fetchError);
+
+            await deleteSauce(request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(fetchError);
+        });
+
+        test('Calls the next middleware with an error containing status 400 if the fetch method returns a cast error', async () => {
+            const errorMessage = 'Sauce fetch error message';
+            const fetchError = { message: errorMessage, name: 'CastError' };
+            mockSauceFindById.mockRejectedValue(fetchError);
+
+            await deleteSauce(request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith({ status: 400, ...fetchError });
+        });
+
+        test('Calls the next middleware with an error containing status 404 if the fetch method returns a document not found error', async () => {
+            const errorMessage = 'Sauce fetch error message';
+            const fetchError = { message: errorMessage, name: 'DocumentNotFoundError' };
+            mockSauceFindById.mockRejectedValue(fetchError);
+
+            await deleteSauce(request, response, next);
 
             expect(next).toHaveBeenCalled();
             expect(next).toHaveBeenCalledWith({ status: 404, ...fetchError });

@@ -5,18 +5,22 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import jsonWebToken from 'jsonwebtoken';
 import SAUCE_DATA from '../mocks/sauce-data.js';
-import exp from 'node:constants';
+import fs from 'node:fs';
 
 const mockSauceSave = jest.spyOn(Sauce.prototype, 'save').mockResolvedValue();
 const mockSauceFind = jest.spyOn(Sauce, 'find');
 const mockSauceFindById = jest.spyOn(Sauce, 'findById');
 const mockSauceUpdateOne = jest.spyOn(Sauce, 'updateOne');
+const mockSauceDeleteOne = jest.spyOn(Sauce, 'deleteOne');
+const mockFsUnlink = jest.spyOn(fs, 'unlink');
 
 beforeEach(() => {
     mockSauceSave.mockReset();
     mockSauceFind.mockReset();
     mockSauceFindById.mockReset();
     mockSauceUpdateOne.mockReset();
+    mockSauceDeleteOne.mockReset();
+    mockFsUnlink.mockReset();
 });
 
 describe('Sauce routes test suite', () => {
@@ -482,6 +486,32 @@ describe('Sauce routes test suite', () => {
             expect(mockSauceUpdateOne).toHaveBeenCalled();
         });
 
+        test('Call the unlink method if an image is sent', async () => {
+            mockSauceUpdateOne.mockResolvedValue(null);
+            mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
+
+            const response = await request(app)
+                .put(requestUrl)
+                .set('Authorization', authorizationHeader)
+                .field('sauce', JSON.stringify(sauceData), { contentType: 'application/json' })
+                .attach('image', imagePath);
+
+            expect(mockFsUnlink).toHaveBeenCalled();
+            expect(mockFsUnlink.mock.calls[0][0]).toMatch(new RegExp(SAUCE_DATA[0].imageUrl.split('/images/')[1]));
+        });
+
+        test("Don't call the unlink method if no image is sent", async () => {
+            mockSauceUpdateOne.mockResolvedValue(null);
+            mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
+
+            const response = await request(app)
+                .put(requestUrl)
+                .set('Authorization', authorizationHeader)
+                .send(sauceData);
+
+            expect(mockFsUnlink).not.toHaveBeenCalled();
+        });
+
         test('Responds with an error and status 400 if the name is invalid', async () => {
             const invalidSauceData = JSON.parse(JSON.stringify(sauceData));
             invalidSauceData.name = true;
@@ -896,6 +926,119 @@ describe('Sauce routes test suite', () => {
                 .put(requestUrl)
                 .set('Authorization', authorizationHeader)
                 .send(sauceData);
+
+            expect(response.status).toBe(400);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+    });
+    describe('DELETE api/sauces/:id', () => {
+        const jwt = jsonWebToken.sign({ userId: SAUCE_DATA[0].userId }, 'RANDOM_SECRET_KEY', {
+            expiresIn: '24h',
+        });
+        const authorizationHeader = `Bearer ${jwt}`;
+        const requestUrl = `/api/sauces/${SAUCE_DATA[0]._id}`;
+
+        test('Responds with a message in JSON format, and status 200', async () => {
+            mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
+            mockSauceDeleteOne.mockResolvedValue(null);
+
+            const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
+
+            expect(response.status).toBe(200);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('message');
+            expect(mockSauceDeleteOne).toHaveBeenCalled();
+            expect(mockSauceDeleteOne).toHaveBeenCalledWith({ _id: SAUCE_DATA[0]._id });
+        });
+
+        test('Call the unlink method', async () => {
+            mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
+            mockSauceDeleteOne.mockResolvedValue(null);
+
+            const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
+
+            expect(mockFsUnlink).toHaveBeenCalled();
+            expect(mockFsUnlink.mock.calls[0][0]).toMatch(new RegExp(SAUCE_DATA[0].imageUrl.split('/images/')[1]));
+        });
+
+        test('Responds with an error and status 401 if the jwt is invalid', async () => {
+            const invalidJwt = jsonWebToken.sign({ userId: '123' }, 'WRONG_KEY', {
+                expiresIn: '24h',
+            });
+            const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
+            const response = await request(app).delete(requestUrl).set('Authorization', invalidAuthorizationHeader);
+
+            expect(response.status).toBe(401);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
+            const invalidJwt = jsonWebToken.sign({ useless: '123' }, 'RANDOM_SECRET_KEY', {
+                expiresIn: '24h',
+            });
+            const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
+            const response = await request(app).delete(requestUrl).set('Authorization', invalidAuthorizationHeader);
+
+            expect(response.status).toBe(401);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        test("Responds with an error and status 403 if the user doesn't have the right to manipulate the sauce", async () => {
+            const invalidJwt = jsonWebToken.sign({ userId: '123' }, 'RANDOM_SECRET_KEY', {
+                expiresIn: '24h',
+            });
+            const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
+            mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
+            const response = await request(app).delete(requestUrl).set('Authorization', invalidAuthorizationHeader);
+
+            expect(response.status).toBe(403);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        test('Responds with an error and status 500 if the deletion fails', async () => {
+            mockSauceDeleteOne.mockRejectedValueOnce({ message: 'Deletion fails' });
+            mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
+            const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
+
+            expect(response.status).toBe(500);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        test('Responds with an error and status 500 if the fetching fails', async () => {
+            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail' });
+            const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
+
+            expect(response.status).toBe(500);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        test("Responds with an error and status 404 if the document can't be found", async () => {
+            mockSauceFindById.mockResolvedValue(null);
+            const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
+
+            expect(response.status).toBe(404);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        test.skip("Responds with an error and status 404 if the document can't be found and an error is thrown", async () => {
+            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail', name: 'DocumentNotFoundError' });
+            const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
+
+            expect(response.status).toBe(404);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        test.skip('Responds with an error and status 400 if the id is incorrect', async () => {
+            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail', name: 'CastError' });
+            const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
 
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
