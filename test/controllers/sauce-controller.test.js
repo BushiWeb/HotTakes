@@ -258,6 +258,17 @@ describe('Sauce controllers test suite', () => {
             expect(mockFsUnlink).not.toHaveBeenCalled();
         });
 
+        test("Don't call the unlink method if no image is sent", async () => {
+            mockSauceUpdateOne.mockResolvedValue(null);
+            mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
+
+            delete request.file;
+
+            await updateSauce(request, response, next);
+
+            expect(mockFsUnlink).not.toHaveBeenCalled();
+        });
+
         test('Calls the next middleware with an error if updating fails', async () => {
             const errorMessage = 'Sauce update error message';
             const updateError = { message: errorMessage };

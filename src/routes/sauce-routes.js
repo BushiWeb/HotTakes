@@ -1,6 +1,6 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { createSauce, getAllSauces, getSauce, updateSauce } from '../controllers/sauce-controller.js';
+import { createSauce, getAllSauces, getSauce, updateSauce, deleteSauce } from '../controllers/sauce-controller.js';
 import { validateFields } from '../middlewares/field-validation.js';
 import { bodyJsonParse } from '../middlewares/body-json-parse.js';
 import { checkAuthentication, checkOwnership } from '../middlewares/authentication.js';
@@ -96,5 +96,12 @@ router.put(
     validateFields,
     updateSauce
 );
+
+/**
+ * Deletes a sauce.
+ * Checks that the user is authenticated and owns the sauce.
+ * Uses the deleteSauce controller.
+ */
+router.delete('/:id', checkAuthentication, checkOwnership, deleteSauce);
 
 export default router;
