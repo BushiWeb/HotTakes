@@ -204,8 +204,6 @@ describe('Sauce controllers test suite', () => {
             expect(response.status).toHaveBeenCalledWith(200);
             expect(response.json).toHaveBeenCalled();
             expect(response.json.mock.calls[0][0]).toHaveProperty('message');
-            expect(mockSauceFindById).toHaveBeenCalled();
-            expect(mockSauceFindById).toHaveBeenCalledWith(request.params.id);
             expect(mockSauceUpdateOne).toHaveBeenCalled();
             expect(mockSauceUpdateOne).toHaveBeenCalledWith({ _id: request.params.id }, request.body);
         });
@@ -227,6 +225,30 @@ describe('Sauce controllers test suite', () => {
             expect(mockSauceUpdateOne.mock.calls[0][1]).toMatchObject(request.body);
             expect(mockSauceUpdateOne.mock.calls[0][1]).toHaveProperty('imageUrl');
             expect(mockSauceUpdateOne.mock.calls[0][1].imageUrl).toMatch(new RegExp(request.file.fileName));
+        });
+
+        test('Sends a response containing status 200 and a message if an image is sent and the image is in req.cache.sauce', async () => {
+            mockSauceUpdateOne.mockResolvedValue(null);
+            mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
+            request.cache = {
+                sauces: {},
+            };
+            request.cache.sauces[request.params.id] = SAUCE_DATA[0];
+
+            await updateSauce(request, response, next);
+
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(200);
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('message');
+            expect(mockSauceFindById).not.toHaveBeenCalled();
+            expect(mockSauceUpdateOne).toHaveBeenCalled();
+            expect(mockSauceUpdateOne.mock.calls[0][0]).toEqual({ _id: request.params.id });
+            expect(mockSauceUpdateOne.mock.calls[0][1]).toMatchObject(request.body);
+            expect(mockSauceUpdateOne.mock.calls[0][1]).toHaveProperty('imageUrl');
+            expect(mockSauceUpdateOne.mock.calls[0][1].imageUrl).toMatch(new RegExp(request.file.fileName));
+
+            delete request.cache;
         });
 
         test('Call the unlink method if an image is sent', async () => {
