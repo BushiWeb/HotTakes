@@ -4,6 +4,7 @@ import {
     getSauce,
     updateSauce,
     deleteSauce,
+    likeSauce,
 } from '../../src/controllers/sauce-controller.js';
 import { mockResponse, mockRequest, mockNext } from '../mocks/express-mocks.js';
 import Sauce from '../../src/models/Sauce.js';
@@ -443,6 +444,282 @@ describe('Sauce controllers test suite', () => {
             mockSauceFindById.mockRejectedValue(fetchError);
 
             await deleteSauce(request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith({ status: 404, ...fetchError });
+        });
+    });
+
+    describe('likeSauce controller test suite', () => {
+        let returnedSauce;
+        beforeEach(() => {
+            returnedSauce = new Sauce(SAUCE_DATA[0]);
+            request.params.id = '123';
+        });
+
+        afterAll(() => {
+            delete request.params.id;
+        });
+
+        test('Likes the sauce', async () => {
+            mockSauceSave.mockResolvedValue(null);
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+
+            let userId = '66666';
+            request.body = { userId, like: 1 };
+            request.auth = { userId: userId };
+
+            await likeSauce(request, response, next);
+
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(200);
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('message');
+            expect(mockSauceSave).toHaveBeenCalled();
+            expect(returnedSauce.likes).toBe(SAUCE_DATA[0].likes + 1);
+            expect(returnedSauce.usersLiked.length).toBe(SAUCE_DATA[0].usersLiked.length + 1);
+            expect(returnedSauce.usersLiked).toContain(userId);
+            expect(returnedSauce.dislikes).toBe(SAUCE_DATA[0].dislikes);
+            expect(returnedSauce.usersDisliked.length).toBe(SAUCE_DATA[0].usersDisliked.length);
+            expect(returnedSauce.usersDisliked).not.toContain(userId);
+        });
+
+        test('Likes the sauce and remove the dislike if the user has already disliked', async () => {
+            mockSauceSave.mockResolvedValue(null);
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+
+            let userId = SAUCE_DATA[0].usersDisliked[0];
+            request.body = { userId, like: 1 };
+            request.auth = { userId: userId };
+
+            await likeSauce(request, response, next);
+
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(200);
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('message');
+            expect(mockSauceSave).toHaveBeenCalled();
+            expect(returnedSauce.likes).toBe(SAUCE_DATA[0].likes + 1);
+            expect(returnedSauce.usersLiked.length).toBe(SAUCE_DATA[0].usersLiked.length + 1);
+            expect(returnedSauce.usersLiked).toContain(userId);
+            expect(returnedSauce.dislikes).toBe(SAUCE_DATA[0].dislikes - 1);
+            expect(returnedSauce.usersDisliked.length).toBe(SAUCE_DATA[0].usersDisliked.length - 1);
+            expect(returnedSauce.usersDisliked).not.toContain(userId);
+        });
+
+        test("Don't do anything if the user wants to like the sauce but has already done so", async () => {
+            mockSauceSave.mockResolvedValue(null);
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+
+            let userId = SAUCE_DATA[0].usersLiked[0];
+            request.body = { userId, like: 1 };
+            request.auth = { userId: userId };
+
+            await likeSauce(request, response, next);
+
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(200);
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('message');
+            expect(mockSauceSave).toHaveBeenCalled();
+            expect(returnedSauce.likes).toBe(SAUCE_DATA[0].likes);
+            expect(returnedSauce.usersLiked.length).toBe(SAUCE_DATA[0].usersLiked.length);
+            expect(returnedSauce.usersLiked).toContain(userId);
+            expect(returnedSauce.dislikes).toBe(SAUCE_DATA[0].dislikes);
+            expect(returnedSauce.usersDisliked.length).toBe(SAUCE_DATA[0].usersDisliked.length);
+            expect(returnedSauce.usersDisliked).not.toContain(userId);
+        });
+
+        test('Dislikes the sauce', async () => {
+            mockSauceSave.mockResolvedValue(null);
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+
+            let userId = '66666';
+            request.body = { userId, like: -1 };
+            request.auth = { userId: userId };
+
+            await likeSauce(request, response, next);
+
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(200);
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('message');
+            expect(mockSauceSave).toHaveBeenCalled();
+            expect(returnedSauce.likes).toBe(SAUCE_DATA[0].likes);
+            expect(returnedSauce.usersLiked.length).toBe(SAUCE_DATA[0].usersLiked.length);
+            expect(returnedSauce.usersLiked).not.toContain(userId);
+            expect(returnedSauce.dislikes).toBe(SAUCE_DATA[0].dislikes + 1);
+            expect(returnedSauce.usersDisliked.length).toBe(SAUCE_DATA[0].usersDisliked.length + 1);
+            expect(returnedSauce.usersDisliked).toContain(userId);
+        });
+
+        test('Dislikes the sauce and remove the like if the user has already liked', async () => {
+            mockSauceSave.mockResolvedValue(null);
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+
+            let userId = SAUCE_DATA[0].usersLiked[0];
+            request.body = { userId, like: -1 };
+            request.auth = { userId: userId };
+
+            await likeSauce(request, response, next);
+
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(200);
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('message');
+            expect(mockSauceSave).toHaveBeenCalled();
+            expect(returnedSauce.likes).toBe(SAUCE_DATA[0].likes - 1);
+            expect(returnedSauce.usersLiked.length).toBe(SAUCE_DATA[0].usersLiked.length - 1);
+            expect(returnedSauce.usersLiked).not.toContain(userId);
+            expect(returnedSauce.dislikes).toBe(SAUCE_DATA[0].dislikes + 1);
+            expect(returnedSauce.usersDisliked.length).toBe(SAUCE_DATA[0].usersDisliked.length + 1);
+            expect(returnedSauce.usersDisliked).toContain(userId);
+        });
+
+        test("Don't do anything if the user wants to dislike the sauce but has already done so", async () => {
+            mockSauceSave.mockResolvedValue(null);
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+
+            let userId = SAUCE_DATA[0].usersDisliked[0];
+            request.body = { userId, like: -1 };
+            request.auth = { userId: userId };
+
+            await likeSauce(request, response, next);
+
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(200);
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('message');
+            expect(mockSauceSave).toHaveBeenCalled();
+            expect(returnedSauce.likes).toBe(SAUCE_DATA[0].likes);
+            expect(returnedSauce.usersLiked.length).toBe(SAUCE_DATA[0].usersLiked.length);
+            expect(returnedSauce.usersLiked).not.toContain(userId);
+            expect(returnedSauce.dislikes).toBe(SAUCE_DATA[0].dislikes);
+            expect(returnedSauce.usersDisliked.length).toBe(SAUCE_DATA[0].usersDisliked.length);
+            expect(returnedSauce.usersDisliked).toContain(userId);
+        });
+
+        test('Reset a dislike', async () => {
+            mockSauceSave.mockResolvedValue(null);
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+
+            let userId = SAUCE_DATA[0].usersDisliked[0];
+            request.body = { userId, like: 0 };
+            request.auth = { userId: userId };
+
+            await likeSauce(request, response, next);
+
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(200);
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('message');
+            expect(mockSauceSave).toHaveBeenCalled();
+            expect(returnedSauce.likes).toBe(SAUCE_DATA[0].likes);
+            expect(returnedSauce.usersLiked.length).toBe(SAUCE_DATA[0].usersLiked.length);
+            expect(returnedSauce.usersLiked).not.toContain(userId);
+            expect(returnedSauce.dislikes).toBe(SAUCE_DATA[0].dislikes - 1);
+            expect(returnedSauce.usersDisliked.length).toBe(SAUCE_DATA[0].usersDisliked.length - 1);
+            expect(returnedSauce.usersDisliked).not.toContain(userId);
+        });
+
+        test('Reset a like', async () => {
+            mockSauceSave.mockResolvedValue(null);
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+
+            let userId = SAUCE_DATA[0].usersLiked[0];
+            request.body = { userId, like: 0 };
+            request.auth = { userId: userId };
+
+            await likeSauce(request, response, next);
+
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(200);
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('message');
+            expect(mockSauceSave).toHaveBeenCalled();
+            expect(returnedSauce.likes).toBe(SAUCE_DATA[0].likes - 1);
+            expect(returnedSauce.usersLiked.length).toBe(SAUCE_DATA[0].usersLiked.length - 1);
+            expect(returnedSauce.usersLiked).not.toContain(userId);
+            expect(returnedSauce.dislikes).toBe(SAUCE_DATA[0].dislikes);
+            expect(returnedSauce.usersDisliked.length).toBe(SAUCE_DATA[0].usersDisliked.length);
+            expect(returnedSauce.usersDisliked).not.toContain(userId);
+        });
+
+        test("Reset nothing if the user hasn't done anything", async () => {
+            mockSauceSave.mockResolvedValue(null);
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+
+            let userId = '666666';
+            request.body = { userId, like: 0 };
+            request.auth = { userId: userId };
+
+            await likeSauce(request, response, next);
+
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(200);
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('message');
+            expect(mockSauceSave).toHaveBeenCalled();
+            expect(returnedSauce.likes).toBe(SAUCE_DATA[0].likes);
+            expect(returnedSauce.usersLiked.length).toBe(SAUCE_DATA[0].usersLiked.length);
+            expect(returnedSauce.usersLiked).not.toContain(userId);
+            expect(returnedSauce.dislikes).toBe(SAUCE_DATA[0].dislikes);
+            expect(returnedSauce.usersDisliked.length).toBe(SAUCE_DATA[0].usersDisliked.length);
+            expect(returnedSauce.usersDisliked).not.toContain(userId);
+        });
+
+        test('Calls the next middleware with an error if saving fails', async () => {
+            const errorMessage = 'Sauce save error message';
+            const saveError = { message: errorMessage };
+            mockSauceSave.mockRejectedValue(saveError);
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+
+            await likeSauce(request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(saveError);
+        });
+
+        test('Calls the next middleware with an error if fetching fails', async () => {
+            const errorMessage = 'Sauce fetch error message';
+            const fetchError = { message: errorMessage };
+            mockSauceFindById.mockRejectedValue(fetchError);
+
+            await likeSauce(request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(fetchError);
+        });
+
+        test('Calls the next middleware with an error containing status 400 if the save method returns a validation error', async () => {
+            const errorMessage = 'Sauce save error message';
+            const saveError = { message: errorMessage, name: 'ValidationError' };
+            mockSauceSave.mockRejectedValue(saveError);
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+
+            await likeSauce(request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith({ status: 400, ...saveError });
+        });
+
+        test('Calls the next middleware with an error containing status 400 if the fetch method returns a cast error', async () => {
+            const errorMessage = 'Sauce fetch error message';
+            const fetchError = { message: errorMessage, name: 'CastError' };
+            mockSauceFindById.mockRejectedValue(fetchError);
+
+            await likeSauce(request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith({ status: 400, ...fetchError });
+        });
+
+        test('Calls the next middleware with an error containing status 404 if the fetch method returns a document not found error', async () => {
+            const errorMessage = 'Sauce fetch error message';
+            const fetchError = { message: errorMessage, name: 'DocumentNotFoundError' };
+            mockSauceFindById.mockRejectedValue(fetchError);
+
+            await likeSauce(request, response, next);
 
             expect(next).toHaveBeenCalled();
             expect(next).toHaveBeenCalledWith({ status: 404, ...fetchError });

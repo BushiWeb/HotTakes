@@ -162,3 +162,96 @@ export async function deleteSauce(req, res, next) {
     const imagePath = join(req.app.get('root'), '../images', imageName);
     unlink(imagePath, () => {});
 }
+
+/**
+ * Like controller.
+ * This controller manages the like action:
+ *      If a user likes a sauce, then it's like count increases and the user is appended to the usersLiked array.
+ *      If a user dislikes a sauce, then it's dislike count increases and the user is appended to the usersDisliked array.
+ *      The like / dislike of a user can also be reseted by decreasing the right counter and removing it's name from the array.
+ * If a users has already liked (disliked) and decides to dislike (like), then the like (dislike) is removed.
+ * @param {Express.Request} req - Express request object.
+ * @param {Express.Response} res - Express response object.
+ * @param next - Next middleware to execute.
+ */
+export async function likeSauce(req, res, next) {
+    try {
+        // Fetch the sauce to update it
+        const sauce = await Sauce.findById(req.params.id);
+        if (sauce === null) {
+            throw {
+                message: `Can't find the suace with id ${req.params.id}`,
+                name: 'DocumentNotFoundError',
+            };
+        }
+
+        // Update the sauce, depending on the like value
+        let message = '';
+        switch (req.body.like) {
+            case 1:
+                message =
+                    "Votre like n'a pas pu être pris en compte, vous ne pouvez pas liker la même sauce plusieurs fois.";
+                let userDislikeIndex = sauce.usersDisliked.indexOf(req.auth.userId);
+                if (userDislikeIndex >= 0) {
+                    sauce.usersDisliked.splice(userDislikeIndex, 1);
+                    sauce.dislikes--;
+                }
+
+                if (!sauce.usersLiked.includes(req.auth.userId)) {
+                    sauce.likes++;
+                    sauce.usersLiked.push(req.auth.userId);
+                    message = 'Votre like a bien été pris en compte.';
+                }
+                break;
+
+            case -1:
+                message =
+                    "Votre dislike n'a pas pu être pris en compte, vous ne pouvez pas disliker la même sauce plusieurs fois.";
+                let userLikeIndex = sauce.usersLiked.indexOf(req.auth.userId);
+                if (userLikeIndex >= 0) {
+                    sauce.usersLiked.splice(userLikeIndex, 1);
+                    sauce.likes--;
+                }
+
+                if (!sauce.usersDisliked.includes(req.auth.userId)) {
+                    sauce.dislikes++;
+                    sauce.usersDisliked.push(req.auth.userId);
+                    message = 'Votre dislike a bien été pris en compte.';
+                }
+                break;
+
+            default:
+                userDislikeIndex = sauce.usersDisliked.indexOf(req.auth.userId);
+                if (userDislikeIndex >= 0) {
+                    sauce.usersDisliked.splice(userDislikeIndex, 1);
+                    sauce.dislikes--;
+                    message = "Nous avons bien enregistré votre désir d'annuler votre dislike.";
+                    break;
+                }
+
+                userLikeIndex = sauce.usersLiked.indexOf(req.auth.userId);
+                if (userLikeIndex >= 0) {
+                    sauce.usersLiked.splice(userLikeIndex, 1);
+                    sauce.likes--;
+                    message = "Nous avons bien enregistré votre désir d'annuler votre like.";
+                    break;
+                }
+        }
+        await sauce.save();
+
+        message += `La sauce a donc été likée ${sauce.likes} fois, et dislikée ${sauce.dislikes} fois.`;
+
+        res.status(200).json({ message });
+    } catch (error) {
+        if (error.name && error.name === 'DocumentNotFoundError') {
+            error.status = 404;
+        }
+        if (error.name && error.name === 'CastError') {
+            error.status = 400;
+        }
+        if (error.name && error.name === 'ValidationError') {
+            error.status = 400;
+        }
+        return next(error);
+    }
+}
