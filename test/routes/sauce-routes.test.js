@@ -930,6 +930,7 @@ describe('Sauce routes test suite', () => {
             expect(response.body).toHaveProperty('error');
         });
     });
+
     describe('DELETE api/sauces/:id', () => {
         const jwt = jsonWebToken.sign({ userId: SAUCE_DATA[0].userId }, 'RANDOM_SECRET_KEY', {
             expiresIn: '24h',
@@ -1037,6 +1038,361 @@ describe('Sauce routes test suite', () => {
         test.skip('Responds with an error and status 400 if the id is incorrect', async () => {
             mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail', name: 'CastError' });
             const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
+
+            expect(response.status).toBe(400);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+    });
+
+    describe('POST api/sauces/:id/like', () => {
+        const defaultUserId = '666666';
+
+        const createAuthorizationHeaderValue = (userId = defaultUserId, key = 'RANDOM_SECRET_KEY') => {
+            const jwt = jsonWebToken.sign({ userId }, key, {
+                expiresIn: '24h',
+            });
+            return `Bearer ${jwt}`;
+        };
+
+        const requestUrl = `/api/sauces/${SAUCE_DATA[0]._id}/like`;
+
+        let returnedSauce;
+
+        beforeEach(() => {
+            returnedSauce = new Sauce(SAUCE_DATA[0]);
+        });
+
+        test('Responds with a message in JSON format, and status 200, like the sauce', async () => {
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+            mockSauceSave.mockResolvedValue(null);
+
+            const response = await request(app)
+                .post(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue())
+                .send({ userId: defaultUserId, like: 1 });
+
+            expect(response.status).toBe(200);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('message');
+            expect(returnedSauce.likes).toBe(SAUCE_DATA[0].likes + 1);
+            expect(returnedSauce.usersLiked.length).toBe(SAUCE_DATA[0].usersLiked.length + 1);
+            expect(returnedSauce.usersLiked).toContain(defaultUserId);
+            expect(returnedSauce.dislikes).toBe(SAUCE_DATA[0].dislikes);
+            expect(returnedSauce.usersDisliked.length).toBe(SAUCE_DATA[0].usersDisliked.length);
+            expect(returnedSauce.usersDisliked).not.toContain(defaultUserId);
+        });
+
+        test("Responds with a message in JSON format, and status 200, try to like the sauce but don't do anything if the sauce is liked", async () => {
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+            mockSauceSave.mockResolvedValue(null);
+
+            const userId = SAUCE_DATA[0].usersLiked[0];
+
+            const response = await request(app)
+                .post(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue(userId))
+                .send({ userId, like: 1 });
+
+            expect(response.status).toBe(200);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('message');
+            expect(returnedSauce.likes).toBe(SAUCE_DATA[0].likes);
+            expect(returnedSauce.usersLiked.length).toBe(SAUCE_DATA[0].usersLiked.length);
+            expect(returnedSauce.usersLiked).toContain(userId);
+            expect(returnedSauce.dislikes).toBe(SAUCE_DATA[0].dislikes);
+            expect(returnedSauce.usersDisliked.length).toBe(SAUCE_DATA[0].usersDisliked.length);
+            expect(returnedSauce.usersDisliked).not.toContain(userId);
+        });
+
+        test('Responds with a message in JSON format, and status 200, reset the dislike first and like the sauce', async () => {
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+            mockSauceSave.mockResolvedValue(null);
+
+            const userId = SAUCE_DATA[0].usersDisliked[0];
+
+            const response = await request(app)
+                .post(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue(userId))
+                .send({ userId, like: 1 });
+
+            expect(response.status).toBe(200);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('message');
+            expect(returnedSauce.likes).toBe(SAUCE_DATA[0].likes + 1);
+            expect(returnedSauce.usersLiked.length).toBe(SAUCE_DATA[0].usersLiked.length + 1);
+            expect(returnedSauce.usersLiked).toContain(userId);
+            expect(returnedSauce.dislikes).toBe(SAUCE_DATA[0].dislikes - 1);
+            expect(returnedSauce.usersDisliked.length).toBe(SAUCE_DATA[0].usersDisliked.length - 1);
+            expect(returnedSauce.usersDisliked).not.toContain(userId);
+        });
+        test('Responds with a message in JSON format, and status 200, dislike the sauce', async () => {
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+            mockSauceSave.mockResolvedValue(null);
+
+            const response = await request(app)
+                .post(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue())
+                .send({ userId: defaultUserId, like: -1 });
+
+            expect(response.status).toBe(200);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('message');
+            expect(returnedSauce.likes).toBe(SAUCE_DATA[0].likes);
+            expect(returnedSauce.usersLiked.length).toBe(SAUCE_DATA[0].usersLiked.length);
+            expect(returnedSauce.usersLiked).not.toContain(defaultUserId);
+            expect(returnedSauce.dislikes).toBe(SAUCE_DATA[0].dislikes + 1);
+            expect(returnedSauce.usersDisliked.length).toBe(SAUCE_DATA[0].usersDisliked.length + 1);
+            expect(returnedSauce.usersDisliked).toContain(defaultUserId);
+        });
+
+        test("Responds with a message in JSON format, and status 200, try to like the sauce but don't do anything if the sauce is already disliked", async () => {
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+            mockSauceSave.mockResolvedValue(null);
+
+            const userId = SAUCE_DATA[0].usersDisliked[0];
+
+            const response = await request(app)
+                .post(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue(userId))
+                .send({ userId, like: -1 });
+
+            expect(response.status).toBe(200);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('message');
+            expect(returnedSauce.likes).toBe(SAUCE_DATA[0].likes);
+            expect(returnedSauce.usersLiked.length).toBe(SAUCE_DATA[0].usersLiked.length);
+            expect(returnedSauce.usersLiked).not.toContain(userId);
+            expect(returnedSauce.dislikes).toBe(SAUCE_DATA[0].dislikes);
+            expect(returnedSauce.usersDisliked.length).toBe(SAUCE_DATA[0].usersDisliked.length);
+            expect(returnedSauce.usersDisliked).toContain(userId);
+        });
+
+        test('Responds with a message in JSON format, and status 200, reset the like first and dislike the sauce', async () => {
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+            mockSauceSave.mockResolvedValue(null);
+
+            const userId = SAUCE_DATA[0].usersLiked[0];
+
+            const response = await request(app)
+                .post(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue(userId))
+                .send({ userId, like: -1 });
+
+            expect(response.status).toBe(200);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('message');
+            expect(returnedSauce.likes).toBe(SAUCE_DATA[0].likes - 1);
+            expect(returnedSauce.usersLiked.length).toBe(SAUCE_DATA[0].usersLiked.length - 1);
+            expect(returnedSauce.usersLiked).not.toContain(userId);
+            expect(returnedSauce.dislikes).toBe(SAUCE_DATA[0].dislikes + 1);
+            expect(returnedSauce.usersDisliked.length).toBe(SAUCE_DATA[0].usersDisliked.length + 1);
+            expect(returnedSauce.usersDisliked).toContain(userId);
+        });
+
+        test('Responds with a message in JSON format, and status 200, reset a dislike', async () => {
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+            mockSauceSave.mockResolvedValue(null);
+
+            const userId = SAUCE_DATA[0].usersDisliked[0];
+
+            const response = await request(app)
+                .post(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue(userId))
+                .send({ userId, like: 0 });
+
+            expect(response.status).toBe(200);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('message');
+            expect(returnedSauce.likes).toBe(SAUCE_DATA[0].likes);
+            expect(returnedSauce.usersLiked.length).toBe(SAUCE_DATA[0].usersLiked.length);
+            expect(returnedSauce.usersLiked).not.toContain(userId);
+            expect(returnedSauce.dislikes).toBe(SAUCE_DATA[0].dislikes - 1);
+            expect(returnedSauce.usersDisliked.length).toBe(SAUCE_DATA[0].usersDisliked.length - 1);
+            expect(returnedSauce.usersDisliked).not.toContain(userId);
+        });
+
+        test('Responds with a message in JSON format, and status 200, reset a like', async () => {
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+            mockSauceSave.mockResolvedValue(null);
+
+            const userId = SAUCE_DATA[0].usersLiked[0];
+
+            const response = await request(app)
+                .post(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue(userId))
+                .send({ userId, like: 0 });
+
+            expect(response.status).toBe(200);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('message');
+            expect(returnedSauce.likes).toBe(SAUCE_DATA[0].likes - 1);
+            expect(returnedSauce.usersLiked.length).toBe(SAUCE_DATA[0].usersLiked.length - 1);
+            expect(returnedSauce.usersLiked).not.toContain(userId);
+            expect(returnedSauce.dislikes).toBe(SAUCE_DATA[0].dislikes);
+            expect(returnedSauce.usersDisliked.length).toBe(SAUCE_DATA[0].usersDisliked.length);
+            expect(returnedSauce.usersDisliked).not.toContain(userId);
+        });
+
+        test('Responds with a message in JSON format, and status 200, nothing to reset', async () => {
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+            mockSauceSave.mockResolvedValue(null);
+
+            const response = await request(app)
+                .post(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue())
+                .send({ userId: defaultUserId, like: 0 });
+
+            expect(response.status).toBe(200);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('message');
+            expect(returnedSauce.likes).toBe(SAUCE_DATA[0].likes);
+            expect(returnedSauce.usersLiked.length).toBe(SAUCE_DATA[0].usersLiked.length);
+            expect(returnedSauce.usersLiked).not.toContain(defaultUserId);
+            expect(returnedSauce.dislikes).toBe(SAUCE_DATA[0].dislikes);
+            expect(returnedSauce.usersDisliked.length).toBe(SAUCE_DATA[0].usersDisliked.length);
+            expect(returnedSauce.usersDisliked).not.toContain(defaultUserId);
+        });
+
+        test('Responds with an error and status 400 if the like value is invalid', async () => {
+            const response = await request(app)
+                .post(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue())
+                .send({ userId: defaultUserId, like: true });
+
+            expect(response.status).toBe(400);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+            expect(response.body.error[0]).toHaveProperty('message');
+            expect(response.body.error[0].message).toMatch(/like/);
+        });
+
+        test('Responds with an error and status 400 if the like value is absent', async () => {
+            const response = await request(app)
+                .post(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue())
+                .send({ userId: defaultUserId });
+
+            expect(response.status).toBe(400);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+            expect(response.body.error[0]).toHaveProperty('message');
+            expect(response.body.error[0].message).toMatch(/like/);
+        });
+
+        test('Responds with an error and status 400 if the like value is outside the boundaries', async () => {
+            const response = await request(app)
+                .post(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue())
+                .send({ userId: defaultUserId, like: 7 });
+
+            expect(response.status).toBe(400);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+            expect(response.body.error[0]).toHaveProperty('message');
+            expect(response.body.error[0].message).toMatch(/like/);
+        });
+
+        test('Responds with an error and status 401 if the jwt is invalid', async () => {
+            const response = await request(app)
+                .post(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue(defaultUserId, 'WRONG_KEY'))
+                .send({ userId: defaultUserId, like: 1 });
+
+            expect(response.status).toBe(401);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
+            const invalidJwt = jsonWebToken.sign({ useless: '123' }, 'RANDOM_SECRET_KEY', {
+                expiresIn: '24h',
+            });
+            const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
+            const response = await request(app)
+                .post(requestUrl)
+                .set('Authorization', invalidAuthorizationHeader)
+                .send({ userId: defaultUserId, like: 1 });
+
+            expect(response.status).toBe(401);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        test('Responds with an error and status 400 if the saving fails due to validation error', async () => {
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+            mockSauceSave.mockRejectedValueOnce({ message: 'Save fail', name: 'ValidationError' });
+
+            const response = await request(app)
+                .post(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue())
+                .send({ userId: defaultUserId, like: 1 });
+
+            expect(response.status).toBe(400);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        test('Responds with an error and status 500 if the saving fails', async () => {
+            mockSauceFindById.mockResolvedValue(returnedSauce);
+            mockSauceSave.mockRejectedValueOnce({ message: 'Save fail' });
+
+            const response = await request(app)
+                .post(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue())
+                .send({ userId: defaultUserId, like: 1 });
+
+            expect(response.status).toBe(500);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        test('Responds with an error and status 500 if the fetching fails', async () => {
+            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail' });
+
+            const response = await request(app)
+                .post(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue())
+                .send({ userId: defaultUserId, like: 1 });
+
+            expect(response.status).toBe(500);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        test("Responds with an error and status 404 if the document can't be found", async () => {
+            mockSauceFindById.mockResolvedValue(null);
+
+            const response = await request(app)
+                .post(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue())
+                .send({ userId: defaultUserId, like: 1 });
+
+            expect(response.status).toBe(404);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        test.skip("Responds with an error and status 404 if the document can't be found and an error is thrown", async () => {
+            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail', name: 'DocumentNotFoundError' });
+
+            const response = await request(app)
+                .post(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue())
+                .send({ userId: defaultUserId, like: 1 });
+
+            expect(response.status).toBe(404);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        test.skip('Responds with an error and status 400 if the id is incorrect', async () => {
+            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail', name: 'CastError' });
+
+            const response = await request(app)
+                .post(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue())
+                .send({ userId: defaultUserId, like: 1 });
 
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);

@@ -1,6 +1,13 @@
 import express from 'express';
 import { body } from 'express-validator';
-import { createSauce, getAllSauces, getSauce, updateSauce, deleteSauce } from '../controllers/sauce-controller.js';
+import {
+    createSauce,
+    getAllSauces,
+    getSauce,
+    updateSauce,
+    deleteSauce,
+    likeSauce,
+} from '../controllers/sauce-controller.js';
 import { validateFields } from '../middlewares/field-validation.js';
 import { bodyJsonParse } from '../middlewares/body-json-parse.js';
 import { checkAuthentication, checkOwnership } from '../middlewares/authentication.js';
@@ -103,5 +110,29 @@ router.put(
  * Uses the deleteSauce controller.
  */
 router.delete('/:id', checkAuthentication, checkOwnership, deleteSauce);
+
+/**
+ * Likes or dislikes a sauce.
+ * Checks that the user is authenticated.
+ * Validates and sanitize data:
+ *      heat is required, should be either 0, 1 or -1.
+ * Uses the likeSauce controller.
+ */
+router.post(
+    '/:id/like',
+    checkAuthentication,
+    body('like')
+        .exists({ checkNull: true })
+        .withMessage('The like value is required')
+        .bail()
+        .isInt({ min: -1, max: 1 })
+        .withMessage(
+            'The like parameter should be 1 if you wish to like the sauce, -1 if you wish to dislike the sauce or 0 if you wish to reset your action.'
+        )
+        .bail()
+        .toInt(),
+    validateFields,
+    likeSauce
+);
 
 export default router;

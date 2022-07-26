@@ -221,17 +221,17 @@ export async function likeSauce(req, res, next) {
                 break;
 
             default:
-                userDislikeIndex = sauce.usersDisliked.indexOf(req.auth.userId);
-                if (userDislikeIndex >= 0) {
-                    sauce.usersDisliked.splice(userDislikeIndex, 1);
+                const userDislikeIndexReset = sauce.usersDisliked.indexOf(req.auth.userId);
+                if (userDislikeIndexReset >= 0) {
+                    sauce.usersDisliked.splice(userDislikeIndexReset, 1);
                     sauce.dislikes--;
                     message = "Nous avons bien enregistré votre désir d'annuler votre dislike.";
                     break;
                 }
 
-                userLikeIndex = sauce.usersLiked.indexOf(req.auth.userId);
-                if (userLikeIndex >= 0) {
-                    sauce.usersLiked.splice(userLikeIndex, 1);
+                const userLikeIndexReset = sauce.usersLiked.indexOf(req.auth.userId);
+                if (userLikeIndexReset >= 0) {
+                    sauce.usersLiked.splice(userLikeIndexReset, 1);
                     sauce.likes--;
                     message = "Nous avons bien enregistré votre désir d'annuler votre like.";
                     break;
@@ -239,7 +239,7 @@ export async function likeSauce(req, res, next) {
         }
         await sauce.save();
 
-        message += `La sauce a donc été likée ${sauce.likes} fois, et dislikée ${sauce.dislikes} fois.`;
+        message += ` La sauce a donc été likée ${sauce.likes} fois, et dislikée ${sauce.dislikes} fois.`;
 
         res.status(200).json({ message });
     } catch (error) {
