@@ -12,7 +12,8 @@ import Sauce from '../models/Sauce.js';
 export const checkAuthentication = (req, res, next) => {
     try {
         const token = req.headers.authorization.split(' ')[1];
-        const decodedToken = jsonWebToken.verify(token, 'RANDOM_SECRET_KEY');
+        const jwtKey = req.app.get('config').getJwtKey();
+        const decodedToken = jsonWebToken.verify(token, jwtKey);
         if (!decodedToken.userId) {
             throw "The token is valid but doesn't contain the required informations";
         }

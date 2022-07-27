@@ -69,9 +69,10 @@ export async function login(req, res, next) {
     }
 
     // Sends the json web token
+    const jwtKey = req.app.get('config').getJwtKey();
     res.status(200).json({
         userId: user._id,
-        token: jsonWebToken.sign({ userId: user._id }, 'RANDOM_SECRET_KEY', {
+        token: jsonWebToken.sign({ userId: user._id }, jwtKey, {
             expiresIn: '24h',
         }),
     });

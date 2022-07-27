@@ -14,6 +14,8 @@ const mockSauceUpdateOne = jest.spyOn(Sauce, 'updateOne');
 const mockSauceDeleteOne = jest.spyOn(Sauce, 'deleteOne');
 const mockFsUnlink = jest.spyOn(fs, 'unlink');
 
+const authenticationTestKey = 'TEST';
+
 beforeEach(() => {
     mockSauceSave.mockReset();
     mockSauceFind.mockReset();
@@ -36,7 +38,7 @@ describe('Sauce routes test suite', () => {
 
         const imagePath = join(dirname(fileURLToPath(import.meta.url)), '../images/test.png');
 
-        const jwt = jsonWebToken.sign({ userId: '123' }, 'RANDOM_SECRET_KEY', {
+        const jwt = jsonWebToken.sign({ userId: '123' }, authenticationTestKey, {
             expiresIn: '24h',
         });
         const authorizationHeader = `Bearer ${jwt}`;
@@ -256,7 +258,7 @@ describe('Sauce routes test suite', () => {
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
-            const invalidJwt = jsonWebToken.sign({ useless: '123' }, 'RANDOM_SECRET_KEY', {
+            const invalidJwt = jsonWebToken.sign({ useless: '123' }, authenticationTestKey, {
                 expiresIn: '24h',
             });
             const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
@@ -298,7 +300,7 @@ describe('Sauce routes test suite', () => {
     });
 
     describe('GET api/sauces', () => {
-        const jwt = jsonWebToken.sign({ userId: '123' }, 'RANDOM_SECRET_KEY', {
+        const jwt = jsonWebToken.sign({ userId: '123' }, authenticationTestKey, {
             expiresIn: '24h',
         });
         const authorizationHeader = `Bearer ${jwt}`;
@@ -329,7 +331,7 @@ describe('Sauce routes test suite', () => {
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
-            const invalidJwt = jsonWebToken.sign({ useless: '123' }, 'RANDOM_SECRET_KEY', {
+            const invalidJwt = jsonWebToken.sign({ useless: '123' }, authenticationTestKey, {
                 expiresIn: '24h',
             });
             const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
@@ -351,7 +353,7 @@ describe('Sauce routes test suite', () => {
     });
 
     describe('GET api/sauces/:id', () => {
-        const jwt = jsonWebToken.sign({ userId: '123' }, 'RANDOM_SECRET_KEY', {
+        const jwt = jsonWebToken.sign({ userId: '123' }, authenticationTestKey, {
             expiresIn: '24h',
         });
         const authorizationHeader = `Bearer ${jwt}`;
@@ -383,7 +385,7 @@ describe('Sauce routes test suite', () => {
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
-            const invalidJwt = jsonWebToken.sign({ useless: '123' }, 'RANDOM_SECRET_KEY', {
+            const invalidJwt = jsonWebToken.sign({ useless: '123' }, authenticationTestKey, {
                 expiresIn: '24h',
             });
             const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
@@ -446,7 +448,7 @@ describe('Sauce routes test suite', () => {
 
         const imagePath = join(dirname(fileURLToPath(import.meta.url)), '../images/test.png');
 
-        const jwt = jsonWebToken.sign({ userId: SAUCE_DATA[0].userId }, 'RANDOM_SECRET_KEY', {
+        const jwt = jsonWebToken.sign({ userId: SAUCE_DATA[0].userId }, authenticationTestKey, {
             expiresIn: '24h',
         });
         const authorizationHeader = `Bearer ${jwt}`;
@@ -826,7 +828,7 @@ describe('Sauce routes test suite', () => {
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
-            const invalidJwt = jsonWebToken.sign({ useless: '123' }, 'RANDOM_SECRET_KEY', {
+            const invalidJwt = jsonWebToken.sign({ useless: '123' }, authenticationTestKey, {
                 expiresIn: '24h',
             });
             const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
@@ -841,7 +843,7 @@ describe('Sauce routes test suite', () => {
         });
 
         test("Responds with an error and status 403 if the user doesn't have the right to manipulate the sauce", async () => {
-            const invalidJwt = jsonWebToken.sign({ userId: '123' }, 'RANDOM_SECRET_KEY', {
+            const invalidJwt = jsonWebToken.sign({ userId: '123' }, authenticationTestKey, {
                 expiresIn: '24h',
             });
             const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
@@ -932,7 +934,7 @@ describe('Sauce routes test suite', () => {
     });
 
     describe('DELETE api/sauces/:id', () => {
-        const jwt = jsonWebToken.sign({ userId: SAUCE_DATA[0].userId }, 'RANDOM_SECRET_KEY', {
+        const jwt = jsonWebToken.sign({ userId: SAUCE_DATA[0].userId }, authenticationTestKey, {
             expiresIn: '24h',
         });
         const authorizationHeader = `Bearer ${jwt}`;
@@ -974,7 +976,7 @@ describe('Sauce routes test suite', () => {
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
-            const invalidJwt = jsonWebToken.sign({ useless: '123' }, 'RANDOM_SECRET_KEY', {
+            const invalidJwt = jsonWebToken.sign({ useless: '123' }, authenticationTestKey, {
                 expiresIn: '24h',
             });
             const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
@@ -986,7 +988,7 @@ describe('Sauce routes test suite', () => {
         });
 
         test("Responds with an error and status 403 if the user doesn't have the right to manipulate the sauce", async () => {
-            const invalidJwt = jsonWebToken.sign({ userId: '123' }, 'RANDOM_SECRET_KEY', {
+            const invalidJwt = jsonWebToken.sign({ userId: '123' }, authenticationTestKey, {
                 expiresIn: '24h',
             });
             const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
@@ -1048,7 +1050,7 @@ describe('Sauce routes test suite', () => {
     describe('POST api/sauces/:id/like', () => {
         const defaultUserId = '666666';
 
-        const createAuthorizationHeaderValue = (userId = defaultUserId, key = 'RANDOM_SECRET_KEY') => {
+        const createAuthorizationHeaderValue = (userId = defaultUserId, key = authenticationTestKey) => {
             const jwt = jsonWebToken.sign({ userId }, key, {
                 expiresIn: '24h',
             });
@@ -1305,7 +1307,7 @@ describe('Sauce routes test suite', () => {
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
-            const invalidJwt = jsonWebToken.sign({ useless: '123' }, 'RANDOM_SECRET_KEY', {
+            const invalidJwt = jsonWebToken.sign({ useless: '123' }, authenticationTestKey, {
                 expiresIn: '24h',
             });
             const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;

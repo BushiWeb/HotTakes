@@ -1,14 +1,19 @@
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import ConfigManager from '../../src/config/ConfigManager.js';
 
 export const mockRequest = (body = {}, headers = {}, file = {}, protocol = '', params = {}) => {
     const req = { body, headers, file, protocol, params };
     req.app = { root: dirname(fileURLToPath(import.meta.url)) };
     req.app.get = jest.fn().mockImplementation((parameter) => {
-        if (parameter === 'root') {
-            return req.app.root;
+        switch (parameter) {
+            case 'root':
+                return req.app.root;
+            case 'config':
+                return new ConfigManager();
+            default:
+                return parameter;
         }
-        return parameter;
     });
     req.get = jest.fn().mockImplementation((parameter) => parameter);
     return req;
