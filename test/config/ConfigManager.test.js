@@ -69,6 +69,27 @@ describe('ConfigManager Test Suite', () => {
         });
     });
 
+    describe('Static getJwtKey test suite', () => {
+        test('Returns TEST in the testing environment', () => {
+            expect(ConfigManager.getJwtKey()).toBe('TEST');
+        });
+
+        test('Returns the right value if not in the testing environment', () => {
+            process.env.NODE_ENV = 'development';
+            process.env.JWT_KEY = 'KEY';
+            expect(ConfigManager.getJwtKey()).toBe(process.env.JWT_KEY);
+
+            delete process.env.JWT_KEY;
+        });
+
+        test('Throws an error if not in the testing environment and the JWT key is not set', () => {
+            process.env.NODE_ENV = 'development';
+            expect(() => {
+                ConfigManager.getJwtKey();
+            }).toThrow(ConfigurationError);
+        });
+    });
+
     describe('getEnvVariable test suite', () => {
         test('Returns the value of the corresponding environment variable', () => {
             const environmentVariableName = Object.keys(process.env)[0];
@@ -99,6 +120,30 @@ describe('ConfigManager Test Suite', () => {
 
             expect(() => {
                 configManager.getEnvVariable(environmentVariableName);
+            }).toThrow(ConfigurationError);
+        });
+    });
+
+    describe('getJwtKey test suite', () => {
+        test('Returns TEST in the testing environment', () => {
+            const configManager = new ConfigManager();
+            expect(configManager.getJwtKey()).toBe('TEST');
+        });
+
+        test('Returns the right value if not in the testing environment', () => {
+            process.env.NODE_ENV = 'development';
+            process.env.JWT_KEY = 'KEY';
+            const configManager = new ConfigManager();
+            expect(configManager.getJwtKey()).toBe(process.env.JWT_KEY);
+
+            delete process.env.JWT_KEY;
+        });
+
+        test('Throws an error if not in the testing environment and the JWT key is not set', () => {
+            process.env.NODE_ENV = 'development';
+            const configManager = new ConfigManager();
+            expect(() => {
+                configManager.getJwtKey();
             }).toThrow(ConfigurationError);
         });
     });

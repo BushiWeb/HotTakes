@@ -60,11 +60,40 @@ export default class ConfigManager {
     }
 
     /**
+     * Static method to return the value of the JsonWebToken key, depending on the environment.
+     * The key is stored in the .env file, but in the test environment, the key is simply TEST.
+     * @returns {string} Returns the JsonWebToken key.
+     * @throws Throws an error if the key doesn't exist.
+     * @static
+     */
+    static getJwtKey() {
+        if (ConfigManager.compareEnvironment('test')) {
+            return 'TEST';
+        }
+
+        try {
+            return ConfigManager.getEnvVariable('JWT_KEY');
+        } catch (error) {
+            throw new ConfigurationError(
+                'The JsonWebToken key is not defined in the environment variables. Make sure to create a secure key and to give it the right variable name.'
+            );
+        }
+    }
+
+    /**
      * Non static version of the ConfigManager.getEnvVariable method.
      * @see ConfigManager.getEnvVariable
      */
     getEnvVariable(variableName) {
         return ConfigManager.getEnvVariable(variableName);
+    }
+
+    /**
+     * Non static version of the ConfigManager.getJwtKey method.
+     * @see ConfigManager.getJwtKey
+     */
+    getJwtKey(variableName) {
+        return ConfigManager.getJwtKey();
     }
 
     /**
