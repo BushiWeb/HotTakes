@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import User from '../models/User.js';
 import jsonWebToken from 'jsonwebtoken';
+import mongoose from 'mongoose';
 
 /**
  * User signup controller.
@@ -29,9 +30,6 @@ export async function signup(req, res, next) {
         await user.save();
         res.status(201).json({ message: 'Nouvel utilisateur créé!' });
     } catch (error) {
-        if (error.name && error.name === 'ValidationError') {
-            error.status = 400;
-        }
         return next(error);
     }
 }
@@ -48,12 +46,11 @@ export async function login(req, res, next) {
     let user;
     try {
         user = await User.findOne({ email: req.body.email });
+        if (user === null) {
+            throw new mongoose.Error.DocumentNotFoundError(`Can't find the user with email ${req.body.email}`);
+        }
     } catch (error) {
         return next(error);
-    }
-
-    if (!user) {
-        return next({ message: 'User not found', status: 404 });
     }
 
     // Password check

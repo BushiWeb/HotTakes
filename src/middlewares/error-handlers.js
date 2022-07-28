@@ -1,4 +1,5 @@
 import { MulterError } from 'multer';
+import mongoose from 'mongoose';
 
 /**
  * Multer error handling middleware.
@@ -20,6 +21,48 @@ export function multerErrorHandler(err, req, res, next) {
         code: err.code,
         field: err.field,
     });
+}
+
+/**
+ * Mongoose error handling middleware.
+ * It catches and handles MongooseError.
+ * If the error is not a MongooseError, then it calls the next error middleware.
+ * @param {*} err - Error thrown by a middleware.
+ * @param {Express.Request} req - Express request object.
+ * @param {Express.Response} res - Express response object.
+ * @param next - Next middleware to execute.
+ */
+export function mongooseErrorHandler(err, req, res, next) {
+    const errorObject = {
+        type: 'MongooseError',
+        name: err.name,
+        message: err.message,
+    };
+
+    if (
+        err instanceof mongoose.Error.CastError ||
+        err instanceof mongoose.Error.ValidationError ||
+        err instanceof mongoose.Error.ValidatorError
+    ) {
+        return res.status(400).json(errorObject);
+    }
+
+    if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        return res.status(404).json(errorObject);
+    }
+
+    if (
+        err instanceof mongoose.Error.DivergentArrayError ||
+        err instanceof mongoose.Error.MissingSchemaError ||
+        err instanceof mongoose.Error.OverwriteModelError ||
+        err instanceof mongoose.Error.ParallelSaveError ||
+        err instanceof mongoose.Error.StrictModeError ||
+        err instanceof mongoose.Error.VersionError
+    ) {
+        return res.status(500).json(errorObject);
+    }
+
+    next(err);
 }
 
 /**

@@ -1,5 +1,6 @@
 import jsonWebToken from 'jsonwebtoken';
 import Sauce from '../models/Sauce.js';
+import mongoose from 'mongoose';
 
 /**
  * Middleware, checks that the user is authenticated while making the request, by checking that the authentication token is valid.
@@ -36,7 +37,7 @@ export const checkOwnership = async (req, res, next) => {
     try {
         const sauce = await Sauce.findById(req.params.id);
         if (!sauce) {
-            throw { message: "The ressource you're requesting doesn't exist", status: 404 };
+            throw new mongoose.Error.DocumentNotFoundError(`Can't find the sauce with id ${req.params.id}`);
         }
 
         if (sauce.userId !== req.auth.userId) {
