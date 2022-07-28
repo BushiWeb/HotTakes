@@ -4,7 +4,7 @@ import path from 'node:path';
 import { mongoDBConnect } from './utils/utils-database.js';
 import userRouter from './routes/user-routes.js';
 import sauceRouter from './routes/sauce-routes.js';
-import { errorHandler } from './middlewares/error-handler.js';
+import { defaultErrorHandler, multerErrorHandler } from './middlewares/error-handlers.js';
 import { requestLoggerMiddleware, errorLoggerMiddleware } from './logger/logger.js';
 import ConfigManager from './config/ConfigManager.js';
 import { defaultConfigManager } from './config/ConfigManager.js';
@@ -52,6 +52,6 @@ app.use('/api/sauces', sauceRouter);
 
 // Error handling
 app.use(errorLoggerMiddleware);
-app.use(errorHandler);
+app.use(multerErrorHandler, defaultErrorHandler);
 
 export default app;

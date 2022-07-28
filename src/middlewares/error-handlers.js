@@ -1,0 +1,52 @@
+import { MulterError } from 'multer';
+
+/**
+ * Multer error handling middleware.
+ * It catches and handles MulterErrors.
+ * If the error is not a MulterError, then it calls the next error middleware.
+ * @param {*} err - Error thrown by a middleware.
+ * @param {Express.Request} req - Express request object.
+ * @param {Express.Response} res - Express response object.
+ * @param next - Next middleware to execute.
+ */
+export function multerErrorHandler(err, req, res, next) {
+    if (!err instanceof MulterError) {
+        return next(err);
+    }
+
+    res.status(400).json({
+        name: err.name,
+        message: err.message,
+        code: err.code,
+        field: err.field,
+    });
+}
+
+/**
+ * Default error handling middleware. It catches the errors thrown by the different middlewares and handles them.
+ * Last error handler to be used.
+ * Sets the response status to 500 by default, or to the value of the status property of the err parameter.
+ * Sets the return value with the value of the err parameter.
+ * @param {*} err - Error thrown by a middleware.
+ * @param {Express.Request} req - Express request object.
+ * @param {Express.Response} res - Express response object.
+ * @param next - Next middleware to execute.
+ */
+export function defaultErrorHandler(err, req, res, next) {
+    let status = 500;
+
+    if (err instanceof Error) {
+        err = {
+            message: err.message,
+            name: err.name,
+            status: err.status || undefined,
+        };
+    }
+
+    if (err.status !== undefined) {
+        status = err.status;
+        delete err.status;
+    }
+
+    res.status(status).json({ error: err });
+}

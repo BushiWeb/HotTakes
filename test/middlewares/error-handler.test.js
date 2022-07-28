@@ -1,5 +1,5 @@
 import { MulterError } from 'multer';
-import { errorHandler } from '../../src/middlewares/error-handler.js';
+import { errorHandler } from '../../src/middlewares/error-handlers.js';
 import { mockResponse, mockRequest, mockNext } from '../mocks/express-mocks.js';
 
 const request = mockRequest({

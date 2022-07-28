@@ -25,7 +25,11 @@ const maxFileSize = defaultConfigManager.getConfig('fileUpload.maxFileSize');
 /*
  * Defines the disk storage for multer.
  * The images are stored in the 'images' folder.
- * The images will keep their name but the spaces will be replaced with underscores.
+ * The images will keep a similar name but sanitized:
+ *      trailing and leading spaces removed;
+ *      spaces converted to underscores;
+ *      only keeping alphanumerical characters as well as dash, dot and underscore;
+ *      remove the extension.
  * The date is appended to the image name and then the extension, deduced from the MIME_TYPES object.
  */
 const storage = multer.diskStorage({
