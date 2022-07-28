@@ -1,5 +1,6 @@
 import { validateStringArgument } from '../utils/utils-functions.js';
 import ConfigurationError from '../errors/ConfigurationError.js';
+import CONFIG from './config.js';
 
 /**
  * Manages server configuration.
@@ -81,6 +82,14 @@ export default class ConfigManager {
     }
 
     /**
+     * Non static version of the ConfigManager.compareEnvironment method.
+     * @see ConfigManager.compareEnvironment
+     */
+    compareEnvironment(variableName) {
+        return ConfigManager.compareEnvironment(variableName);
+    }
+
+    /**
      * Non static version of the ConfigManager.getEnvVariable method.
      * @see ConfigManager.getEnvVariable
      */
@@ -139,3 +148,8 @@ export default class ConfigManager {
         return currentSetting;
     }
 }
+
+/**
+ * Default configuration manager, using the config.js file in the same directory.
+ */
+export const defaultConfigManager = new ConfigManager(CONFIG);

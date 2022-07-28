@@ -1,6 +1,6 @@
 import multer from 'multer';
 import { MulterError } from 'multer';
-import ConfigManager from '../config/ConfigManager.js';
+import { defaultConfigManager } from '../config/ConfigManager.js';
 import validator from 'validator';
 
 /**
@@ -17,15 +17,10 @@ const createMulterError = (message, code, field = undefined) => {
 };
 
 /*
- * Array of accepted MIME-types
+ * Get the configuration from the configuration manager.
  */
-const MIME_TYPES = {
-    'image/jpg': 'jpg',
-    'image/jpeg': 'jpg',
-    'image/png': 'png',
-    'image/webp': 'webp',
-    'image/avif': 'avif',
-};
+const MIME_TYPES = defaultConfigManager.getConfig('fileUpload.allowedMimeTypes');
+const maxFileSize = defaultConfigManager.getConfig('fileUpload.maxFileSize');
 
 /*
  * Defines the disk storage for multer.
@@ -36,7 +31,7 @@ const MIME_TYPES = {
 const storage = multer.diskStorage({
     destination: (req, file, callback) => {
         let folderName = 'images';
-        if (ConfigManager.compareEnvironment('test')) {
+        if (defaultConfigManager.compareEnvironment('test')) {
             folderName = 'test/temp/img';
         }
         callback(null, folderName);
@@ -74,13 +69,13 @@ const fileFilter = (req, file, callback) => {
 /*
  * Exports the multer middleware.
  * Use the defined storage and file filter.
- * Defines a 5mb limit for the file size.
+ * Defines a limit for the file size.
  */
 export default multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: 5242880,
+        fileSize: maxFileSize,
     },
 }).single('image');
 

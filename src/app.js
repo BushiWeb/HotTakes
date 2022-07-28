@@ -7,12 +7,12 @@ import sauceRouter from './routes/sauce-routes.js';
 import { errorHandler } from './middlewares/error-handler.js';
 import { requestLoggerMiddleware, errorLoggerMiddleware } from './logger/logger.js';
 import ConfigManager from './config/ConfigManager.js';
+import { defaultConfigManager } from './config/ConfigManager.js';
 
 const app = express();
 
-// Create a configguration manager and store it in the app
-const configManager = new ConfigManager();
-app.set('config', configManager);
+// Create a configuration manager, export it and store it in the app
+app.set('config', defaultConfigManager);
 
 // Only connect to mongoDB if we are not testing
 if (!ConfigManager.compareEnvironment('test')) {
