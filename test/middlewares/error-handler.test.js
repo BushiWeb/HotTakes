@@ -1,7 +1,13 @@
 import { MulterError } from 'multer';
-import { defaultErrorHandler, mongooseErrorHandler, multerErrorHandler } from '../../src/middlewares/error-handlers.js';
+import {
+    defaultErrorHandler,
+    mongooseErrorHandler,
+    multerErrorHandler,
+    jwtErrorHandler,
+} from '../../src/middlewares/error-handlers.js';
 import { mockResponse, mockRequest, mockNext } from '../mocks/express-mocks.js';
 import mongoose from 'mongoose';
+import { JsonWebTokenError, NotBeforeError, TokenExpiredError } from 'jsonwebtoken';
 
 const request = mockRequest({
     email: 'test@email.com',
@@ -119,6 +125,63 @@ describe('Error handlers test suite', () => {
             expect(response.json.mock.calls[0][0].error).toHaveProperty('type', 'MongooseError');
             expect(response.status).toHaveBeenCalled();
             expect(response.status).toHaveBeenCalledWith(500);
+            expect(next).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('jwtErrorHandler test suite', () => {
+        test('Calls the next function with the error if the error is not a JsonWebTokenError', () => {
+            const error = new Error('Error message');
+
+            jwtErrorHandler(error, request, response, next);
+
+            expect(response.json).not.toHaveBeenCalled();
+            expect(response.status).not.toHaveBeenCalled();
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(error);
+        });
+
+        test('Sends a response with status 401 and the error in JSON format if the error is a JsonWebTokenError', () => {
+            const error = new JsonWebTokenError('Error message');
+
+            jwtErrorHandler(error, request, response, next);
+
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('error');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('type', 'JsonWebTokenError');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('name', 'JsonWebTokenError');
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(401);
+            expect(next).not.toHaveBeenCalled();
+        });
+
+        test('Sends a response with status 401 and the error in JSON format if the error is a TokenExpiredError', () => {
+            const error = new TokenExpiredError('Error message', '123');
+
+            jwtErrorHandler(error, request, response, next);
+
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('error');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('type', 'JsonWebTokenError');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('name', 'TokenExpiredError');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('expiredAt', '123');
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(401);
+            expect(next).not.toHaveBeenCalled();
+        });
+
+        test('Sends a response with status 401 and the error in JSON format if the error is a NotBeforeError', () => {
+            const error = new NotBeforeError('Error message', '123');
+
+            jwtErrorHandler(error, request, response, next);
+
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('error');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('type', 'JsonWebTokenError');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('name', 'NotBeforeError');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('date', '123');
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(401);
             expect(next).not.toHaveBeenCalled();
         });
     });

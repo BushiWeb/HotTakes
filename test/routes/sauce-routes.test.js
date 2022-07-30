@@ -258,6 +258,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'JsonWebTokenError');
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
@@ -273,6 +274,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'AuthenticationError');
         });
 
         test('Responds with an error and status 400 if the saving fails due to validation error', async () => {
@@ -336,6 +338,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'JsonWebTokenError');
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
@@ -348,6 +351,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'AuthenticationError');
         });
 
         test('Responds with an error and status 500 if the fetching fails', async () => {
@@ -392,6 +396,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'JsonWebTokenError');
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
@@ -404,6 +409,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'AuthenticationError');
         });
 
         test('Responds with an error and status 500 if the fetching fails', async () => {
@@ -845,6 +851,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'JsonWebTokenError');
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
@@ -860,6 +867,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'AuthenticationError');
         });
 
         test("Responds with an error and status 403 if the user doesn't have the right to manipulate the sauce", async () => {
@@ -876,6 +884,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(403);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'AuthenticationError');
         });
 
         test('Responds with an error and status 400 if the update fails due to validation error', async () => {
@@ -1008,6 +1017,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'JsonWebTokenError');
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
@@ -1020,6 +1030,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'AuthenticationError');
         });
 
         test("Responds with an error and status 403 if the user doesn't have the right to manipulate the sauce", async () => {
@@ -1033,6 +1044,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(403);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'AuthenticationError');
         });
 
         test('Responds with an error and status 500 if the deletion fails', async () => {
@@ -1351,6 +1363,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'JsonWebTokenError');
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
@@ -1366,6 +1379,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'AuthenticationError');
         });
 
         test('Responds with an error and status 400 if the saving fails due to validation error', async () => {

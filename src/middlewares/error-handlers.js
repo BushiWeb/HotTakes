@@ -1,5 +1,6 @@
 import { MulterError } from 'multer';
 import mongoose from 'mongoose';
+import { JsonWebTokenError, NotBeforeError, TokenExpiredError } from 'jsonwebtoken';
 
 /**
  * Multer error handling middleware.
@@ -38,6 +39,7 @@ export function mongooseErrorHandler(err, req, res, next) {
     if (!(err instanceof mongoose.Error)) {
         return next(err);
     }
+
     const errorObject = {
         error: {
             type: 'MongooseError',
@@ -59,6 +61,39 @@ export function mongooseErrorHandler(err, req, res, next) {
     }
 
     return res.status(500).json(errorObject);
+}
+
+/**
+ * JsonWebToken error handling middleware.
+ * It catches and handles errors thrown by JsonWebToken.
+ * If the error is not a JsonWebToken error, then it calls the next error middleware.
+ * @param {*} err - Error thrown by a middleware.
+ * @param {Express.Request} req - Express request object.
+ * @param {Express.Response} res - Express response object.
+ * @param next - Next middleware to execute.
+ */
+export function jwtErrorHandler(err, req, res, next) {
+    if (!(err instanceof JsonWebTokenError)) {
+        return next(err);
+    }
+
+    const errorObject = {
+        error: {
+            type: 'JsonWebTokenError',
+            name: err.name,
+            message: err.message,
+        },
+    };
+
+    if (err instanceof NotBeforeError) {
+        errorObject.error.date = err.date;
+    }
+
+    if (err instanceof TokenExpiredError) {
+        errorObject.error.expiredAt = err.expiredAt;
+    }
+
+    return res.status(401).json(errorObject);
 }
 
 /**
