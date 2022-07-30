@@ -6,6 +6,8 @@ import { dirname, join } from 'node:path';
 import jsonWebToken from 'jsonwebtoken';
 import SAUCE_DATA from '../mocks/sauce-data.js';
 import fs from 'node:fs';
+import mongoose from 'mongoose';
+import { MulterError } from 'multer';
 
 const mockSauceSave = jest.spyOn(Sauce.prototype, 'save').mockResolvedValue();
 const mockSauceFind = jest.spyOn(Sauce, 'find');
@@ -144,6 +146,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'MulterError');
         });
 
         test('Responds with an error and status 400 if the description is invalid', async () => {
@@ -273,7 +276,8 @@ describe('Sauce routes test suite', () => {
         });
 
         test('Responds with an error and status 400 if the saving fails due to validation error', async () => {
-            mockSauceSave.mockRejectedValueOnce({ message: 'Save fail', name: 'ValidationError' });
+            const error = new mongoose.Error.ValidationError();
+            mockSauceSave.mockRejectedValueOnce(error);
             const response = await request(app)
                 .post('/api/sauces/')
                 .set('Authorization', authorizationHeader)
@@ -283,10 +287,13 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'ValidationError');
         });
 
         test('Responds with an error and status 500 if the saving fails', async () => {
-            mockSauceSave.mockRejectedValueOnce({ message: 'Save fail' });
+            const error = new mongoose.Error();
+            mockSauceSave.mockRejectedValueOnce(error);
             const response = await request(app)
                 .post('/api/sauces/')
                 .set('Authorization', authorizationHeader)
@@ -296,6 +303,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
         });
     });
 
@@ -343,12 +351,14 @@ describe('Sauce routes test suite', () => {
         });
 
         test('Responds with an error and status 500 if the fetching fails', async () => {
-            mockSauceFind.mockRejectedValueOnce({ message: 'Fetch fails' });
+            const error = new mongoose.Error();
+            mockSauceFind.mockRejectedValueOnce(error);
             const response = await request(app).get('/api/sauces/').set('Authorization', authorizationHeader);
 
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
         });
     });
 
@@ -397,12 +407,14 @@ describe('Sauce routes test suite', () => {
         });
 
         test('Responds with an error and status 500 if the fetching fails', async () => {
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Fetch fails' });
+            const error = new mongoose.Error();
+            mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app).get(requestUrl).set('Authorization', authorizationHeader);
 
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
         });
 
         test("Responds with an error and status 404 if the document can't be found", async () => {
@@ -413,26 +425,34 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'DocumentNotFoundError');
         });
 
         test("Responds with an error and status 404 if the document can't be found and an error is thrown", async () => {
             const badRequestUrl = '/api/sauces/000000000';
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Fetch fails', name: 'DocumentNotFoundError' });
+            const error = new mongoose.Error.DocumentNotFoundError();
+            mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app).get(badRequestUrl).set('Authorization', authorizationHeader);
 
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'DocumentNotFoundError');
         });
 
         test('Responds with an error and status 400 if the id is incorrect', async () => {
             const badRequestUrl = '/api/sauces/000000000';
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Cast fails', name: 'CastError' });
+            const error = new mongoose.Error.CastError();
+            mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app).get(badRequestUrl).set('Authorization', authorizationHeader);
 
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'CastError');
         });
     });
 
@@ -859,7 +879,8 @@ describe('Sauce routes test suite', () => {
         });
 
         test('Responds with an error and status 400 if the update fails due to validation error', async () => {
-            mockSauceUpdateOne.mockRejectedValueOnce({ message: 'Save fail', name: 'ValidationError' });
+            const error = new mongoose.Error.ValidationError();
+            mockSauceUpdateOne.mockRejectedValueOnce(error);
             mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
             const response = await request(app)
                 .put(requestUrl)
@@ -869,10 +890,13 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'ValidationError');
         });
 
         test('Responds with an error and status 500 if the update fails', async () => {
-            mockSauceUpdateOne.mockRejectedValueOnce({ message: 'Save fail' });
+            const error = new mongoose.Error();
+            mockSauceUpdateOne.mockRejectedValueOnce(error);
             mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
             const response = await request(app)
                 .put(requestUrl)
@@ -882,10 +906,12 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
         });
 
         test('Responds with an error and status 500 if the fetching fails', async () => {
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail' });
+            const error = new mongoose.Error();
+            mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app)
                 .put(requestUrl)
                 .set('Authorization', authorizationHeader)
@@ -894,6 +920,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
         });
 
         test("Responds with an error and status 404 if the document can't be found", async () => {
@@ -906,10 +933,13 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'DocumentNotFoundError');
         });
 
-        test.skip("Responds with an error and status 404 if the document can't be found and an error is thrown", async () => {
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail', name: 'DocumentNotFoundError' });
+        test("Responds with an error and status 404 if the document can't be found and an error is thrown", async () => {
+            const error = new mongoose.Error.DocumentNotFoundError();
+            mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app)
                 .put(requestUrl)
                 .set('Authorization', authorizationHeader)
@@ -918,10 +948,13 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'DocumentNotFoundError');
         });
 
-        test.skip('Responds with an error and status 400 if the id is incorrect', async () => {
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail', name: 'CastError' });
+        test('Responds with an error and status 400 if the id is incorrect', async () => {
+            const error = new mongoose.Error.CastError();
+            mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app)
                 .put(requestUrl)
                 .set('Authorization', authorizationHeader)
@@ -930,6 +963,8 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'CastError');
         });
     });
 
@@ -1001,22 +1036,26 @@ describe('Sauce routes test suite', () => {
         });
 
         test('Responds with an error and status 500 if the deletion fails', async () => {
-            mockSauceDeleteOne.mockRejectedValueOnce({ message: 'Deletion fails' });
+            const error = new mongoose.Error();
+            mockSauceDeleteOne.mockRejectedValueOnce(error);
             mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
             const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
 
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
         });
 
         test('Responds with an error and status 500 if the fetching fails', async () => {
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail' });
+            const error = new mongoose.Error();
+            mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
 
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
         });
 
         test("Responds with an error and status 404 if the document can't be found", async () => {
@@ -1026,24 +1065,32 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'DocumentNotFoundError');
         });
 
-        test.skip("Responds with an error and status 404 if the document can't be found and an error is thrown", async () => {
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail', name: 'DocumentNotFoundError' });
+        test("Responds with an error and status 404 if the document can't be found and an error is thrown", async () => {
+            const error = new mongoose.Error.DocumentNotFoundError();
+            mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
 
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'DocumentNotFoundError');
         });
 
-        test.skip('Responds with an error and status 400 if the id is incorrect', async () => {
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail', name: 'CastError' });
+        test('Responds with an error and status 400 if the id is incorrect', async () => {
+            const error = new mongoose.Error.CastError();
+            mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
 
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'CastError');
         });
     });
 
@@ -1322,8 +1369,9 @@ describe('Sauce routes test suite', () => {
         });
 
         test('Responds with an error and status 400 if the saving fails due to validation error', async () => {
+            const error = new mongoose.Error.ValidationError();
             mockSauceFindById.mockResolvedValue(returnedSauce);
-            mockSauceSave.mockRejectedValueOnce({ message: 'Save fail', name: 'ValidationError' });
+            mockSauceSave.mockRejectedValueOnce(error);
 
             const response = await request(app)
                 .post(requestUrl)
@@ -1333,11 +1381,14 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'ValidationError');
         });
 
         test('Responds with an error and status 500 if the saving fails', async () => {
+            const error = new mongoose.Error();
             mockSauceFindById.mockResolvedValue(returnedSauce);
-            mockSauceSave.mockRejectedValueOnce({ message: 'Save fail' });
+            mockSauceSave.mockRejectedValueOnce(error);
 
             const response = await request(app)
                 .post(requestUrl)
@@ -1347,10 +1398,12 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
         });
 
         test('Responds with an error and status 500 if the fetching fails', async () => {
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail' });
+            const error = new mongoose.Error();
+            mockSauceFindById.mockRejectedValueOnce(error);
 
             const response = await request(app)
                 .post(requestUrl)
@@ -1360,6 +1413,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
         });
 
         test("Responds with an error and status 404 if the document can't be found", async () => {
@@ -1373,10 +1427,13 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'DocumentNotFoundError');
         });
 
-        test.skip("Responds with an error and status 404 if the document can't be found and an error is thrown", async () => {
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail', name: 'DocumentNotFoundError' });
+        test("Responds with an error and status 404 if the document can't be found and an error is thrown", async () => {
+            const error = new mongoose.Error.DocumentNotFoundError();
+            mockSauceFindById.mockRejectedValueOnce(error);
 
             const response = await request(app)
                 .post(requestUrl)
@@ -1386,10 +1443,13 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'DocumentNotFoundError');
         });
 
-        test.skip('Responds with an error and status 400 if the id is incorrect', async () => {
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail', name: 'CastError' });
+        test('Responds with an error and status 400 if the id is incorrect', async () => {
+            const error = new mongoose.Error.CastError();
+            mockSauceFindById.mockRejectedValueOnce(error);
 
             const response = await request(app)
                 .post(requestUrl)
@@ -1399,6 +1459,8 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'CastError');
         });
     });
 });

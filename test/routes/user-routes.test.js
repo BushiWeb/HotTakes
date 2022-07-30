@@ -2,6 +2,7 @@ import request from 'supertest';
 import app from '../../src/app.js';
 import User from '../../src/models/User.js';
 import bcrypt from 'bcrypt';
+import mongoose from 'mongoose';
 
 const mockUserSave = jest.spyOn(User.prototype, 'save').mockResolvedValue();
 const mockUserFindOne = jest.spyOn(User, 'findOne');
@@ -65,14 +66,29 @@ describe('Authentication routes test suite', () => {
             mockBcryptHash.mockRestore();
         });
 
-        test('Responds with an error and status 400 if the saving fails', async () => {
-            mockUserSave.mockRejectedValueOnce({ message: 'Save fail', name: 'ValidationError' });
+        test('Responds with an error and status 500 if the saving fails', async () => {
+            const error = new mongoose.Error();
+            mockUserSave.mockRejectedValueOnce(error);
+            const requestBody = { email: 'test@email.com', password: 'P@55w0r$' };
+            const response = await request(app).post('/api/auth/signup').send(requestBody);
+
+            expect(response.status).toBe(500);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+        });
+
+        test('Responds with an error and status 400 if the saving fails due to a validation error', async () => {
+            const error = new mongoose.Error.ValidationError();
+            mockUserSave.mockRejectedValueOnce(error);
             const requestBody = { email: 'test@email.com', password: 'P@55w0r$' };
             const response = await request(app).post('/api/auth/signup').send(requestBody);
 
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'ValidationError');
         });
     });
 
@@ -132,6 +148,8 @@ describe('Authentication routes test suite', () => {
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'DocumentNotFoundError');
         });
 
         test('Responds with an error and status 401 if the password is wrong', async () => {
@@ -146,12 +164,13 @@ describe('Authentication routes test suite', () => {
 
         test('Responds with an error and status 500 if user fetching fails', async () => {
             const requestBody = { email: userData.email, password: userData.clearPassword };
-            mockUserFindOne.mockRejectedValueOnce({ message: 'Fetch fails' });
+            mockUserFindOne.mockRejectedValueOnce(new mongoose.Error());
             const response = await request(app).post('/api/auth/login').send(requestBody);
 
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
         });
 
         test('Responds with an error and status 500 if bcrypt comparison fails', async () => {

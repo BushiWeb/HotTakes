@@ -11,15 +11,17 @@ import mongoose from 'mongoose';
  * @param next - Next middleware to execute.
  */
 export function multerErrorHandler(err, req, res, next) {
-    if (!err instanceof MulterError) {
+    if (!(err instanceof MulterError)) {
         return next(err);
     }
 
     res.status(400).json({
-        name: err.name,
-        message: err.message,
-        code: err.code,
-        field: err.field,
+        error: {
+            name: err.name,
+            message: err.message,
+            code: err.code,
+            field: err.field,
+        },
     });
 }
 
@@ -33,10 +35,15 @@ export function multerErrorHandler(err, req, res, next) {
  * @param next - Next middleware to execute.
  */
 export function mongooseErrorHandler(err, req, res, next) {
+    if (!(err instanceof mongoose.Error)) {
+        return next(err);
+    }
     const errorObject = {
-        type: 'MongooseError',
-        name: err.name,
-        message: err.message,
+        error: {
+            type: 'MongooseError',
+            name: err.name,
+            message: err.message,
+        },
     };
 
     if (
@@ -51,18 +58,7 @@ export function mongooseErrorHandler(err, req, res, next) {
         return res.status(404).json(errorObject);
     }
 
-    if (
-        err instanceof mongoose.Error.DivergentArrayError ||
-        err instanceof mongoose.Error.MissingSchemaError ||
-        err instanceof mongoose.Error.OverwriteModelError ||
-        err instanceof mongoose.Error.ParallelSaveError ||
-        err instanceof mongoose.Error.StrictModeError ||
-        err instanceof mongoose.Error.VersionError
-    ) {
-        return res.status(500).json(errorObject);
-    }
-
-    next(err);
+    return res.status(500).json(errorObject);
 }
 
 /**

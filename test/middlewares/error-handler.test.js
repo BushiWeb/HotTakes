@@ -1,6 +1,7 @@
 import { MulterError } from 'multer';
-import { errorHandler } from '../../src/middlewares/error-handlers.js';
+import { defaultErrorHandler, mongooseErrorHandler, multerErrorHandler } from '../../src/middlewares/error-handlers.js';
 import { mockResponse, mockRequest, mockNext } from '../mocks/express-mocks.js';
+import mongoose from 'mongoose';
 
 const request = mockRequest({
     email: 'test@email.com',
@@ -15,80 +16,150 @@ beforeEach(() => {
     next.mockClear();
 });
 
-describe('Error handler test suite', () => {
-    test('Sends a response containing status 500 and the error object as JSON', () => {
-        const error = { message: 'Error message' };
+describe('Error handlers test suite', () => {
+    describe('multerErrorHandler test suite', () => {
+        test('Calls the next function with the error if the error is not a MulterError', () => {
+            const error = new Error('Error message');
 
-        errorHandler(error, request, response, next);
+            multerErrorHandler(error, request, response, next);
 
-        expect(response.status).toHaveBeenCalled();
-        expect(response.status).toHaveBeenCalledWith(500);
-        expect(response.json).toHaveBeenCalled();
-        expect(response.json).toHaveBeenCalledWith({ error });
-    });
+            expect(response.json).not.toHaveBeenCalled();
+            expect(response.status).not.toHaveBeenCalled();
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(error);
+        });
 
-    test('Sends a response containing custom status, and the error object without the status', () => {
-        const error = { message: 'Error message', status: 404 };
+        test('Sends a response with status 400 and the error in JSON format if the error is a MulterError', () => {
+            const error = new MulterError('Error message');
 
-        errorHandler(error, request, response, next);
+            multerErrorHandler(error, request, response, next);
 
-        expect(response.status).toHaveBeenCalled();
-        expect(response.status).toHaveBeenCalledWith(404);
-        expect(response.json).toHaveBeenCalled();
-        expect(response.json).toHaveBeenCalledWith({
-            error: {
-                message: error.message,
-            },
+            expect(response.json).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(400);
+            expect(next).not.toHaveBeenCalled();
         });
     });
 
-    test('Sends a response containing status 500 and a message in a JSON object if the error is an instance of error', () => {
-        const error = new Error('Error message');
+    describe('mongooseErrorHandler test suite', () => {
+        test('Calls the next function with the error if the error is not a MongooseError', () => {
+            const error = new Error('Error message');
 
-        errorHandler(error, request, response, next);
+            mongooseErrorHandler(error, request, response, next);
 
-        expect(response.status).toHaveBeenCalled();
-        expect(response.status).toHaveBeenCalledWith(500);
-        expect(response.json).toHaveBeenCalled();
-        expect(response.json.mock.calls[0][0]).toHaveProperty('error');
-        expect(response.json.mock.calls[0][0].error).toHaveProperty('message');
-    });
+            expect(response.json).not.toHaveBeenCalled();
+            expect(response.status).not.toHaveBeenCalled();
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(error);
+        });
 
-    test('Sends a response containing status 400 and a message in a JSON object if the error is an instance of MulterError', () => {
-        const error = new MulterError('CODE', 'fieldName');
-        error.message = 'Error message';
+        test('Sends a response with status 400 and the error in JSON format if the error is a CastError', () => {
+            const error = new mongoose.Error.CastError('Error message');
 
-        errorHandler(error, request, response, next);
+            mongooseErrorHandler(error, request, response, next);
 
-        expect(response.status).toHaveBeenCalled();
-        expect(response.status).toHaveBeenCalledWith(400);
-        expect(response.json).toHaveBeenCalled();
-        expect(response.json).toHaveBeenCalledWith({
-            error: {
-                message: error.message,
-                code: error.code,
-                name: error.name,
-                field: error.field,
-            },
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('error');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('type', 'MongooseError');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('name', 'CastError');
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(400);
+            expect(next).not.toHaveBeenCalled();
+        });
+
+        test('Sends a response with status 400 and the error in JSON format if the error is a ValidationError', () => {
+            const error = new mongoose.Error.ValidationError();
+
+            mongooseErrorHandler(error, request, response, next);
+
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('error');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('type', 'MongooseError');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('name', 'ValidationError');
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(400);
+            expect(next).not.toHaveBeenCalled();
+        });
+
+        test('Sends a response with status 400 and the error in JSON format if the error is a ValidatorError', () => {
+            const error = new mongoose.Error.ValidatorError({ message: 'Message', type: 'Unique', value: 'A value' });
+
+            mongooseErrorHandler(error, request, response, next);
+
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('error');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('type', 'MongooseError');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('name', 'ValidatorError');
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(400);
+            expect(next).not.toHaveBeenCalled();
+        });
+
+        test('Sends a response with status 404 and the error in JSON format if the error is a DocumentNotFoundError', () => {
+            const error = new mongoose.Error.DocumentNotFoundError('Error message');
+
+            mongooseErrorHandler(error, request, response, next);
+
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('error');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('type', 'MongooseError');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('name', 'DocumentNotFoundError');
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(404);
+            expect(next).not.toHaveBeenCalled();
+        });
+
+        test('Sends a response with status 500 and the error in JSON format if the error is an other mongoose error', () => {
+            const error = new mongoose.Error('Error message');
+
+            mongooseErrorHandler(error, request, response, next);
+
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('error');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('type', 'MongooseError');
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(500);
+            expect(next).not.toHaveBeenCalled();
         });
     });
 
-    test('Sends a response containing status 400 and a message in a JSON object if the error is an instance of MulterError, but with no field', () => {
-        const error = new MulterError('CODE');
-        error.message = 'Error message';
+    describe('defaultErrorHandler test suite', () => {
+        test('Sends a response containing status 500 and the error object as JSON', () => {
+            const error = { message: 'Error message' };
 
-        errorHandler(error, request, response, next);
+            defaultErrorHandler(error, request, response, next);
 
-        expect(response.status).toHaveBeenCalled();
-        expect(response.status).toHaveBeenCalledWith(400);
-        expect(response.json).toHaveBeenCalled();
-        expect(response.json).toHaveBeenCalledWith({
-            error: {
-                message: error.message,
-                code: error.code,
-                name: error.name,
-                field: undefined,
-            },
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(500);
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json).toHaveBeenCalledWith({ error });
+        });
+
+        test('Sends a response containing custom status, and the error object without the status', () => {
+            const error = { message: 'Error message', status: 404 };
+
+            defaultErrorHandler(error, request, response, next);
+
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(404);
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json).toHaveBeenCalledWith({
+                error: {
+                    message: error.message,
+                },
+            });
+        });
+
+        test('Sends a response containing status 500 and a message in a JSON object if the error is an instance of error', () => {
+            const error = new Error('Error message');
+
+            defaultErrorHandler(error, request, response, next);
+
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(500);
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('error');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('message');
         });
     });
 });

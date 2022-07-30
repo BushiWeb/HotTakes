@@ -2,7 +2,7 @@ import { checkAuthentication, checkOwnership } from '../../src/middlewares/authe
 import { mockResponse, mockRequest, mockNext } from '../mocks/express-mocks.js';
 import jsonWebToken from 'jsonwebtoken';
 import { JsonWebTokenError } from 'jsonwebtoken';
-import { Query, Model } from 'mongoose';
+import { Query, Model, Error } from 'mongoose';
 
 const mockJWTVerify = jest.spyOn(jsonWebToken, 'verify');
 const authorizationHeader = 'Bearer 123312';
@@ -119,7 +119,7 @@ describe('checkOwnership returned middleware  test suite', () => {
         expect(next.mock.calls[0][0]).toHaveProperty('status', 403);
     });
 
-    test("Calls the next function with an error containing the status 404 if the element doesn't exist", async () => {
+    test("Calls the next function with a mongoose DocumentNotFoundError if the element doesn't exist", async () => {
         request.auth = { userId: '456' };
         request.params = { id: 'sauceId' };
         mockFindById.mockResolvedValue(null);
@@ -127,7 +127,6 @@ describe('checkOwnership returned middleware  test suite', () => {
         await checkOwnership(request, response, next);
 
         expect(next).toHaveBeenCalled();
-        expect(next.mock.calls[0][0]).toHaveProperty('message');
-        expect(next.mock.calls[0][0]).toHaveProperty('status', 404);
+        expect(next.mock.calls[0][0]).toBeInstanceOf(Error.DocumentNotFoundError);
     });
 });
