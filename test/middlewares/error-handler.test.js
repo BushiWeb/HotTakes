@@ -161,5 +161,18 @@ describe('Error handlers test suite', () => {
             expect(response.json.mock.calls[0][0]).toHaveProperty('error');
             expect(response.json.mock.calls[0][0].error).toHaveProperty('message');
         });
+
+        test('Sends a response containing custom status and a message in a JSON object if the error is an instance of error with a status property', () => {
+            const error = new Error('Error message');
+            error.status = 404;
+
+            defaultErrorHandler(error, request, response, next);
+
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(error.status);
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('error');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('message');
+        });
     });
 });
