@@ -1,6 +1,8 @@
-import jsonWebToken from 'jsonwebtoken';
+import jsonWebToken, { JsonWebTokenError } from 'jsonwebtoken';
 import Sauce from '../models/Sauce.js';
 import mongoose from 'mongoose';
+import UnauthorizedError from '../errors/UnauthorizedError.js';
+import ForbiddenError from '../errors/ForbiddenError.js';
 
 /**
  * Middleware, checks that the user is authenticated while making the request, by checking that the authentication token is valid.
@@ -12,16 +14,20 @@ import mongoose from 'mongoose';
  */
 export const checkAuthentication = (req, res, next) => {
     try {
+        if (!req.headers.authorization) {
+            throw new UnauthorizedError();
+        }
+
         const token = req.headers.authorization.split(' ')[1];
         const jwtKey = req.app.get('config').getJwtKey();
         const decodedToken = jsonWebToken.verify(token, jwtKey);
         if (!decodedToken.userId) {
-            throw "The token is valid but doesn't contain the required informations";
+            throw new UnauthorizedError("The token is valid but doesn't contain the required informations");
         }
         req.auth = { userId: decodedToken.userId };
         next();
     } catch (error) {
-        return next({ message: 'Invalid request, you must be authenticated', status: 401, error });
+        return next(error);
     }
 };
 
@@ -41,7 +47,7 @@ export const checkOwnership = async (req, res, next) => {
         }
 
         if (sauce.userId !== req.auth.userId) {
-            throw { message: "Invalid request, you don't have the right to access this ressource", status: 403 };
+            throw new ForbiddenError();
         }
 
         // Saves the sauce in the request for later use

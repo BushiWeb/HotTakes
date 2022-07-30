@@ -2,7 +2,9 @@ import { checkAuthentication, checkOwnership } from '../../src/middlewares/authe
 import { mockResponse, mockRequest, mockNext } from '../mocks/express-mocks.js';
 import jsonWebToken from 'jsonwebtoken';
 import { JsonWebTokenError } from 'jsonwebtoken';
-import { Query, Model, Error } from 'mongoose';
+import { Model, Error } from 'mongoose';
+import UnauthorizedError from '../../src/errors/UnauthorizedError.js';
+import ForbiddenError from '../../src/errors/ForbiddenError.js';
 
 const mockJWTVerify = jest.spyOn(jsonWebToken, 'verify');
 const authorizationHeader = 'Bearer 123312';
@@ -43,7 +45,7 @@ describe('checkAuthentication test suite', () => {
         expect(request.auth).toHaveProperty('userId', decodedToken.userId);
     });
 
-    test('Calls the next function with an error containing the status 401 if the token is invalid', () => {
+    test('Calls the next function with an error if the token is invalid', () => {
         mockJWTVerify.mockImplementation(() => {
             throw new JsonWebTokenError('Error message');
         });
@@ -51,21 +53,17 @@ describe('checkAuthentication test suite', () => {
         checkAuthentication(request, response, next);
 
         expect(next).toHaveBeenCalled();
-        expect(next.mock.calls[0][0]).toHaveProperty('message');
-        expect(next.mock.calls[0][0]).toHaveProperty('status', 401);
-        expect(next.mock.calls[0][0]).toHaveProperty('error');
+        expect(next.mock.calls[0][0]).toBeInstanceOf(JsonWebTokenError);
     });
 
-    test("Calls the next function with an error containing the status 401 if the token doesn't contain the userId", () => {
+    test("Calls the next function with an error if the token doesn't contain the userId", () => {
         const decodedToken = { troll: 123 };
         mockJWTVerify.mockReturnValue(decodedToken);
 
         checkAuthentication(request, response, next);
 
         expect(next).toHaveBeenCalled();
-        expect(next.mock.calls[0][0]).toHaveProperty('message');
-        expect(next.mock.calls[0][0]).toHaveProperty('status', 401);
-        expect(next.mock.calls[0][0]).toHaveProperty('error');
+        expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
     });
 
     test('Calls the next function with an error containing the status 401 if the token is missing', () => {
@@ -73,9 +71,7 @@ describe('checkAuthentication test suite', () => {
         checkAuthentication(request, response, next);
 
         expect(next).toHaveBeenCalled();
-        expect(next.mock.calls[0][0]).toHaveProperty('message');
-        expect(next.mock.calls[0][0]).toHaveProperty('status', 401);
-        expect(next.mock.calls[0][0]).toHaveProperty('error');
+        expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
         request.headers.authorization = authorizationHeader;
     });
 });
@@ -115,8 +111,7 @@ describe('checkOwnership returned middleware  test suite', () => {
         await checkOwnership(request, response, next);
 
         expect(next).toHaveBeenCalled();
-        expect(next.mock.calls[0][0]).toHaveProperty('message');
-        expect(next.mock.calls[0][0]).toHaveProperty('status', 403);
+        expect(next.mock.calls[0][0]).toBeInstanceOf(ForbiddenError);
     });
 
     test("Calls the next function with a mongoose DocumentNotFoundError if the element doesn't exist", async () => {
