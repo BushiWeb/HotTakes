@@ -1,6 +1,6 @@
 import ForbiddenError from '../../src/errors/ForbiddenError.js';
 
-describe('AuthenticationError test suite', () => {
+describe('ForbiddenError test suite', () => {
     describe('Constructor test suite', () => {
         test('The name property should have the right value', () => {
             const error = new ForbiddenError('Error message');

@@ -1,6 +1,6 @@
 import UnauthorizedError from '../../src/errors/UnauthorizedError.js';
 
-describe('AuthenticationError test suite', () => {
+describe('UnauthorizedError test suite', () => {
     describe('Constructor test suite', () => {
         test('The name property should have the right value', () => {
             const error = new UnauthorizedError('Error message');

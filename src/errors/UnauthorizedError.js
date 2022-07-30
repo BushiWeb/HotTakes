@@ -10,9 +10,7 @@ export default class UnauthorizedError extends AuthenticationError {
      * @param {string|undefined} message - The errors's message.
      */
     constructor(message) {
-        if (!message) {
-            message = 'Unauthorized: you must be authenticated to continue';
-        }
+        message ||= 'Unauthorized: you must be authenticated to continue';
         super(message);
         this.status = 401;
     }

@@ -10,9 +10,7 @@ export default class ForbiddenError extends AuthenticationError {
      * @param {string|undefined} message - The errors's message.
      */
     constructor(message) {
-        if (!message) {
-            message = "Forbidden: you don't have the right to access this ressource";
-        }
+        message ||= "Forbidden: you don't have the right to access this ressource";
         super(message);
         this.status = 403;
     }
