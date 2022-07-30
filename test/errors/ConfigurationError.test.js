@@ -4,7 +4,7 @@ describe('ConfigurationError test suite', () => {
     describe('Constructor test suite', () => {
         test('The name property should have the right value', () => {
             const error = new ConfigurationError('Error message');
-            expect(error.name).toMatch('Configuration access error');
+            expect(error.name).toMatch('ConfigurationError');
         });
 
         test('The message property should have the right value', () => {
