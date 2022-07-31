@@ -3,7 +3,7 @@
  */
 export default class AuthenticationError extends Error {
     /**
-     * ConfigurationError constructor.
+     * AuthenticationError constructor.
      * Calls the error constructor and sets the name.
      * @param {string|undefined} message - The errors's message.
      */

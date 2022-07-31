@@ -5,8 +5,10 @@ import AuthenticationError from './AuthenticationError.js';
  */
 export default class ForbiddenError extends AuthenticationError {
     /**
-     * ConfigurationError constructor.
-     * Calls the error constructor and sets the name.
+     * ForbiddenError constructor.
+     * Creates a default message if the message is not given.
+     * Calls the parent constructor.
+     * Sets the status.
      * @param {string|undefined} message - The errors's message.
      */
     constructor(message) {
