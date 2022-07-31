@@ -2,6 +2,7 @@ Projet5-HotTakes-EmericFrancisod.code-workspace
 node_modules
 coverage
 logs
-test/temp
+test/temp/img/*
+test/temp/logs/*
 .env
 images/*
