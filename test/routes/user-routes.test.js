@@ -188,6 +188,7 @@ describe('Authentication routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'AuthenticationError');
         });
 
         test('Responds with an error and status 500 if user fetching fails', async () => {

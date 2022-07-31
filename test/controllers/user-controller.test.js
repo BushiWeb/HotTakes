@@ -4,6 +4,7 @@ import User from '../../src/models/User.js';
 import bcrypt from 'bcrypt';
 import jsonWebToken from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import UnauthorizedError from '../../src/errors/UnauthorizedError.js';
 
 const mockUserSave = jest.spyOn(User.prototype, 'save');
 const mockUserFindOne = jest.spyOn(User, 'findOne');
@@ -94,15 +95,14 @@ describe('User controllers test suite', () => {
             expect(next.mock.calls[0][0]).toBeInstanceOf(mongoose.Error.DocumentNotFoundError);
         });
 
-        test('Calls the next middleware with an error containing status 401 if the password is invalid', async () => {
+        test('Calls the next middleware with an UnauthorizedError if the password is invalid', async () => {
             mockBcryptCompare.mockResolvedValue(false);
             mockUserFindOne.mockResolvedValue({ _id: '1' });
 
             await login(request, response, next);
 
             expect(next).toHaveBeenCalled();
-            expect(next.mock.calls[0][0]).toHaveProperty('message');
-            expect(next.mock.calls[0][0]).toHaveProperty('status', 401);
+            expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
         });
 
         test('Calls the next middleware with an error if password compare fails', async () => {

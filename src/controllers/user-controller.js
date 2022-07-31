@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import User from '../models/User.js';
 import jsonWebToken from 'jsonwebtoken';
 import mongoose from 'mongoose';
+import UnauthorizedError from '../errors/UnauthorizedError.js';
 
 /**
  * User signup controller.
@@ -62,7 +63,7 @@ export async function login(req, res, next) {
     }
 
     if (!validPassword) {
-        return next({ message: 'Invalid password', status: 401 });
+        return next(new UnauthorizedError('Invalid password'));
     }
 
     // Sends the json web token
