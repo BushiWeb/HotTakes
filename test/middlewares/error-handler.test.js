@@ -5,11 +5,13 @@ import {
     multerErrorHandler,
     jwtErrorHandler,
     userInputValidationErrorHandler,
+    deleteFiles,
 } from '../../src/middlewares/error-handlers.js';
 import { mockResponse, mockRequest, mockNext } from '../mocks/express-mocks.js';
 import mongoose from 'mongoose';
 import { JsonWebTokenError, NotBeforeError, TokenExpiredError } from 'jsonwebtoken';
 import UserInputValidationError from '../../src/errors/UserInputValidationError.js';
+import fs from 'node:fs';
 
 const request = mockRequest({
     email: 'test@email.com',
@@ -18,13 +20,46 @@ const request = mockRequest({
 const response = mockResponse();
 const next = mockNext();
 
+const mockFsUnlink = jest.spyOn(fs, 'unlink');
+
 beforeEach(() => {
     response.status.mockClear();
     response.json.mockClear();
     next.mockClear();
+    mockFsUnlink.mockClear();
 });
 
 describe('Error handlers test suite', () => {
+    describe('deleteFiles test suite', () => {
+        test('Calls the next function with the error if no file is sent', () => {
+            const error = new Error('Error message');
+
+            delete request.file;
+
+            deleteFiles(error, request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(error);
+
+            request.file = {};
+        });
+
+        test('Calls the unlink method if a file is sent', () => {
+            const error = new Error('Error message');
+
+            request.file = {
+                filename: 'file.png',
+            };
+
+            deleteFiles(error, request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(error);
+            expect(mockFsUnlink).toHaveBeenCalled();
+            expect(mockFsUnlink.mock.calls[0][0]).toMatch(request.file.filename);
+        });
+    });
+
     describe('multerErrorHandler test suite', () => {
         test('Calls the next function with the error if the error is not a MulterError', () => {
             const error = new Error('Error message');

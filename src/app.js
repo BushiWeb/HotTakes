@@ -10,6 +10,7 @@ import {
     mongooseErrorHandler,
     jwtErrorHandler,
     userInputValidationErrorHandler,
+    deleteFiles,
 } from './middlewares/error-handlers.js';
 import { requestLoggerMiddleware, errorLoggerMiddleware } from './logger/logger.js';
 import ConfigManager from './config/ConfigManager.js';
@@ -58,6 +59,7 @@ app.use('/api/sauces', sauceRouter);
 
 // Error handling
 app.use(errorLoggerMiddleware);
+app.use(deleteFiles);
 app.use(
     jwtErrorHandler,
     mongooseErrorHandler,

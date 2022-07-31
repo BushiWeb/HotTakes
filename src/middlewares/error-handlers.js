@@ -2,6 +2,25 @@ import { MulterError } from 'multer';
 import mongoose from 'mongoose';
 import { JsonWebTokenError, NotBeforeError, TokenExpiredError } from 'jsonwebtoken';
 import UserInputValidationError from '../../src/errors/UserInputValidationError.js';
+import { join } from 'node:path';
+import { unlink } from 'node:fs';
+
+/**
+ * Middleware handling file deletion in case of an error.
+ * If a file is saved during a request and that request throws an error, deletes the file.
+ * @param {*} err - Error thrown by a middleware.
+ * @param {Express.Request} req - Express request object.
+ * @param {Express.Response} res - Express response object.
+ * @param next - Next middleware to execute.
+ */
+export function deleteFiles(err, req, res, next) {
+    if (req.file) {
+        const imagePath = join(req.app.get('root'), '../images', req.file.filename);
+        unlink(imagePath, () => {});
+    }
+
+    next(err);
+}
 
 /**
  * Multer error handling middleware.
