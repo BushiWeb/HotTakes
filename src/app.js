@@ -9,6 +9,7 @@ import {
     multerErrorHandler,
     mongooseErrorHandler,
     jwtErrorHandler,
+    userInputValidationErrorHandler,
 } from './middlewares/error-handlers.js';
 import { requestLoggerMiddleware, errorLoggerMiddleware } from './logger/logger.js';
 import ConfigManager from './config/ConfigManager.js';
@@ -57,6 +58,12 @@ app.use('/api/sauces', sauceRouter);
 
 // Error handling
 app.use(errorLoggerMiddleware);
-app.use(jwtErrorHandler, mongooseErrorHandler, multerErrorHandler, defaultErrorHandler);
+app.use(
+    jwtErrorHandler,
+    mongooseErrorHandler,
+    multerErrorHandler,
+    userInputValidationErrorHandler,
+    defaultErrorHandler
+);
 
 export default app;

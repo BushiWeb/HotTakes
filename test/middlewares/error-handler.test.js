@@ -4,10 +4,12 @@ import {
     mongooseErrorHandler,
     multerErrorHandler,
     jwtErrorHandler,
+    userInputValidationErrorHandler,
 } from '../../src/middlewares/error-handlers.js';
 import { mockResponse, mockRequest, mockNext } from '../mocks/express-mocks.js';
 import mongoose from 'mongoose';
 import { JsonWebTokenError, NotBeforeError, TokenExpiredError } from 'jsonwebtoken';
+import UserInputValidationError from '../../src/errors/UserInputValidationError.js';
 
 const request = mockRequest({
     email: 'test@email.com',
@@ -182,6 +184,44 @@ describe('Error handlers test suite', () => {
             expect(response.json.mock.calls[0][0].error).toHaveProperty('date', '123');
             expect(response.status).toHaveBeenCalled();
             expect(response.status).toHaveBeenCalledWith(401);
+            expect(next).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('userInputValidationErrorHandler test suite', () => {
+        test('Calls the next function with the error if the error is not a UserInputValidationError', () => {
+            const error = new Error('Error message');
+
+            userInputValidationErrorHandler(error, request, response, next);
+
+            expect(response.json).not.toHaveBeenCalled();
+            expect(response.status).not.toHaveBeenCalled();
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(error);
+        });
+
+        test('Sends a response with status 400 and the error in JSON format if the error is a UserInputValidationError', () => {
+            const fieldsError = [
+                {
+                    message: 'Invalid field message',
+                    location: 'body',
+                },
+                {
+                    message: 'Missing header',
+                    location: 'header',
+                },
+            ];
+            const message = 'Input error';
+            const error = new UserInputValidationError(fieldsError, message);
+
+            userInputValidationErrorHandler(error, request, response, next);
+
+            expect(response.json).toHaveBeenCalled();
+            expect(response.json.mock.calls[0][0]).toHaveProperty('error');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.json.mock.calls[0][0].error).toHaveProperty('fields', fieldsError);
+            expect(response.status).toHaveBeenCalled();
+            expect(response.status).toHaveBeenCalledWith(400);
             expect(next).not.toHaveBeenCalled();
         });
     });

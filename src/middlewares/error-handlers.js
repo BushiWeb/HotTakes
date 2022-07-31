@@ -1,6 +1,7 @@
 import { MulterError } from 'multer';
 import mongoose from 'mongoose';
 import { JsonWebTokenError, NotBeforeError, TokenExpiredError } from 'jsonwebtoken';
+import UserInputValidationError from '../../src/errors/UserInputValidationError.js';
 
 /**
  * Multer error handling middleware.
@@ -94,6 +95,31 @@ export function jwtErrorHandler(err, req, res, next) {
     }
 
     return res.status(401).json(errorObject);
+}
+
+/**
+ * User input validation error handling middleware.
+ * It catches and handles UserInputValidationError.
+ * If the error is not a UserInputValidationError error, then it calls the next error middleware.
+ * @param {*} err - Error thrown by a middleware.
+ * @param {Express.Request} req - Express request object.
+ * @param {Express.Response} res - Express response object.
+ * @param next - Next middleware to execute.
+ */
+export function userInputValidationErrorHandler(err, req, res, next) {
+    if (!(err instanceof UserInputValidationError)) {
+        return next(err);
+    }
+
+    const errorObject = {
+        error: {
+            name: err.name,
+            message: err.message,
+            fields: err.errors,
+        },
+    };
+
+    return res.status(400).json(errorObject);
 }
 
 /**

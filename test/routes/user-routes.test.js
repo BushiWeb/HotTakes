@@ -25,6 +25,10 @@ describe('Authentication routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'email' });
         });
 
         test('Responds with an error and status 400 if the email is absent', async () => {
@@ -34,15 +38,23 @@ describe('Authentication routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'email' });
         });
 
         test('Responds with an error and status 400 if the password is invalid', async () => {
-            const requestBody = { email: 'testemail.com', password: 'P@w0r$' };
+            const requestBody = { email: 'test@email.com', password: 'P@w0r$' };
             const response = await request(app).post('/api/auth/signup').send(requestBody);
 
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'password' });
         });
 
         test('Responds with an error and status 400 if the password is absent', async () => {
@@ -52,6 +64,10 @@ describe('Authentication routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'password' });
         });
 
         test('Responds with an error and status 500 if the password hash fails', async () => {
@@ -120,6 +136,10 @@ describe('Authentication routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'email' });
         });
 
         test('Responds with an error and status 400 if the email is missing', async () => {
@@ -129,6 +149,10 @@ describe('Authentication routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'email' });
         });
 
         test('Responds with an error and status 400 if the password is missing', async () => {
@@ -138,6 +162,10 @@ describe('Authentication routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'password' });
         });
 
         test("Responds with an error and status 404 if the user doesn't exist", async () => {
