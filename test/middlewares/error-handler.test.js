@@ -31,6 +31,10 @@ beforeEach(() => {
 
 describe('Error handlers test suite', () => {
     describe('deleteFiles test suite', () => {
+        afterEach(() => {
+            delete request.files;
+            request.file = {};
+        });
         test('Calls the next function with the error if no file is sent', () => {
             const error = new Error('Error message');
 
@@ -40,8 +44,6 @@ describe('Error handlers test suite', () => {
 
             expect(next).toHaveBeenCalled();
             expect(next).toHaveBeenCalledWith(error);
-
-            request.file = {};
         });
 
         test('Calls the unlink method if a file is sent', () => {
@@ -57,6 +59,67 @@ describe('Error handlers test suite', () => {
             expect(next).toHaveBeenCalledWith(error);
             expect(mockFsUnlink).toHaveBeenCalled();
             expect(mockFsUnlink.mock.calls[0][0]).toMatch(request.file.filename);
+        });
+
+        test('Calls the unlink method if an array of files is sent', () => {
+            const error = new Error('Error message');
+
+            delete request.file;
+
+            request.files = [
+                {
+                    filename: 'file.png',
+                },
+                {
+                    filename: 'file2.png',
+                },
+            ];
+
+            deleteFiles(error, request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(error);
+            expect(mockFsUnlink).toHaveBeenCalledTimes(2);
+
+            for (let i = 0; i < request.files.length; i++) {
+                expect(mockFsUnlink.mock.calls[i][0]).toMatch(request.files[i].filename);
+            }
+        });
+
+        test('Calls the unlink method if an object of files is sent', () => {
+            const error = new Error('Error message');
+
+            delete request.file;
+
+            request.files = {
+                filename: [
+                    {
+                        filename: 'file.png',
+                    },
+                ],
+                filename2: [
+                    {
+                        filename: 'file2.png',
+                    },
+                    {
+                        filename: 'file3.png',
+                    },
+                ],
+            };
+
+            deleteFiles(error, request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(error);
+            expect(mockFsUnlink).toHaveBeenCalled();
+
+            let counter = 0;
+            let fields = Object.keys(request.files);
+            for (let i = 0; i < fields.length; i++) {
+                for (let j = 0; j < request.files[fields[i]].length; j++, counter++) {
+                    expect(mockFsUnlink.mock.calls[counter][0]).toMatch(request.files[fields[i]][j].filename);
+                }
+            }
         });
     });
 

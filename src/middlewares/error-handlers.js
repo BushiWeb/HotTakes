@@ -14,10 +14,25 @@ import { unlink } from 'node:fs';
  * @param next - Next middleware to execute.
  */
 export function deleteFiles(err, req, res, next) {
+    let files = [];
     if (req.file) {
-        const imagePath = join(req.app.get('root'), '../images', req.file.filename);
-        unlink(imagePath, () => {});
+        files.push(req.file);
     }
+
+    if (req.files) {
+        if (Array.isArray(req.files)) {
+            files = req.files;
+        } else {
+            for (const fileName in req.files) {
+                files.push(...req.files[fileName]);
+            }
+        }
+    }
+
+    files.forEach((file) => {
+        const imagePath = join(req.app.get('root'), '../images', file.filename);
+        unlink(imagePath, () => {});
+    });
 
     next(err);
 }
