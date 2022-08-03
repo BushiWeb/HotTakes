@@ -1,6 +1,7 @@
 import Sauce from '../models/Sauce.js';
 import { unlink } from 'node:fs';
 import { join } from 'node:path';
+import mongoose from 'mongoose';
 
 /**
  * Sauce creation controller.
@@ -25,9 +26,6 @@ export async function createSauce(req, res, next) {
         await sauce.save();
         res.status(201).json({ message: 'Nouvelle sauce créée!' });
     } catch (error) {
-        if (error.name && error.name === 'ValidationError') {
-            error.status = 400;
-        }
         return next(error);
     }
 }
@@ -57,19 +55,10 @@ export async function getSauce(req, res, next) {
     try {
         const sauce = await Sauce.findById(req.params.id, '-__v');
         if (sauce === null) {
-            throw {
-                message: `Can't find the suace with id ${req.params.id}`,
-                name: 'DocumentNotFoundError',
-            };
+            throw new mongoose.Error.DocumentNotFoundError(`Can't find the sauce with id ${req.params.id}`);
         }
         res.status(200).json(sauce);
     } catch (error) {
-        if (error.name && error.name === 'DocumentNotFoundError') {
-            error.status = 404;
-        }
-        if (error.name && error.name === 'CastError') {
-            error.status = 400;
-        }
         return next(error);
     }
 }
@@ -97,6 +86,9 @@ export async function updateSauce(req, res, next) {
         // Get the previous image URL from the request cache or from the database if the request contains a file
         if (req.file) {
             let sauce = req.cache?.sauces?.[req.params.id] || (await Sauce.findById(req.params.id));
+            if (sauce === null) {
+                throw new mongoose.Error.DocumentNotFoundError(`Can't find the sauce with id ${req.params.id}`);
+            }
             previousImageUrl = sauce.imageUrl;
         }
 
@@ -105,15 +97,6 @@ export async function updateSauce(req, res, next) {
 
         res.status(200).json({ message: `La sauce ${req.params.id} a bien été modifiée` });
     } catch (error) {
-        if (error.name && error.name === 'DocumentNotFoundError') {
-            error.status = 404;
-        }
-        if (error.name && error.name === 'CastError') {
-            error.status = 400;
-        }
-        if (error.name && error.name === 'ValidationError') {
-            error.status = 400;
-        }
         return next(error);
     }
 
@@ -141,6 +124,9 @@ export async function deleteSauce(req, res, next) {
     try {
         // Get the previous image URL from the request cache or from the database
         let sauce = req.cache?.sauces?.[req.params.id] || (await Sauce.findById(req.params.id));
+        if (sauce === null) {
+            throw new mongoose.Error.DocumentNotFoundError(`Can't find the sauce with id ${req.params.id}`);
+        }
         imageUrl = sauce.imageUrl;
 
         // Deletes
@@ -148,12 +134,6 @@ export async function deleteSauce(req, res, next) {
 
         res.status(200).json({ message: `La sauce ${req.params.id} a bien été supprimée` });
     } catch (error) {
-        if (error.name && error.name === 'DocumentNotFoundError') {
-            error.status = 404;
-        }
-        if (error.name && error.name === 'CastError') {
-            error.status = 400;
-        }
         return next(error);
     }
 
@@ -179,10 +159,7 @@ export async function likeSauce(req, res, next) {
         // Fetch the sauce to update it
         const sauce = await Sauce.findById(req.params.id);
         if (sauce === null) {
-            throw {
-                message: `Can't find the suace with id ${req.params.id}`,
-                name: 'DocumentNotFoundError',
-            };
+            throw new mongoose.Error.DocumentNotFoundError(`Can't find the sauce with id ${req.params.id}`);
         }
 
         // Update the sauce, depending on the like value
@@ -243,15 +220,6 @@ export async function likeSauce(req, res, next) {
 
         res.status(200).json({ message });
     } catch (error) {
-        if (error.name && error.name === 'DocumentNotFoundError') {
-            error.status = 404;
-        }
-        if (error.name && error.name === 'CastError') {
-            error.status = 400;
-        }
-        if (error.name && error.name === 'ValidationError') {
-            error.status = 400;
-        }
         return next(error);
     }
 }

@@ -1,5 +1,6 @@
 import { validationResult } from 'express-validator';
 import { errorFormatter } from '../utils/utils-validation.js';
+import UserInputValidationError from '../errors/UserInputValidationError.js';
 
 /**
  * Field validation middleware.
@@ -15,8 +16,6 @@ export const validateFields = (req, res, next) => {
         next();
     } catch (error) {
         error = error.formatWith(errorFormatter).array();
-        error.status = 400;
-        error.message = 'User input validation error';
-        return next(error);
+        return next(new UserInputValidationError(error));
     }
 };

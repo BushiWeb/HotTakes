@@ -1,6 +1,8 @@
 import bcrypt from 'bcrypt';
 import User from '../models/User.js';
 import jsonWebToken from 'jsonwebtoken';
+import mongoose from 'mongoose';
+import UnauthorizedError from '../errors/UnauthorizedError.js';
 
 /**
  * User signup controller.
@@ -29,9 +31,6 @@ export async function signup(req, res, next) {
         await user.save();
         res.status(201).json({ message: 'Nouvel utilisateur créé!' });
     } catch (error) {
-        if (error.name && error.name === 'ValidationError') {
-            error.status = 400;
-        }
         return next(error);
     }
 }
@@ -48,12 +47,11 @@ export async function login(req, res, next) {
     let user;
     try {
         user = await User.findOne({ email: req.body.email });
+        if (user === null) {
+            throw new mongoose.Error.DocumentNotFoundError(`Can't find the user with email ${req.body.email}`);
+        }
     } catch (error) {
         return next(error);
-    }
-
-    if (!user) {
-        return next({ message: 'User not found', status: 404 });
     }
 
     // Password check
@@ -65,15 +63,19 @@ export async function login(req, res, next) {
     }
 
     if (!validPassword) {
-        return next({ message: 'Invalid password', status: 401 });
+        return next(new UnauthorizedError('Invalid password'));
     }
 
     // Sends the json web token
-    const jwtKey = req.app.get('config').getJwtKey();
-    res.status(200).json({
-        userId: user._id,
-        token: jsonWebToken.sign({ userId: user._id }, jwtKey, {
-            expiresIn: '24h',
-        }),
-    });
+    try {
+        const jwtKey = req.app.get('config').getJwtKey();
+        res.status(200).json({
+            userId: user._id,
+            token: jsonWebToken.sign({ userId: user._id }, jwtKey, {
+                expiresIn: '24h',
+            }),
+        });
+    } catch (error) {
+        return next(error);
+    }
 }

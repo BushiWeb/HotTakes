@@ -3,6 +3,8 @@ import { mockResponse, mockRequest, mockNext } from '../mocks/express-mocks.js';
 import User from '../../src/models/User.js';
 import bcrypt from 'bcrypt';
 import jsonWebToken from 'jsonwebtoken';
+import mongoose from 'mongoose';
+import UnauthorizedError from '../../src/errors/UnauthorizedError.js';
 
 const mockUserSave = jest.spyOn(User.prototype, 'save');
 const mockUserFindOne = jest.spyOn(User, 'findOne');
@@ -42,21 +44,9 @@ describe('User controllers test suite', () => {
             expect(response.json.mock.calls[0][0]).toHaveProperty('message');
         });
 
-        test('Calls the next middleware with an error containing status 400 if user already exits', async () => {
-            const errorMessage = 'User save error message';
-            const saveError = { message: errorMessage, name: 'ValidationError' };
-            mockBcryptHash.mockResolvedValue('hash');
-            mockUserSave.mockRejectedValue(saveError);
-
-            await signup(request, response, next);
-
-            expect(next).toHaveBeenCalled();
-            expect(next).toHaveBeenCalledWith({ status: 400, ...saveError });
-        });
-
         test('Calls the next middleware with an error if saving fails', async () => {
             const errorMessage = 'User save error message';
-            const saveError = { message: errorMessage };
+            const saveError = new mongoose.Error(errorMessage);
             mockBcryptHash.mockResolvedValue('hash');
             mockUserSave.mockRejectedValue(saveError);
 
@@ -68,7 +58,7 @@ describe('User controllers test suite', () => {
 
         test('Calls the next middleware with an error if password hash fails', async () => {
             const errorMessage = 'Hash error message';
-            const hashError = { message: errorMessage };
+            const hashError = new Error(errorMessage);
             mockBcryptHash.mockRejectedValue(hashError);
 
             await signup(request, response, next);
@@ -95,26 +85,24 @@ describe('User controllers test suite', () => {
             expect(response.json.mock.calls[0][0]).toHaveProperty('userId');
         });
 
-        test("Calls the next middleware with an error containing status 404 if user doesn't exist", async () => {
+        test("Calls the next middleware with a mongoose DocumentNotFoundError if the user doesn't exist", async () => {
             mockBcryptCompare.mockResolvedValue(true);
             mockUserFindOne.mockResolvedValue(null);
 
             await login(request, response, next);
 
             expect(next).toHaveBeenCalled();
-            expect(next.mock.calls[0][0]).toHaveProperty('message');
-            expect(next.mock.calls[0][0]).toHaveProperty('status', 404);
+            expect(next.mock.calls[0][0]).toBeInstanceOf(mongoose.Error.DocumentNotFoundError);
         });
 
-        test('Calls the next middleware with an error containing status 401 if the password is invalid', async () => {
+        test('Calls the next middleware with an UnauthorizedError if the password is invalid', async () => {
             mockBcryptCompare.mockResolvedValue(false);
             mockUserFindOne.mockResolvedValue({ _id: '1' });
 
             await login(request, response, next);
 
             expect(next).toHaveBeenCalled();
-            expect(next.mock.calls[0][0]).toHaveProperty('message');
-            expect(next.mock.calls[0][0]).toHaveProperty('status', 401);
+            expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
         });
 
         test('Calls the next middleware with an error if password compare fails', async () => {
@@ -133,7 +121,7 @@ describe('User controllers test suite', () => {
 
         test('Calls the next middleware with an error if the user query fails', async () => {
             const errorMessage = 'Querry error message';
-            const querryError = { message: errorMessage };
+            const querryError = new mongoose.Error(errorMessage);
             mockUserFindOne.mockRejectedValue(querryError);
 
             await login(request, response, next);

@@ -2,6 +2,7 @@ import { validateFields } from '../../src/middlewares/field-validation';
 import { mockResponse, mockRequest, mockNext } from '../mocks/express-mocks.js';
 import { Result } from 'express-validator';
 import { mockResultError } from '../mocks/express-validator-mocks.js';
+import UserInputValidationError from '../../src/errors/UserInputValidationError';
 
 const mockValidationResultThrow = jest.spyOn(Result.prototype, 'throw');
 
@@ -32,7 +33,6 @@ describe('validateFields test suite', () => {
     test('Calls the next function with an error containing the status 400 if the validation fails', () => {
         const errorMessage = 'Validation error message';
         const validationError = mockResultError(errorMessage);
-        const expectedResult = { message: 'User input validation error', status: 400, ...validationError };
 
         mockValidationResultThrow.mockImplementation(() => {
             throw validationError;
@@ -41,8 +41,6 @@ describe('validateFields test suite', () => {
         validateFields(request, response, next);
 
         expect(next).toHaveBeenCalled();
-        expect(next.mock.calls[0][0]).toHaveProperty('message');
-        expect(next.mock.calls[0][0]).toHaveProperty('status', 400);
-        expect(next.mock.calls[0][0]).toMatchObject(validationError);
+        expect(next.mock.calls[0][0]).toBeInstanceOf(UserInputValidationError);
     });
 });

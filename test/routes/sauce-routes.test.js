@@ -6,6 +6,8 @@ import { dirname, join } from 'node:path';
 import jsonWebToken from 'jsonwebtoken';
 import SAUCE_DATA from '../mocks/sauce-data.js';
 import fs from 'node:fs';
+import mongoose from 'mongoose';
+import { MulterError } from 'multer';
 
 const mockSauceSave = jest.spyOn(Sauce.prototype, 'save').mockResolvedValue();
 const mockSauceFind = jest.spyOn(Sauce, 'find');
@@ -67,8 +69,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/name/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'name' });
+            expect(mockFsUnlink).toHaveBeenCalled();
         });
 
         test('Responds with an error and status 400 if the name is absent', async () => {
@@ -83,8 +88,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/name/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'name' });
+            expect(mockFsUnlink).toHaveBeenCalled();
         });
 
         test('Responds with an error and status 400 if the heat is invalid', async () => {
@@ -99,8 +107,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/heat/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'heat' });
+            expect(mockFsUnlink).toHaveBeenCalled();
         });
 
         test('Responds with an error and status 400 if the heat is absent', async () => {
@@ -115,8 +126,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/heat/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'heat' });
+            expect(mockFsUnlink).toHaveBeenCalled();
         });
 
         test('Responds with an error and status 400 if the heat is outside the boundaries', async () => {
@@ -131,8 +145,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/heat/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'heat' });
+            expect(mockFsUnlink).toHaveBeenCalled();
         });
 
         test('Responds with an error and status 400 if the file is missing', async () => {
@@ -144,6 +161,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'MulterError');
         });
 
         test('Responds with an error and status 400 if the description is invalid', async () => {
@@ -158,8 +176,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/description/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'description' });
+            expect(mockFsUnlink).toHaveBeenCalled();
         });
 
         test('Responds with an error and status 400 if the description is absent', async () => {
@@ -174,8 +195,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/description/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'description' });
+            expect(mockFsUnlink).toHaveBeenCalled();
         });
 
         test('Responds with an error and status 400 if the manufacturer is invalid', async () => {
@@ -190,8 +214,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/manufacturer/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'manufacturer' });
+            expect(mockFsUnlink).toHaveBeenCalled();
         });
 
         test('Responds with an error and status 400 if the manufacturer is absent', async () => {
@@ -206,8 +233,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/manufacturer/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'manufacturer' });
+            expect(mockFsUnlink).toHaveBeenCalled();
         });
 
         test('Responds with an error and status 400 if the main pepper is invalid', async () => {
@@ -222,8 +252,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/mainPepper/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'mainPepper' });
+            expect(mockFsUnlink).toHaveBeenCalled();
         });
 
         test('Responds with an error and status 400 if the main pepper is absent', async () => {
@@ -238,8 +271,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/mainPepper/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'mainPepper' });
+            expect(mockFsUnlink).toHaveBeenCalled();
         });
 
         test('Responds with an error and status 401 if the jwt is invalid', async () => {
@@ -255,6 +291,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'JsonWebTokenError');
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
@@ -270,10 +307,12 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'AuthenticationError');
         });
 
         test('Responds with an error and status 400 if the saving fails due to validation error', async () => {
-            mockSauceSave.mockRejectedValueOnce({ message: 'Save fail', name: 'ValidationError' });
+            const error = new mongoose.Error.ValidationError();
+            mockSauceSave.mockRejectedValueOnce(error);
             const response = await request(app)
                 .post('/api/sauces/')
                 .set('Authorization', authorizationHeader)
@@ -283,10 +322,14 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'ValidationError');
+            expect(mockFsUnlink).toHaveBeenCalled();
         });
 
         test('Responds with an error and status 500 if the saving fails', async () => {
-            mockSauceSave.mockRejectedValueOnce({ message: 'Save fail' });
+            const error = new mongoose.Error();
+            mockSauceSave.mockRejectedValueOnce(error);
             const response = await request(app)
                 .post('/api/sauces/')
                 .set('Authorization', authorizationHeader)
@@ -296,6 +339,8 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(mockFsUnlink).toHaveBeenCalled();
         });
     });
 
@@ -328,6 +373,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'JsonWebTokenError');
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
@@ -340,15 +386,18 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'AuthenticationError');
         });
 
         test('Responds with an error and status 500 if the fetching fails', async () => {
-            mockSauceFind.mockRejectedValueOnce({ message: 'Fetch fails' });
+            const error = new mongoose.Error();
+            mockSauceFind.mockRejectedValueOnce(error);
             const response = await request(app).get('/api/sauces/').set('Authorization', authorizationHeader);
 
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
         });
     });
 
@@ -382,6 +431,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'JsonWebTokenError');
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
@@ -394,15 +444,18 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'AuthenticationError');
         });
 
         test('Responds with an error and status 500 if the fetching fails', async () => {
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Fetch fails' });
+            const error = new mongoose.Error();
+            mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app).get(requestUrl).set('Authorization', authorizationHeader);
 
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
         });
 
         test("Responds with an error and status 404 if the document can't be found", async () => {
@@ -413,26 +466,34 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'DocumentNotFoundError');
         });
 
         test("Responds with an error and status 404 if the document can't be found and an error is thrown", async () => {
             const badRequestUrl = '/api/sauces/000000000';
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Fetch fails', name: 'DocumentNotFoundError' });
+            const error = new mongoose.Error.DocumentNotFoundError();
+            mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app).get(badRequestUrl).set('Authorization', authorizationHeader);
 
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'DocumentNotFoundError');
         });
 
         test('Responds with an error and status 400 if the id is incorrect', async () => {
             const badRequestUrl = '/api/sauces/000000000';
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Cast fails', name: 'CastError' });
+            const error = new mongoose.Error.CastError();
+            mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app).get(badRequestUrl).set('Authorization', authorizationHeader);
 
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'CastError');
         });
     });
 
@@ -526,8 +587,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/name/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'name' });
+            expect(mockFsUnlink).toHaveBeenCalled();
         });
 
         test('Responds with an error and status 400 if the name is invalid and no image is sent', async () => {
@@ -543,8 +607,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/name/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'name' });
+            expect(mockFsUnlink).not.toHaveBeenCalled();
         });
 
         test('Responds with a message in JSON format, and status 200 if name is absent', async () => {
@@ -579,8 +646,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/heat/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'heat' });
+            expect(mockFsUnlink).toHaveBeenCalled();
         });
 
         test('Responds with an error and status 400 if the heat is invalid and no image is sent', async () => {
@@ -596,8 +666,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/heat/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'heat' });
+            expect(mockFsUnlink).not.toHaveBeenCalled();
         });
 
         test('Responds with a message in JSON format, and status 200 if heat is absent', async () => {
@@ -632,8 +705,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/heat/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'heat' });
+            expect(mockFsUnlink).toHaveBeenCalled();
         });
 
         test('Responds with an error and status 400 if the heat is outside the boundaries and no file is sent', async () => {
@@ -649,8 +725,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/heat/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'heat' });
+            expect(mockFsUnlink).not.toHaveBeenCalled();
         });
 
         test('Responds with an error and status 400 if the description is invalid', async () => {
@@ -667,8 +746,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/description/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'description' });
+            expect(mockFsUnlink).toHaveBeenCalled();
         });
 
         test('Responds with an error and status 400 if the description is invalid and no file is sent', async () => {
@@ -684,8 +766,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/description/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'description' });
+            expect(mockFsUnlink).not.toHaveBeenCalled();
         });
 
         test('Responds with a message in JSON format, and status 200 if description is absent', async () => {
@@ -720,8 +805,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/manufacturer/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'manufacturer' });
+            expect(mockFsUnlink).toHaveBeenCalled();
         });
 
         test('Responds with an error and status 400 if the manufacturer is invalid and no file is sent', async () => {
@@ -737,8 +825,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/manufacturer/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'manufacturer' });
+            expect(mockFsUnlink).not.toHaveBeenCalled();
         });
 
         test('Responds with a message in JSON format, and status 200 if manufacturer is absent', async () => {
@@ -773,8 +864,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/mainPepper/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'mainPepper' });
+            expect(mockFsUnlink).toHaveBeenCalled();
         });
 
         test('Responds with an error and status 400 if the main pepper is invalid and no file is sent', async () => {
@@ -790,8 +884,11 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/mainPepper/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'mainPepper' });
+            expect(mockFsUnlink).not.toHaveBeenCalled();
         });
 
         test('Responds with a message in JSON format, and status 200 if main pepper is absent', async () => {
@@ -825,6 +922,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'JsonWebTokenError');
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
@@ -840,6 +938,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'AuthenticationError');
         });
 
         test("Responds with an error and status 403 if the user doesn't have the right to manipulate the sauce", async () => {
@@ -856,10 +955,12 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(403);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'AuthenticationError');
         });
 
         test('Responds with an error and status 400 if the update fails due to validation error', async () => {
-            mockSauceUpdateOne.mockRejectedValueOnce({ message: 'Save fail', name: 'ValidationError' });
+            const error = new mongoose.Error.ValidationError();
+            mockSauceUpdateOne.mockRejectedValueOnce(error);
             mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
             const response = await request(app)
                 .put(requestUrl)
@@ -869,10 +970,13 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'ValidationError');
         });
 
         test('Responds with an error and status 500 if the update fails', async () => {
-            mockSauceUpdateOne.mockRejectedValueOnce({ message: 'Save fail' });
+            const error = new mongoose.Error();
+            mockSauceUpdateOne.mockRejectedValueOnce(error);
             mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
             const response = await request(app)
                 .put(requestUrl)
@@ -882,10 +986,12 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
         });
 
         test('Responds with an error and status 500 if the fetching fails', async () => {
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail' });
+            const error = new mongoose.Error();
+            mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app)
                 .put(requestUrl)
                 .set('Authorization', authorizationHeader)
@@ -894,6 +1000,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
         });
 
         test("Responds with an error and status 404 if the document can't be found", async () => {
@@ -906,10 +1013,13 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'DocumentNotFoundError');
         });
 
-        test.skip("Responds with an error and status 404 if the document can't be found and an error is thrown", async () => {
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail', name: 'DocumentNotFoundError' });
+        test("Responds with an error and status 404 if the document can't be found and an error is thrown", async () => {
+            const error = new mongoose.Error.DocumentNotFoundError();
+            mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app)
                 .put(requestUrl)
                 .set('Authorization', authorizationHeader)
@@ -918,10 +1028,13 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'DocumentNotFoundError');
         });
 
-        test.skip('Responds with an error and status 400 if the id is incorrect', async () => {
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail', name: 'CastError' });
+        test('Responds with an error and status 400 if the id is incorrect', async () => {
+            const error = new mongoose.Error.CastError();
+            mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app)
                 .put(requestUrl)
                 .set('Authorization', authorizationHeader)
@@ -930,6 +1043,8 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'CastError');
         });
     });
 
@@ -973,6 +1088,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'JsonWebTokenError');
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
@@ -985,6 +1101,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'AuthenticationError');
         });
 
         test("Responds with an error and status 403 if the user doesn't have the right to manipulate the sauce", async () => {
@@ -998,25 +1115,30 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(403);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'AuthenticationError');
         });
 
         test('Responds with an error and status 500 if the deletion fails', async () => {
-            mockSauceDeleteOne.mockRejectedValueOnce({ message: 'Deletion fails' });
+            const error = new mongoose.Error();
+            mockSauceDeleteOne.mockRejectedValueOnce(error);
             mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
             const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
 
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
         });
 
         test('Responds with an error and status 500 if the fetching fails', async () => {
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail' });
+            const error = new mongoose.Error();
+            mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
 
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
         });
 
         test("Responds with an error and status 404 if the document can't be found", async () => {
@@ -1026,24 +1148,32 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'DocumentNotFoundError');
         });
 
-        test.skip("Responds with an error and status 404 if the document can't be found and an error is thrown", async () => {
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail', name: 'DocumentNotFoundError' });
+        test("Responds with an error and status 404 if the document can't be found and an error is thrown", async () => {
+            const error = new mongoose.Error.DocumentNotFoundError();
+            mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
 
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'DocumentNotFoundError');
         });
 
-        test.skip('Responds with an error and status 400 if the id is incorrect', async () => {
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail', name: 'CastError' });
+        test('Responds with an error and status 400 if the id is incorrect', async () => {
+            const error = new mongoose.Error.CastError();
+            mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
 
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'CastError');
         });
     });
 
@@ -1265,8 +1395,10 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/like/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'like' });
         });
 
         test('Responds with an error and status 400 if the like value is absent', async () => {
@@ -1278,8 +1410,10 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/like/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'like' });
         });
 
         test('Responds with an error and status 400 if the like value is outside the boundaries', async () => {
@@ -1291,8 +1425,10 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error[0]).toHaveProperty('message');
-            expect(response.body.error[0].message).toMatch(/like/);
+            expect(response.body.error).toHaveProperty('name', 'UserInputValidationError');
+            expect(response.body.error).toHaveProperty('fields');
+            expect(response.body.error.fields).toHaveLength(1);
+            expect(response.body.error.fields[0]).toMatchObject({ param: 'like' });
         });
 
         test('Responds with an error and status 401 if the jwt is invalid', async () => {
@@ -1304,6 +1440,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'JsonWebTokenError');
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
@@ -1319,11 +1456,13 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'AuthenticationError');
         });
 
         test('Responds with an error and status 400 if the saving fails due to validation error', async () => {
+            const error = new mongoose.Error.ValidationError();
             mockSauceFindById.mockResolvedValue(returnedSauce);
-            mockSauceSave.mockRejectedValueOnce({ message: 'Save fail', name: 'ValidationError' });
+            mockSauceSave.mockRejectedValueOnce(error);
 
             const response = await request(app)
                 .post(requestUrl)
@@ -1333,11 +1472,14 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'ValidationError');
         });
 
         test('Responds with an error and status 500 if the saving fails', async () => {
+            const error = new mongoose.Error();
             mockSauceFindById.mockResolvedValue(returnedSauce);
-            mockSauceSave.mockRejectedValueOnce({ message: 'Save fail' });
+            mockSauceSave.mockRejectedValueOnce(error);
 
             const response = await request(app)
                 .post(requestUrl)
@@ -1347,10 +1489,12 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
         });
 
         test('Responds with an error and status 500 if the fetching fails', async () => {
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail' });
+            const error = new mongoose.Error();
+            mockSauceFindById.mockRejectedValueOnce(error);
 
             const response = await request(app)
                 .post(requestUrl)
@@ -1360,6 +1504,7 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
         });
 
         test("Responds with an error and status 404 if the document can't be found", async () => {
@@ -1373,10 +1518,13 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'DocumentNotFoundError');
         });
 
-        test.skip("Responds with an error and status 404 if the document can't be found and an error is thrown", async () => {
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail', name: 'DocumentNotFoundError' });
+        test("Responds with an error and status 404 if the document can't be found and an error is thrown", async () => {
+            const error = new mongoose.Error.DocumentNotFoundError();
+            mockSauceFindById.mockRejectedValueOnce(error);
 
             const response = await request(app)
                 .post(requestUrl)
@@ -1386,10 +1534,13 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'DocumentNotFoundError');
         });
 
-        test.skip('Responds with an error and status 400 if the id is incorrect', async () => {
-            mockSauceFindById.mockRejectedValueOnce({ message: 'Save fail', name: 'CastError' });
+        test('Responds with an error and status 400 if the id is incorrect', async () => {
+            const error = new mongoose.Error.CastError();
+            mockSauceFindById.mockRejectedValueOnce(error);
 
             const response = await request(app)
                 .post(requestUrl)
@@ -1399,6 +1550,8 @@ describe('Sauce routes test suite', () => {
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('type', 'MongooseError');
+            expect(response.body.error).toHaveProperty('name', 'CastError');
         });
     });
 });
