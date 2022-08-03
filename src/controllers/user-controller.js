@@ -13,21 +13,16 @@ import UnauthorizedError from '../errors/UnauthorizedError.js';
  * @param next - Next middleware to execute.
  */
 export async function signup(req, res, next) {
-    // Password hash
-    let passwordHash = '';
     try {
-        passwordHash = await bcrypt.hash(req.body.password, 10);
-    } catch (error) {
-        return next(error);
-    }
+        // Password hash
+        const passwordHash = await bcrypt.hash(req.body.password, 10);
 
-    // User creation
-    const user = new User({
-        email: req.body.email,
-        password: passwordHash,
-    });
+        // User creation
+        const user = new User({
+            email: req.body.email,
+            password: passwordHash,
+        });
 
-    try {
         await user.save();
         res.status(201).json({ message: 'Nouvel utilisateur créé!' });
     } catch (error) {
@@ -43,31 +38,20 @@ export async function signup(req, res, next) {
  * @param next - Next middleware to execute.
  */
 export async function login(req, res, next) {
-    // Get the user
-    let user;
     try {
-        user = await User.findOne({ email: req.body.email });
-        if (user === null) {
+        // Get the user
+        const user = await User.findOne({ email: req.body.email });
+        if (!user) {
             throw new mongoose.Error.DocumentNotFoundError(`Can't find the user with email ${req.body.email}`);
         }
-    } catch (error) {
-        return next(error);
-    }
 
-    // Password check
-    let validPassword;
-    try {
-        validPassword = await bcrypt.compare(req.body.password, user.password);
-    } catch (error) {
-        return next(error);
-    }
+        // Password check
+        const validPassword = await bcrypt.compare(req.body.password, user.password);
+        if (!validPassword) {
+            return next(new UnauthorizedError('Invalid password'));
+        }
 
-    if (!validPassword) {
-        return next(new UnauthorizedError('Invalid password'));
-    }
-
-    // Sends the json web token
-    try {
+        // Sends the json web token
         const jwtKey = req.app.get('config').getJwtKey();
         res.status(200).json({
             userId: user._id,
