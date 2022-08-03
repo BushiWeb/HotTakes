@@ -1,6 +1,11 @@
 import mongoose from 'mongoose';
 import ConfigManager from '../config/ConfigManager.js';
 
+/**
+ * Creates a mongo DB databasa URl dependong on some environment variables.
+ * @returns Returns the database URL
+ * @throws {ConfigurationErrors} Throws ConfigurationErrors if the environment variables are not defined.
+ */
 const createDBUrl = () => {
     return `mongodb+srv://${ConfigManager.getEnvVariable('DB_USERNAME')}:${ConfigManager.getEnvVariable(
         'DB_PASSWORD'
@@ -9,6 +14,10 @@ const createDBUrl = () => {
     )}?retryWrites=true&w=majority`;
 };
 
+/**
+ * Connects to MongoDB.
+ * Prints the result.
+ */
 export const mongoDBConnect = async () => {
     try {
         const dbUrl = createDBUrl();
