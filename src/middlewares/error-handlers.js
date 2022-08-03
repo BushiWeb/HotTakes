@@ -1,6 +1,6 @@
 import { MulterError } from 'multer';
 import mongoose from 'mongoose';
-import { JsonWebTokenError, NotBeforeError, TokenExpiredError } from 'jsonwebtoken';
+import jsonWebToken from 'jsonwebtoken';
 import UserInputValidationError from '../../src/errors/UserInputValidationError.js';
 import { join } from 'node:path';
 import { unlink } from 'node:fs';
@@ -108,7 +108,7 @@ export function mongooseErrorHandler(err, req, res, next) {
  * @param next - Next middleware to execute.
  */
 export function jwtErrorHandler(err, req, res, next) {
-    if (!(err instanceof JsonWebTokenError)) {
+    if (!(err instanceof jsonWebToken.JsonWebTokenError)) {
         return next(err);
     }
 
@@ -120,11 +120,11 @@ export function jwtErrorHandler(err, req, res, next) {
         },
     };
 
-    if (err instanceof NotBeforeError) {
+    if (err instanceof jsonWebToken.NotBeforeError) {
         errorObject.error.date = err.date;
     }
 
-    if (err instanceof TokenExpiredError) {
+    if (err instanceof jsonWebToken.TokenExpiredError) {
         errorObject.error.expiredAt = err.expiredAt;
     }
 

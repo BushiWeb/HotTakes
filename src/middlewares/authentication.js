@@ -1,4 +1,4 @@
-import jsonWebToken, { JsonWebTokenError } from 'jsonwebtoken';
+import jsonWebToken from 'jsonwebtoken';
 import Sauce from '../models/Sauce.js';
 import mongoose from 'mongoose';
 import UnauthorizedError from '../errors/UnauthorizedError.js';
