@@ -42,6 +42,6 @@ export const getConnectionInformations = (server, port) => {
  * @param {Error} error - Thrown error object.
  */
 export const errorHandler = (error) => {
-    Logger.fatal({ message: error.message, label: `Syscall ${error.syscall}: ${error.code}` });
+    Logger.fatal(error);
     exit(1);
 };

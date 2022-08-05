@@ -26,7 +26,7 @@ let maxFileSize;
 try {
     MIME_TYPES = defaultConfigManager.getConfig('fileUpload.allowedMimeTypes');
 } catch (error) {
-    Logger.error({ message: error.message, label: error.name });
+    Logger.error(error);
     MIME_TYPES = {
         'image/jpg': 'jpg',
         'image/jpeg': 'jpg',
@@ -38,7 +38,7 @@ try {
 try {
     maxFileSize = defaultConfigManager.getConfig('fileUpload.maxFileSize');
 } catch (error) {
-    Logger.error({ message: error.message, label: error.name });
+    Logger.error(error);
     maxFileSize = 5242880;
     Logger.warn(`Maximum file size couldn't be set. Using default value : ${maxFileSize}`);
 }

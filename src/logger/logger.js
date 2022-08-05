@@ -1,6 +1,7 @@
 import winston from 'winston';
 import 'winston-daily-rotate-file';
 import ConfigManager from '../config/ConfigManager.js';
+import process, { exit } from 'node:process';
 
 // Logging levels
 const levels = {
@@ -38,15 +39,32 @@ const colors = {
 winston.addColors(colors);
 
 // Format to use for the logging
-let format = winston.format.combine(
-    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
-    winston.format.printf(({ level, message, timestamp, label, ...metadata }) => {
-        let formatedMessage = `${level}\t${timestamp}\t\t`;
+/*
+    Formats the message to print.
+    Displays the level and the date.
+    If the stack property is defined, then it is used as a message, otherwise user the message property.
+*/
+function printfFormat({ level, message, timestamp, label, stack, ...metadata }) {
+    let formatedMessage = `${level}\t${timestamp}\t\t`;
+
+    if (!stack) {
         formatedMessage += label ? `[${label}] ` : '';
         formatedMessage += message;
-        formatedMessage += ' ' + (metadata && Object.keys(metadata).length > 0 ? JSON.stringify(metadata) : '');
-        return formatedMessage;
-    })
+    } else {
+        formatedMessage += '[Error]';
+        formatedMessage += ' ' + stack;
+    }
+
+    if (metadata && Object.keys(metadata).length > 0) {
+        formatedMessage += ' ' + JSON.stringify(metadata);
+    }
+    return formatedMessage;
+}
+
+let format = winston.format.combine(
+    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
+    winston.format.errors({ stack: true }),
+    winston.format.printf(printfFormat)
 );
 
 /*
@@ -56,16 +74,19 @@ let format = winston.format.combine(
         In development, it will be done in the console.
 */
 let loggerTransports = [];
+const commonDailyRotateFileTransportsParameters = {
+    datePattern: 'YYYY-MM-DD',
+    extension: 'log',
+    maxSize: '20m',
+};
 
 if (ConfigManager.compareEnvironment('test')) {
     loggerTransports.push(
         new winston.transports.DailyRotateFile({
-            datePattern: 'YYYY-MM-DD',
+            ...commonDailyRotateFileTransportsParameters,
             filename: 'test-log-%DATE%',
-            extension: 'log',
             dirname: './test/temp/logs',
             maxFiles: '1',
-            maxSize: '20m',
         })
     );
 } else if (ConfigManager.compareEnvironment('development')) {
@@ -77,11 +98,9 @@ if (ConfigManager.compareEnvironment('test')) {
 } else {
     loggerTransports.push(
         new winston.transports.DailyRotateFile({
-            datePattern: 'YYYY-MM-DD',
+            ...commonDailyRotateFileTransportsParameters,
             filename: 'log-%DATE%',
-            extension: 'log',
             dirname: './logs',
-            maxSize: '20m',
             zippedArchive: true,
         })
     );
@@ -93,6 +112,13 @@ const Logger = winston.createLogger({
     levels,
     format,
     transports: loggerTransports,
+    exitOnError: true,
+});
+
+// Handling uncaught exceptions and unhandled rejections
+process.on('uncaughtException', (error, origin) => {
+    Logger.fatal(error);
+    exit(1);
 });
 
 export default Logger;

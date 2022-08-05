@@ -29,7 +29,7 @@ export const mongoDBConnect = async () => {
         });
         Logger.info('MongoDB connection successful.');
     } catch (error) {
-        Logger.fatal(`MongoDB connection failed: [${error.name}] ${error.message}`);
+        Logger.fatal(error);
         exit(1);
     }
 };

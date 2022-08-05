@@ -9,7 +9,7 @@ try {
     port = normalizePort(ConfigManager.getEnvVariable('PORT'));
 } catch (error) {
     port = normalizePort('3000');
-    Logger.error({ message: error.message, label: error.name });
+    Logger.error(error);
     Logger.warn(`The port can't be normalized. Use defaut port ${port} instead`);
 }
 
