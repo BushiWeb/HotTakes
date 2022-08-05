@@ -1,81 +1,98 @@
 import winston from 'winston';
 import 'winston-daily-rotate-file';
-import expressWinston from 'express-winston';
 import ConfigManager from '../config/ConfigManager.js';
 
-/*
-   Setup the whitelists:
-        In testing and development, log the minimum amount of informations for readability.
-        In production, log all the usefull informations.
-*/
-expressWinston.bodyWhitelist = [];
-expressWinston.requestWhitelist = [];
-expressWinston.responseWhitelist = [];
+// Logging levels
+const levels = {
+    fatal: 0,
+    error: 1,
+    warn: 2,
+    info: 3,
+    http: 4,
+    debug: 5,
+};
 
-if (ConfigManager.compareEnvironment('production')) {
-    expressWinston.requestWhitelist.push('url', 'headers', 'method', 'originalUrl', 'query', 'httpVersion');
-    expressWinston.responseWhitelist.push('statusCode');
-} else {
-    expressWinston.requestWhitelist.push('method', 'originalUrl', 'query', 'body');
-    expressWinston.responseWhitelist.push('statusCode', 'body');
-}
+/*
+   Decides the maximum logging to show depending on the environment.
+   In development, show all logging messages.
+   In productions, only show fatal logs, errors and warnings.
+   In test, only show fatal logs, errors and warnings.
+*/
+const level = () => {
+    if (ConfigManager.compareEnvironment('development')) {
+        return 'debug';
+    }
+
+    return 'warn';
+};
+
+// Associate a color to each level
+const colors = {
+    fatal: 'red bold',
+    error: 'red',
+    warn: 'yellow',
+    info: 'white',
+    http: 'cyan',
+    debug: 'gray',
+};
+winston.addColors(colors);
 
 // Format to use for the logging
-let loggerFormat = winston.format.combine(winston.format.timestamp(), winston.format.json());
+let format = winston.format.combine(
+    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
+    winston.format.printf(({ level, message, timestamp, label, ...metadata }) => {
+        let formatedMessage = `${level}\t${timestamp}\t\t`;
+        formatedMessage += label ? `[${label}] ` : '';
+        formatedMessage += message;
+        formatedMessage += ' ' + (metadata && Object.keys(metadata).length > 0 ? JSON.stringify(metadata) : '');
+        return formatedMessage;
+    })
+);
 
-/* Create request and error logger transports. Depending on the environment, the transports will be different:
+/*
+    Create request and error logger transports. Depending on the environment, the transports will be different:
         In testing, it will be done in files in the test folder.
         In production, it will be done in files.
         In development, it will be done in the console.
 */
-let requestLoggerTransports = [];
-let requestDailyRotateFileOptions = {
-    datePattern: 'YYYY-MM-DD',
-    filename: 'request-%DATE%.log',
-    dirname: './logs/request',
-    maxFiles: '14d',
-    maxSize: '20m',
-    format: loggerFormat,
-};
-let errorLoggerTransports = [];
-let errorDailyRotateFileOptions = {
-    datePattern: 'YYYY-MM-DD',
-    filename: 'error-%DATE%.log',
-    dirname: './logs/error',
-    maxFiles: '14d',
-    maxSize: '20m',
-    format: loggerFormat,
-};
+let loggerTransports = [];
 
 if (ConfigManager.compareEnvironment('test')) {
-    requestDailyRotateFileOptions.dirname = './test/temp/logs/request';
-    errorDailyRotateFileOptions.dirname = './test/temp/logs/error';
-    requestLoggerTransports.push(new winston.transports.DailyRotateFile(requestDailyRotateFileOptions));
-    errorLoggerTransports.push(new winston.transports.DailyRotateFile(errorDailyRotateFileOptions));
+    loggerTransports.push(
+        new winston.transports.DailyRotateFile({
+            datePattern: 'YYYY-MM-DD',
+            filename: 'test-log-%DATE%',
+            extension: 'log',
+            dirname: './test/temp/logs',
+            maxFiles: '1',
+            maxSize: '20m',
+        })
+    );
 } else if (ConfigManager.compareEnvironment('development')) {
-    requestLoggerTransports.push(new winston.transports.Console({ format: winston.format.simple() }));
-    errorLoggerTransports.push(new winston.transports.Console({ format: winston.format.simple() }));
+    loggerTransports.push(
+        new winston.transports.Console({
+            format: winston.format.combine(format, winston.format.colorize({ all: true })),
+        })
+    );
 } else {
-    requestLoggerTransports.push(new winston.transports.DailyRotateFile(requestDailyRotateFileOptions));
-    errorLoggerTransports.push(new winston.transports.DailyRotateFile(errorDailyRotateFileOptions));
+    loggerTransports.push(
+        new winston.transports.DailyRotateFile({
+            datePattern: 'YYYY-MM-DD',
+            filename: 'log-%DATE%',
+            extension: 'log',
+            dirname: './logs',
+            maxSize: '20m',
+            zippedArchive: true,
+        })
+    );
 }
 
-// Request logger and it's associated middleware
-const requestLogger = winston.createLogger({
-    transports: requestLoggerTransports,
+// Logger creation
+const Logger = winston.createLogger({
+    level: level(),
+    levels,
+    format,
+    transports: loggerTransports,
 });
 
-export const requestLoggerMiddleware = expressWinston.logger({
-    winstonInstance: requestLogger,
-    meta: true,
-    msg: 'HTTP {{req.mehod}} {{req.url}}',
-});
-
-// Error logger and it's associated middleware
-const errorLogger = winston.createLogger({ transports: errorLoggerTransports });
-
-export const errorLoggerMiddleware = expressWinston.errorLogger({
-    winstonInstance: errorLogger,
-    meta: true,
-    msg: 'Error : {{err.message}}, HTTP {{req.method}} {{req.url}}',
-});
+export default Logger;

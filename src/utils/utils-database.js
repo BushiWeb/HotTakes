@@ -1,5 +1,7 @@
+import { exit } from 'node:process';
 import mongoose from 'mongoose';
 import ConfigManager from '../config/ConfigManager.js';
+import Logger from '../logger/logger.js';
 
 /**
  * Creates a mongo DB databasa URl dependong on some environment variables.
@@ -25,8 +27,9 @@ export const mongoDBConnect = async () => {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         });
-        console.log('MongoDB connection successful.');
+        Logger.info('MongoDB connection successful.');
     } catch (error) {
-        console.error(`MongoDB connection failed: [${error.name}] ${error.message}`);
+        Logger.fatal(`MongoDB connection failed: [${error.name}] ${error.message}`);
+        exit(1);
     }
 };

@@ -1,6 +1,7 @@
 import http from 'node:http';
 import process from 'node:process';
 import { normalizePort, getConnectionInformations, errorHandler } from '../../src/utils/utils-server.js';
+import Logger from '../../src/logger/logger.js';
 
 describe('Server utils test suite', () => {
     describe('normalizePort test suite', () => {
@@ -78,38 +79,24 @@ describe('Server utils test suite', () => {
             }
         }
 
-        const mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+        const mockLoggerFatal = jest.spyOn(Logger, 'fatal').mockImplementation(() => {});
         const mockProcessExit = jest.spyOn(process, 'exit').mockImplementation(() => {});
 
         beforeEach(() => {
-            mockConsoleError.mockClear();
+            mockLoggerFatal.mockClear();
             mockProcessExit.mockClear();
         });
 
         afterAll(() => {
-            mockConsoleError.mockRestore();
+            mockLoggerFatal.mockRestore();
             mockProcessExit.mockRestore();
         });
 
-        test("Throws an error if the error.syscall isn't 'listen'", () => {
-            const error = new MockSystemError('test syscall', 'test code', 'Test message');
-            expect(() => {
-                errorHandler(error);
-            }).toThrow();
-        });
-
-        test("Prints an error and exit if the error code is 'EADDRINUSE' ", () => {
+        test('Logs the error and exits the program', () => {
             const error = new MockSystemError('listen', 'EADDRINUSE', 'test message');
             errorHandler(error);
-            expect(mockConsoleError).toHaveBeenCalled();
+            expect(mockLoggerFatal).toHaveBeenCalled();
             expect(mockProcessExit).toHaveBeenCalled();
-        });
-
-        test("Throws an error if the error code is not 'EADDRINUSE'", () => {
-            const error = new MockSystemError('listen', 'test code', 'Test message');
-            expect(() => {
-                errorHandler(error);
-            }).toThrow();
         });
     });
 });

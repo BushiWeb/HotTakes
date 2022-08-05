@@ -1,17 +1,26 @@
 import mongoose from 'mongoose';
 import { mongoDBConnect } from '../../src/utils/utils-database.js';
 import ConfigManager from '../../src/config/ConfigManager.js';
+import Logger from '../../src/logger/logger.js';
 
 const mockMongooseConnect = jest.spyOn(mongoose, 'connect');
 const mockGetEnvVariable = jest.spyOn(ConfigManager, 'getEnvVariable');
-const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {});
-const mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+const mockLoggerFatal = jest.spyOn(Logger, 'fatal').mockImplementation(() => {});
+const mockLoggerInfo = jest.spyOn(Logger, 'info').mockImplementation(() => {});
+const mockProcessExit = jest.spyOn(process, 'exit').mockImplementation(() => {});
 
 beforeEach(() => {
     mockMongooseConnect.mockReset();
     mockGetEnvVariable.mockReset();
-    mockConsoleError.mockClear();
-    mockConsoleLog.mockClear();
+    mockLoggerFatal.mockClear();
+    mockLoggerInfo.mockClear();
+    mockProcessExit.mockClear();
+});
+
+afterAll(() => {
+    mockLoggerFatal.mockRestore();
+    mockLoggerInfo.mockRestore();
+    mockProcessExit.mockRestore();
 });
 
 describe('Database utils test suite', () => {
@@ -22,16 +31,17 @@ describe('Database utils test suite', () => {
 
             await mongoDBConnect();
 
-            expect(mockConsoleLog).toHaveBeenCalled();
+            expect(mockLoggerInfo).toHaveBeenCalled();
         });
 
-        test('Prints an error if connection fails', async () => {
+        test('Prints an error and exit the progrem if connection fails', async () => {
             mockGetEnvVariable.mockReturnValue('url');
             mockMongooseConnect.mockRejectedValue('URL');
 
             await mongoDBConnect();
 
-            expect(mockConsoleError).toHaveBeenCalled();
+            expect(mockLoggerFatal).toHaveBeenCalled();
+            expect(mockProcessExit).toHaveBeenCalled();
         });
 
         test('Prints an error if database configuration is missing', async () => {
@@ -42,7 +52,8 @@ describe('Database utils test suite', () => {
 
             await mongoDBConnect();
 
-            expect(mockConsoleError).toHaveBeenCalled();
+            expect(mockLoggerFatal).toHaveBeenCalled();
+            expect(mockProcessExit).toHaveBeenCalled();
         });
     });
 });

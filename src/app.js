@@ -12,9 +12,9 @@ import {
     userInputValidationErrorHandler,
     deleteFiles,
 } from './middlewares/error-handlers.js';
-import { requestLoggerMiddleware, errorLoggerMiddleware } from './logger/logger.js';
 import ConfigManager from './config/ConfigManager.js';
 import { defaultConfigManager } from './config/ConfigManager.js';
+import Logger from './logger/logger.js';
 
 const app = express();
 
@@ -25,7 +25,7 @@ app.set('config', defaultConfigManager);
 if (!ConfigManager.compareEnvironment('test')) {
     mongoDBConnect();
 } else {
-    console.log('Testing environment, no database connection required.');
+    Logger.info('Testing environment, no database connection required.');
 }
 
 /* Store the root folder absolute path in the app.
@@ -47,9 +47,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// Request logger
-app.use(requestLoggerMiddleware);
-
 // Static routes
 app.use('/images', express.static(path.join(app.get('root'), '../images'), { fallthrough: false }));
 
@@ -58,7 +55,6 @@ app.use('/api/auth', userRouter);
 app.use('/api/sauces', sauceRouter);
 
 // Error handling
-app.use(errorLoggerMiddleware);
 app.use(deleteFiles);
 app.use(
     jwtErrorHandler,

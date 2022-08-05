@@ -1,4 +1,5 @@
 import { exit } from 'node:process';
+import Logger from '../logger/logger.js';
 
 /**
  * Return the port value as a number.
@@ -37,21 +38,10 @@ export const getConnectionInformations = (server, port) => {
 };
 
 /**
- * Handles errors thrown by the server. Prints an error on the console and exits the program, or throws the error.
+ * Handles errors thrown by the server. Logs the error and exits the program..
  * @param {Error} error - Thrown error object.
- * @throws Throw the error if its type isn't handled.
  */
 export const errorHandler = (error) => {
-    if (error.syscall !== 'listen') {
-        throw error;
-    }
-
-    switch (error.code) {
-        case 'EADDRINUSE':
-            console.error(`Address is already in use.`);
-            exit(1);
-            break;
-        default:
-            throw error;
-    }
+    Logger.fatal({ message: error.message, label: `Syscall ${error.syscall}: ${error.code}` });
+    exit(1);
 };
