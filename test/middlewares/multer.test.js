@@ -20,11 +20,44 @@ describe('multerCheckFileExists middleware test suite', () => {
         expect(next.mock.calls[0].length).toBe(0);
     });
 
+    test('Calls the next middleware if multiple files have been saved', () => {
+        delete request.file;
+        request.files = ['File', 'File2'];
+        multerCheckFileExists(request, response, next);
+
+        expect(next).toHaveBeenCalled();
+        expect(next.mock.calls[0].length).toBe(0);
+
+        delete request.files;
+    });
+
     test('Calls the next error middleware if no file has been saved', () => {
         delete request.file;
         multerCheckFileExists(request, response, next);
 
         expect(next).toHaveBeenCalled();
         expect(next.mock.calls[0][0]).toBeInstanceOf(Error);
+    });
+
+    test('Calls the next error middleware if no file has been saved but the files property is still in request as an array', () => {
+        delete request.file;
+        request.files = [];
+        multerCheckFileExists(request, response, next);
+
+        expect(next).toHaveBeenCalled();
+        expect(next.mock.calls[0][0]).toBeInstanceOf(Error);
+
+        delete request.files;
+    });
+
+    test('Calls the next error middleware if no file has been saved but the files property is still in request as an object', () => {
+        delete request.file;
+        request.files = {};
+        multerCheckFileExists(request, response, next);
+
+        expect(next).toHaveBeenCalled();
+        expect(next.mock.calls[0][0]).toBeInstanceOf(Error);
+
+        delete request.files;
     });
 });

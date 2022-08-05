@@ -2,6 +2,7 @@ import multer from 'multer';
 import { MulterError } from 'multer';
 import { defaultConfigManager } from '../config/ConfigManager.js';
 import validator from 'validator';
+import Logger from '../logger/logger.js';
 
 /**
  * Creates an multer error.
@@ -17,10 +18,30 @@ const createMulterError = (message, code, field = undefined) => {
 };
 
 /*
- * Get the configuration from the configuration manager.
+ * Get the allowed mime types and the max file size from the configuration manager.
  */
-const MIME_TYPES = defaultConfigManager.getConfig('fileUpload.allowedMimeTypes');
-const maxFileSize = defaultConfigManager.getConfig('fileUpload.maxFileSize');
+let MIME_TYPES;
+let maxFileSize;
+
+try {
+    MIME_TYPES = defaultConfigManager.getConfig('fileUpload.allowedMimeTypes');
+} catch (error) {
+    Logger.error({ message: error.message, label: error.name });
+    MIME_TYPES = {
+        'image/jpg': 'jpg',
+        'image/jpeg': 'jpg',
+        'image/png': 'png',
+    };
+    Logger.warn(`Allowed MIME types couldn't be set. Using default value : ${JSON.stringify(MIME_TYPES)}`);
+}
+
+try {
+    maxFileSize = defaultConfigManager.getConfig('fileUpload.maxFileSize');
+} catch (error) {
+    Logger.error({ message: error.message, label: error.name });
+    maxFileSize = 5242880;
+    Logger.warn(`Maximum file size couldn't be set. Using default value : ${maxFileSize}`);
+}
 
 /*
  * Defines the disk storage for multer.
@@ -90,7 +111,12 @@ export default multer({
  * @param next - Next middleware to execute.
  */
 export const multerCheckFileExists = (req, res, next) => {
-    if (!req.file) {
+    if (
+        !req.file &&
+        (!req.files ||
+            (Array.isArray(req.files) && req.files.length === 0) ||
+            (typeof req.files === 'object' && Object.keys(req.files).length === 0))
+    ) {
         const fileMissingError = createMulterError('The file is required.', 'FILE_MISSING');
         return next(fileMissingError);
     }
