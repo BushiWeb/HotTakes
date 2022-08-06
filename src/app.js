@@ -14,7 +14,7 @@ import {
 } from './middlewares/error-handlers.js';
 import ConfigManager from './config/ConfigManager.js';
 import { defaultConfigManager } from './config/ConfigManager.js';
-import Logger from './logger/logger.js';
+import Logger, { morganMiddleware } from './logger/logger.js';
 
 const app = express();
 
@@ -33,6 +33,8 @@ if (!ConfigManager.compareEnvironment('test')) {
  * by storing it in the app, all middleware will have access to its value.
  */
 app.set('root', path.dirname(fileURLToPath(import.meta.url)));
+
+app.use(morganMiddleware);
 
 app.use(express.json());
 

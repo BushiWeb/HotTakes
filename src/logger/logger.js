@@ -2,8 +2,7 @@ import winston from 'winston';
 import 'winston-daily-rotate-file';
 import ConfigManager from '../config/ConfigManager.js';
 import process, { exit } from 'node:process';
-import debug from 'debug';
-
+import morgan from 'morgan';
 /*
     Defines the logging levels.
 */
@@ -114,7 +113,7 @@ if (ConfigManager.compareEnvironment('test')) {
 }
 
 /*
-    Creates the logger and use it to print other logs.
+    Creates the logger.
 */
 const Logger = winston.createLogger({
     level: level(),
@@ -123,6 +122,15 @@ const Logger = winston.createLogger({
     transports: loggerTransports,
     exitOnError: true,
 });
+
+/*
+    Morgan logger configuration
+*/
+const stream = {
+    write: (message) => Logger.http({ message, label: 'HTTP' }),
+};
+
+export const morganMiddleware = morgan('dev', { stream });
 
 /*
     Handles uncaught exceptions and unhandled rejections.
