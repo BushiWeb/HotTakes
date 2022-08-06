@@ -3,6 +3,9 @@ import User from '../models/User.js';
 import jsonWebToken from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import UnauthorizedError from '../errors/UnauthorizedError.js';
+import debug from 'debug';
+
+const userControllerDebug = debug('hottakes:user');
 
 /**
  * User signup controller.
@@ -13,6 +16,7 @@ import UnauthorizedError from '../errors/UnauthorizedError.js';
  * @param next - Next middleware to execute.
  */
 export async function signup(req, res, next) {
+    userControllerDebug('User signup controller');
     try {
         // Password hash
         const passwordHash = await bcrypt.hash(req.body.password, 10);
@@ -25,6 +29,7 @@ export async function signup(req, res, next) {
 
         await user.save();
         res.status(201).json({ message: 'Nouvel utilisateur créé!' });
+        userControllerDebug('Signup response sent');
     } catch (error) {
         return next(error);
     }
@@ -38,6 +43,7 @@ export async function signup(req, res, next) {
  * @param next - Next middleware to execute.
  */
 export async function login(req, res, next) {
+    userControllerDebug('User loging controller');
     try {
         // Get the user
         const user = await User.findOne({ email: req.body.email });
@@ -59,6 +65,8 @@ export async function login(req, res, next) {
                 expiresIn: '24h',
             }),
         });
+
+        userControllerDebug('Login response sent');
     } catch (error) {
         return next(error);
     }

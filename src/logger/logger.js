@@ -2,8 +2,11 @@ import winston from 'winston';
 import 'winston-daily-rotate-file';
 import ConfigManager from '../config/ConfigManager.js';
 import process, { exit } from 'node:process';
+import debug from 'debug';
 
-// Logging levels
+/*
+    Defines the logging levels.
+*/
 const levels = {
     fatal: 0,
     error: 1,
@@ -27,7 +30,9 @@ const level = () => {
     return 'warn';
 };
 
-// Associate a color to each level
+/*
+    Defines the colors to use.
+*/
 const colors = {
     fatal: 'red bold',
     error: 'red',
@@ -38,11 +43,13 @@ const colors = {
 };
 winston.addColors(colors);
 
-// Format to use for the logging
 /*
-    Formats the message to print.
-    Displays the level and the date.
-    If the stack property is defined, then it is used as a message, otherwise user the message property.
+    Defines the format to use for logging.
+
+    printfFormat:
+        Formats the message to print.
+        Displays the level and the date.
+        If the stack property is defined, then it is used as a message, otherwise user the message property.
 */
 function printfFormat({ level, message, timestamp, label, stack, ...metadata }) {
     let formatedMessage = `${level}\t${timestamp}\t\t`;
@@ -68,7 +75,7 @@ let format = winston.format.combine(
 );
 
 /*
-    Create request and error logger transports. Depending on the environment, the transports will be different:
+    Create transports. Depending on the environment, the transports will be different:
         In testing, it will be done in files in the test folder.
         In production, it will be done in files.
         In development, it will be done in the console.
@@ -106,7 +113,9 @@ if (ConfigManager.compareEnvironment('test')) {
     );
 }
 
-// Logger creation
+/*
+    Creates the logger and use it to print other logs.
+*/
 const Logger = winston.createLogger({
     level: level(),
     levels,
@@ -115,7 +124,9 @@ const Logger = winston.createLogger({
     exitOnError: true,
 });
 
-// Handling uncaught exceptions and unhandled rejections
+/*
+    Handles uncaught exceptions and unhandled rejections.
+*/
 process.on('uncaughtException', (error, origin) => {
     Logger.fatal(error);
     exit(1);

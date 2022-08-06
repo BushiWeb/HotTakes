@@ -1,5 +1,8 @@
 import { exit } from 'node:process';
 import Logger from '../logger/logger.js';
+import debug from 'debug';
+
+const serverDebug = debug('hottakes:server');
 
 /**
  * Return the port value as a number.
@@ -8,6 +11,7 @@ import Logger from '../logger/logger.js';
  * @throws Throws an error if the parameter is neither a string nor an number.
  */
 export const normalizePort = (val) => {
+    serverDebug('Normalizing port');
     let port = val;
 
     if (typeof val === 'string') {

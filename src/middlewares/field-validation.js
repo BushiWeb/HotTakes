@@ -1,6 +1,9 @@
 import { validationResult } from 'express-validator';
 import { errorFormatter } from '../utils/utils-validation.js';
 import UserInputValidationError from '../errors/UserInputValidationError.js';
+import debug from 'debug';
+
+const validationDebug = debug('hottakes:validation');
 
 /**
  * Field validation middleware.
@@ -11,6 +14,7 @@ import UserInputValidationError from '../errors/UserInputValidationError.js';
  * @param next - Next middleware to execute.
  */
 export const validateFields = (req, res, next) => {
+    validationDebug('User input validation');
     try {
         validationResult(req).throw();
         next();

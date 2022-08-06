@@ -3,6 +3,9 @@ import { MulterError } from 'multer';
 import { defaultConfigManager } from '../config/ConfigManager.js';
 import validator from 'validator';
 import Logger from '../logger/logger.js';
+import debug from 'debug';
+
+const multerDebug = debug('hottakes:multer');
 
 /**
  * Creates an multer error.
@@ -12,6 +15,7 @@ import Logger from '../logger/logger.js';
  * @returns {MulterError} Returns an error that
  */
 const createMulterError = (message, code, field = undefined) => {
+    multerDebug('Multer error creation');
     const error = new MulterError(code, field);
     error.message = message;
     return error;
@@ -59,6 +63,7 @@ const storage = multer.diskStorage({
         if (defaultConfigManager.compareEnvironment('test')) {
             folderName = 'test/temp/img';
         }
+        multerDebug(`File saving destination: ${folderName}`);
         callback(null, folderName);
     },
     filename: (req, file, callback) => {
@@ -69,6 +74,7 @@ const storage = multer.diskStorage({
         name = name.replace(/\.[^/.]+$/, '');
         const extension = MIME_TYPES[file.mimetype];
         const fileName = `${name}${Date.now()}.${extension}`;
+        multerDebug(`File saving new name: ${fileName}`);
         callback(null, fileName);
     },
 });
@@ -79,6 +85,7 @@ const storage = multer.diskStorage({
  * The maximum file size is specified in the limits option and is checked by multer
  */
 const fileFilter = (req, file, callback) => {
+    multerDebug('File filtering');
     if (!MIME_TYPES[file.mimetype]) {
         const fileTypeError = createMulterError(
             'This file type is not accepted. Please, use one of the following format: jpeg, png, webp, avif',
@@ -111,6 +118,7 @@ export default multer({
  * @param next - Next middleware to execute.
  */
 export const multerCheckFileExists = (req, res, next) => {
+    multerDebug('Checks that the file exists');
     if (
         !req.file &&
         (!req.files ||

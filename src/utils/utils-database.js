@@ -2,6 +2,9 @@ import { exit } from 'node:process';
 import mongoose from 'mongoose';
 import ConfigManager from '../config/ConfigManager.js';
 import Logger from '../logger/logger.js';
+import debug from 'debug';
+
+const mongoDbDebug = debug('hottakes:mongoDB');
 
 /**
  * Creates a mongo DB databasa URl dependong on some environment variables.
@@ -9,6 +12,7 @@ import Logger from '../logger/logger.js';
  * @throws {ConfigurationErrors} Throws ConfigurationErrors if the environment variables are not defined.
  */
 const createDBUrl = () => {
+    mongoDbDebug('MongoDB Database URL creation');
     return `mongodb+srv://${ConfigManager.getEnvVariable('DB_USERNAME')}:${ConfigManager.getEnvVariable(
         'DB_PASSWORD'
     )}@${ConfigManager.getEnvVariable('DB_HOST')}/${ConfigManager.getEnvVariable(
@@ -21,6 +25,7 @@ const createDBUrl = () => {
  * Prints the result.
  */
 export const mongoDBConnect = async () => {
+    mongoDbDebug('MongoDB connection');
     try {
         const dbUrl = createDBUrl();
         await mongoose.connect(dbUrl, {

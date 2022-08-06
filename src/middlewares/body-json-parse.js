@@ -1,3 +1,7 @@
+import debug from 'debug';
+
+const validationDebug = debug('hottakes:validation');
+
 /**
  * Returns a middleware that populates the body with properties of an object inside of the body.
  * If the property is a string, then it is parsed first.
@@ -8,7 +12,9 @@
  * @param {boolean} [throwIfUndefined=true] - Indicates weather or not to throw an error if the parameter is undefined. Useful if the parameter may not exist.
  */
 export const bodyJsonParse = (propertyName, throwIfUndefined = true) => {
+    validationDebug(`Create bodyJsonParse for the ${propertyName} property`);
     return (req, res, next) => {
+        validationDebug(`Assign ${propertyName} properties to the body`);
         // Checks that the parameter exists
         if (req.body[propertyName] === undefined && throwIfUndefined) {
             return next(new Error(`The body property ${propertyName} doesn't exist.`));

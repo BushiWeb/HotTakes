@@ -2,6 +2,9 @@ import Sauce from '../models/Sauce.js';
 import { unlink } from 'node:fs';
 import { join } from 'node:path';
 import mongoose from 'mongoose';
+import debug from 'debug';
+
+const sauceControllerDebug = debug('hottakes:sauce');
 
 /**
  * Sauce creation controller.
@@ -12,6 +15,7 @@ import mongoose from 'mongoose';
  * @param next - Next middleware to execute.
  */
 export async function createSauce(req, res, next) {
+    sauceControllerDebug('Sauce creation controller');
     // Create image URL
     const imageUrl = `${req.protocol}://${req.get('host')}/images/${req.file.filename}`;
 
@@ -25,6 +29,8 @@ export async function createSauce(req, res, next) {
     try {
         await sauce.save();
         res.status(201).json({ message: 'Nouvelle sauce créée!' });
+
+        sauceControllerDebug('Sauce created: response sent');
     } catch (error) {
         return next(error);
     }
@@ -37,9 +43,11 @@ export async function createSauce(req, res, next) {
  * @param next - Next middleware to execute.
  */
 export async function getAllSauces(req, res, next) {
+    sauceControllerDebug('Get all sauce controller');
     try {
         const sauces = await Sauce.find({}, '-__v');
         res.status(200).json(sauces);
+        sauceControllerDebug('Sauces fetched: response sent');
     } catch (error) {
         return next(error);
     }
@@ -52,12 +60,14 @@ export async function getAllSauces(req, res, next) {
  * @param next - Next middleware to execute.
  */
 export async function getSauce(req, res, next) {
+    sauceControllerDebug('Get one sauce controller');
     try {
         const sauce = await Sauce.findById(req.params.id, '-__v');
         if (sauce === null) {
             throw new mongoose.Error.DocumentNotFoundError(`Can't find the sauce with id ${req.params.id}`);
         }
         res.status(200).json(sauce);
+        sauceControllerDebug('Sauce fetched: response sent');
     } catch (error) {
         return next(error);
     }
@@ -75,6 +85,7 @@ export async function getSauce(req, res, next) {
  * @param next - Next middleware to execute.
  */
 export async function updateSauce(req, res, next) {
+    sauceControllerDebug('Update sauce controller');
     // Get the data and the image URL if needed
     const sauceData = { ...req.body };
     if (req.file) {
@@ -96,12 +107,14 @@ export async function updateSauce(req, res, next) {
         await Sauce.updateOne({ _id: req.params.id }, sauceData);
 
         res.status(200).json({ message: `La sauce ${req.params.id} a bien été modifiée` });
+        sauceControllerDebug('Sauce updated: response sent');
     } catch (error) {
         return next(error);
     }
 
     // Deletes the previous image
     if (req.file) {
+        sauceControllerDebug('Previous image deletion');
         const imageName = previousImageUrl.split('/images/')[1];
         const imagePath = join(req.app.get('root'), '../images', imageName);
         unlink(imagePath, () => {});
@@ -120,6 +133,7 @@ export async function updateSauce(req, res, next) {
  * @param next - Next middleware to execute.
  */
 export async function deleteSauce(req, res, next) {
+    sauceControllerDebug('Sauce deletion controller');
     let imageUrl = '';
     try {
         // Get the previous image URL from the request cache or from the database
@@ -133,11 +147,13 @@ export async function deleteSauce(req, res, next) {
         await Sauce.deleteOne({ _id: req.params.id });
 
         res.status(200).json({ message: `La sauce ${req.params.id} a bien été supprimée` });
+        sauceControllerDebug('Sauce deleted: response sent');
     } catch (error) {
         return next(error);
     }
 
     // Deletes the previous image
+    sauceControllerDebug("Sauce's image deletion");
     const imageName = imageUrl.split('/images/')[1];
     const imagePath = join(req.app.get('root'), '../images', imageName);
     unlink(imagePath, () => {});
@@ -155,6 +171,7 @@ export async function deleteSauce(req, res, next) {
  * @param next - Next middleware to execute.
  */
 export async function likeSauce(req, res, next) {
+    sauceControllerDebug('Sauce liking controller');
     try {
         // Fetch the sauce to update it
         const sauce = await Sauce.findById(req.params.id);
@@ -166,6 +183,7 @@ export async function likeSauce(req, res, next) {
         let message = '';
         switch (req.body.like) {
             case 1:
+                sauceControllerDebug('Like the sauce');
                 message =
                     "Votre like n'a pas pu être pris en compte, vous ne pouvez pas liker la même sauce plusieurs fois.";
                 let userDislikeIndex = sauce.usersDisliked.indexOf(req.auth.userId);
@@ -182,6 +200,7 @@ export async function likeSauce(req, res, next) {
                 break;
 
             case -1:
+                sauceControllerDebug('Dislike the sauce');
                 message =
                     "Votre dislike n'a pas pu être pris en compte, vous ne pouvez pas disliker la même sauce plusieurs fois.";
                 let userLikeIndex = sauce.usersLiked.indexOf(req.auth.userId);
@@ -198,6 +217,7 @@ export async function likeSauce(req, res, next) {
                 break;
 
             default:
+                sauceControllerDebug('Reset the liking choice');
                 const userDislikeIndexReset = sauce.usersDisliked.indexOf(req.auth.userId);
                 if (userDislikeIndexReset >= 0) {
                     sauce.usersDisliked.splice(userDislikeIndexReset, 1);
@@ -219,6 +239,7 @@ export async function likeSauce(req, res, next) {
         message += ` La sauce a donc été likée ${sauce.likes} fois, et dislikée ${sauce.dislikes} fois.`;
 
         res.status(200).json({ message });
+        sauceControllerDebug('Sauce like set: response sent');
     } catch (error) {
         return next(error);
     }

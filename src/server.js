@@ -1,8 +1,8 @@
+import Logger from './logger/logger.js';
 import http from 'node:http';
 import app from './app.js';
 import { normalizePort, getConnectionInformations, errorHandler } from './utils/utils-server.js';
 import ConfigManager from './config/ConfigManager.js';
-import Logger from './logger/logger.js';
 
 let port;
 try {
