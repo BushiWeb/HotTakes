@@ -3,6 +3,7 @@ import 'winston-daily-rotate-file';
 import ConfigManager from '../config/ConfigManager.js';
 import process, { exit } from 'node:process';
 import morgan from 'morgan';
+import debug from 'debug';
 /*
     Defines the logging levels.
 */
@@ -122,6 +123,11 @@ const Logger = winston.createLogger({
     transports: loggerTransports,
     exitOnError: true,
 });
+
+/*
+    Creates the debugger format
+*/
+debug.log = Logger.debug.bind(Logger);
 
 /*
     Morgan logger configuration
