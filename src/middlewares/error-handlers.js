@@ -4,6 +4,10 @@ import jsonWebToken from 'jsonwebtoken';
 import UserInputValidationError from '../../src/errors/UserInputValidationError.js';
 import { join } from 'node:path';
 import { unlink } from 'node:fs';
+import debug from 'debug';
+import Logger from '../logger/logger.js';
+
+const errorDebug = debug('hottakes:error');
 
 /**
  * Middleware handling file deletion in case of an error.
@@ -14,6 +18,7 @@ import { unlink } from 'node:fs';
  * @param next - Next middleware to execute.
  */
 export function deleteFiles(err, req, res, next) {
+    errorDebug('File deletion error middleware');
     let files = [];
     if (req.file) {
         files.push(req.file);
@@ -31,6 +36,7 @@ export function deleteFiles(err, req, res, next) {
 
     files.forEach((file) => {
         const imagePath = join(req.app.get('root'), '../images', file.filename);
+        errorDebug(`Delete file ${imagePath}`);
         unlink(imagePath, () => {});
     });
 
@@ -50,6 +56,8 @@ export function multerErrorHandler(err, req, res, next) {
     if (!(err instanceof MulterError)) {
         return next(err);
     }
+
+    errorDebug('Multer error handler middleware');
 
     res.status(400).json({
         error: {
@@ -75,6 +83,8 @@ export function mongooseErrorHandler(err, req, res, next) {
         return next(err);
     }
 
+    errorDebug('Mongoose error handler middleware');
+
     const errorObject = {
         error: {
             type: 'MongooseError',
@@ -95,7 +105,8 @@ export function mongooseErrorHandler(err, req, res, next) {
         return res.status(404).json(errorObject);
     }
 
-    return res.status(500).json(errorObject);
+    res.status(500).json(errorObject);
+    Logger.error({ message: err, label: 'Mongoose internal error' });
 }
 
 /**
@@ -111,6 +122,8 @@ export function jwtErrorHandler(err, req, res, next) {
     if (!(err instanceof jsonWebToken.JsonWebTokenError)) {
         return next(err);
     }
+
+    errorDebug('JsonWebToken error handler middleware');
 
     const errorObject = {
         error: {
@@ -145,6 +158,8 @@ export function userInputValidationErrorHandler(err, req, res, next) {
         return next(err);
     }
 
+    errorDebug('User input validation error handler middleware');
+
     const errorObject = {
         error: {
             name: err.name,
@@ -167,6 +182,8 @@ export function userInputValidationErrorHandler(err, req, res, next) {
  * @param next - Next middleware to execute.
  */
 export function defaultErrorHandler(err, req, res, next) {
+    errorDebug('Default error handler middleware');
+
     let status = 500;
 
     if (err instanceof Error) {
@@ -183,4 +200,8 @@ export function defaultErrorHandler(err, req, res, next) {
     }
 
     res.status(status).json({ error: err });
+
+    if (status >= 500) {
+        Logger.error(err);
+    }
 }

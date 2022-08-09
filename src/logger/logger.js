@@ -55,7 +55,7 @@ function printfFormat({ level, message, timestamp, label, stack, ...metadata }) 
         formatedMessage += label ? `[${label}] ` : '';
         formatedMessage += message;
     } else {
-        formatedMessage += '[Error]';
+        formatedMessage += label ? `[${label}] ` : '[Error]';
         formatedMessage += ' ' + stack;
     }
 
