@@ -196,9 +196,9 @@ export function defaultErrorHandler(err, req, res, next) {
 
     if (err.status !== undefined) {
         status = err.status;
-        delete err.status;
     }
 
+    delete err.status;
     res.status(status).json({ error: err });
 
     if (status >= 500) {
