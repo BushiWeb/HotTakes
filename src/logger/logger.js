@@ -4,9 +4,8 @@ import ConfigManager from '../config/ConfigManager.js';
 import process, { exit } from 'node:process';
 import morgan from 'morgan';
 import debug from 'debug';
-/*
-    Defines the logging levels.
-*/
+
+/* Defines the logging levels. */
 const levels = {
     fatal: 0,
     error: 1,
@@ -30,9 +29,7 @@ const level = () => {
     return 'warn';
 };
 
-/*
-    Defines the colors to use.
-*/
+/* Defines the colors to use. */
 const colors = {
     fatal: 'red bold',
     error: 'red',
@@ -113,9 +110,7 @@ if (ConfigManager.compareEnvironment('test')) {
     );
 }
 
-/*
-    Creates the logger.
-*/
+/* Creates the logger. */
 const Logger = winston.createLogger({
     level: level(),
     levels,
@@ -124,14 +119,10 @@ const Logger = winston.createLogger({
     exitOnError: true,
 });
 
-/*
-    Creates the debugger format
-*/
+/* Creates the debugger format */
 debug.log = Logger.debug.bind(Logger);
 
-/*
-    Morgan logger configuration
-*/
+/* Morgan logger configuration */
 const stream = {
     write: (message) => Logger.http({ message, label: 'HTTP' }),
 };

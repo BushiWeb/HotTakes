@@ -20,12 +20,28 @@ const createDBUrl = () => {
     )}?retryWrites=true&w=majority`;
 };
 
+const setupDbDebug = () => {
+    const mongooseDebug = debug('mongoose');
+    mongoose.set('debug', (collectionName, methodName, ...methodArguments) => {
+        let logMessage = `${collectionName}.${methodName}(`;
+        for (let i = 0; i < methodArguments.length; i++) {
+            if (i !== 0) {
+                logMessage += ', ';
+            }
+            logMessage += '%o';
+        }
+        logMessage += ')';
+        mongooseDebug(logMessage, ...methodArguments);
+    });
+};
+
 /**
  * Connects to MongoDB.
  * Prints the result.
  */
 export const mongoDBConnect = async () => {
     mongoDbDebug('MongoDB connection');
+    setupDbDebug();
     try {
         const dbUrl = createDBUrl();
         await mongoose.connect(dbUrl, {
