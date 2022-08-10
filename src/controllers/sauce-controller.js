@@ -180,58 +180,34 @@ export async function likeSauce(req, res, next) {
         }
 
         // Update the sauce, depending on the like value
+        const likeResult = sauce.setLiking(req.body.like, req.auth.userId);
         let message = '';
-        switch (req.body.like) {
+        switch (likeResult.action) {
             case 1:
-                sauceControllerDebug('Like the sauce');
-                message =
-                    "Votre like n'a pas pu être pris en compte, vous ne pouvez pas liker la même sauce plusieurs fois.";
-                let userDislikeIndex = sauce.usersDisliked.indexOf(req.auth.userId);
-                if (userDislikeIndex >= 0) {
-                    sauce.usersDisliked.splice(userDislikeIndex, 1);
-                    sauce.dislikes--;
-                }
-
-                if (!sauce.usersLiked.includes(req.auth.userId)) {
-                    sauce.likes++;
-                    sauce.usersLiked.push(req.auth.userId);
+                if (likeResult.action === likeResult.reset) {
+                    message =
+                        "Votre like n'a pas pu être pris en compte, vous ne pouvez pas liker la même sauce plusieurs fois.";
+                } else {
                     message = 'Votre like a bien été pris en compte.';
                 }
                 break;
 
             case -1:
-                sauceControllerDebug('Dislike the sauce');
-                message =
-                    "Votre dislike n'a pas pu être pris en compte, vous ne pouvez pas disliker la même sauce plusieurs fois.";
-                let userLikeIndex = sauce.usersLiked.indexOf(req.auth.userId);
-                if (userLikeIndex >= 0) {
-                    sauce.usersLiked.splice(userLikeIndex, 1);
-                    sauce.likes--;
-                }
-
-                if (!sauce.usersDisliked.includes(req.auth.userId)) {
-                    sauce.dislikes++;
-                    sauce.usersDisliked.push(req.auth.userId);
+                if (likeResult.action === likeResult.reset) {
+                    message =
+                        "Votre dislike n'a pas pu être pris en compte, vous ne pouvez pas disliker la même sauce plusieurs fois.";
+                } else {
                     message = 'Votre dislike a bien été pris en compte.';
                 }
                 break;
 
             default:
-                sauceControllerDebug('Reset the liking choice');
-                const userDislikeIndexReset = sauce.usersDisliked.indexOf(req.auth.userId);
-                if (userDislikeIndexReset >= 0) {
-                    sauce.usersDisliked.splice(userDislikeIndexReset, 1);
-                    sauce.dislikes--;
+                if (likeResult.reset === -1) {
                     message = "Nous avons bien enregistré votre désir d'annuler votre dislike.";
-                    break;
-                }
-
-                const userLikeIndexReset = sauce.usersLiked.indexOf(req.auth.userId);
-                if (userLikeIndexReset >= 0) {
-                    sauce.usersLiked.splice(userLikeIndexReset, 1);
-                    sauce.likes--;
+                } else if (likeResult.reset === 1) {
                     message = "Nous avons bien enregistré votre désir d'annuler votre like.";
-                    break;
+                } else {
+                    message = 'Aucune action à annuler.';
                 }
         }
         await sauce.save();
