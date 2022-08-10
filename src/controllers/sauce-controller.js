@@ -179,40 +179,25 @@ export async function likeSauce(req, res, next) {
             throw new mongoose.Error.DocumentNotFoundError(`Can't find the sauce with id ${req.params.id}`);
         }
 
-        // Update the sauce, depending on the like value
-        const likeResult = sauce.setLiking(req.body.like, req.auth.userId);
+        // Update the sauce and set the message
+        const { reset, action } = sauce.setLiking(req.body.like, req.auth.userId);
+
         let message = '';
-        switch (likeResult.action) {
-            case 1:
-                if (likeResult.action === likeResult.reset) {
-                    message =
-                        "Votre like n'a pas pu être pris en compte, vous ne pouvez pas liker la même sauce plusieurs fois.";
-                } else {
-                    message = 'Votre like a bien été pris en compte.';
-                }
-                break;
+        let messageLikeInformations = `La sauce a été likée ${sauce.likes} fois, et dislikée ${sauce.dislikes} fois.`;
 
-            case -1:
-                if (likeResult.action === likeResult.reset) {
-                    message =
-                        "Votre dislike n'a pas pu être pris en compte, vous ne pouvez pas disliker la même sauce plusieurs fois.";
-                } else {
-                    message = 'Votre dislike a bien été pris en compte.';
-                }
-                break;
-
-            default:
-                if (likeResult.reset === -1) {
-                    message = "Nous avons bien enregistré votre désir d'annuler votre dislike.";
-                } else if (likeResult.reset === 1) {
-                    message = "Nous avons bien enregistré votre désir d'annuler votre like.";
-                } else {
-                    message = 'Aucune action à annuler.';
-                }
+        if (reset === action && action !== 0) {
+            message = `Vous avez déjà ${action === 1 ? 'liké' : 'disliké'} cette sauce.`;
+        } else if (action !== 0) {
+            message = `Votre ${
+                action === 1 ? 'like' : 'dislike'
+            } a bien été pris en compte. ${messageLikeInformations}`;
+        } else if (reset === 0) {
+            message = 'Aucune action à annuler.';
+        } else {
+            message = `Votre ${reset === 1 ? 'like' : 'dislike'} a bien été annulé. ${messageLikeInformations}`;
         }
-        await sauce.save();
 
-        message += ` La sauce a donc été likée ${sauce.likes} fois, et dislikée ${sauce.dislikes} fois.`;
+        await sauce.save();
 
         res.status(200).json({ message });
         sauceControllerDebug('Sauce like set: response sent');
