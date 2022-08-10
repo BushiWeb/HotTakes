@@ -11,3 +11,11 @@ emptyDirectory(path.join(DIRNAME, '..', 'temp', 'img'))
     .catch((error) => {
         console.error(error);
     });
+
+emptyDirectory(path.join(DIRNAME, '..', 'temp', 'logs'))
+    .then(() => {
+        console.log('Logs deleted');
+    })
+    .catch((error) => {
+        console.error(error);
+    });
