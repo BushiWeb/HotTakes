@@ -46,6 +46,8 @@ const sauceSchema = mongoose.Schema(
              */
             resetLiking(userId) {
                 mongooseCustomMethodDebug(`Sauce instance method resetLiking(${userId})`);
+
+                // Remove the user's dislike if the user disliked the sauce
                 const userDislikeIndex = this.usersDisliked.indexOf(userId);
                 if (userDislikeIndex >= 0) {
                     this.usersDisliked.splice(userDislikeIndex, 1);
@@ -53,6 +55,7 @@ const sauceSchema = mongoose.Schema(
                     return -1;
                 }
 
+                // Remove the user's like if the user liked the sauce
                 const userLikeIndex = this.usersLiked.indexOf(userId);
                 if (userLikeIndex >= 0) {
                     this.usersLiked.splice(userLikeIndex, 1);
@@ -71,7 +74,11 @@ const sauceSchema = mongoose.Schema(
              */
             setLiking(likeType, userId) {
                 mongooseCustomMethodDebug(`Sauce instance method setLiking(${likeType}, ${userId})`);
+
+                // Reset previous choice
                 const resultObject = { reset: this.resetLiking(userId), action: likeType };
+
+                // Apply the like or dislike
                 switch (likeType) {
                     case 1:
                         this.like(userId);

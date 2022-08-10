@@ -179,21 +179,42 @@ export async function likeSauce(req, res, next) {
             throw new mongoose.Error.DocumentNotFoundError(`Can't find the sauce with id ${req.params.id}`);
         }
 
-        // Update the sauce and set the message
+        // Update the sauce liking
         const { reset, action } = sauce.setLiking(req.body.like, req.auth.userId);
 
+        // Set the response message
         let message = '';
         let messageLikeInformations = `La sauce a été likée ${sauce.likes} fois, et dislikée ${sauce.dislikes} fois.`;
 
         if (reset === action && action !== 0) {
+            /*
+                The user wants to like or dislike the sauce a second time :
+                    {action: 1, reset: 1}
+                    ou
+                    {action: -1, reset: -1}
+            */
             message = `Vous avez déjà ${action === 1 ? 'liké' : 'disliké'} cette sauce.`;
         } else if (action !== 0) {
+            /*
+                The user wants to like or dislike the sauce for the first time :
+                    {action: 1, reset: -1 | 0}
+                    ou
+                    {action: -1, reset: 1 | 0}
+            */
             message = `Votre ${
                 action === 1 ? 'like' : 'dislike'
             } a bien été pris en compte. ${messageLikeInformations}`;
         } else if (reset === 0) {
+            /*
+                The user wants to reset his choice, but there is nothing to reset :
+                    {action: 0, reset: 0}
+            */
             message = 'Aucune action à annuler.';
         } else {
+            /*
+                The user wants to reset his choice :
+                    {action: 0, reset: 1 | -1}
+            */
             message = `Votre ${reset === 1 ? 'like' : 'dislike'} a bien été annulé. ${messageLikeInformations}`;
         }
 
