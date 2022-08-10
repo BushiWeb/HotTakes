@@ -8,6 +8,8 @@ import SAUCE_DATA from '../mocks/sauce-data.js';
 import fs from 'node:fs';
 import mongoose from 'mongoose';
 import { MulterError } from 'multer';
+import { emptyDirectory } from '../test-utils/fs-manipulation.js';
+import path from 'node:path';
 
 const mockSauceSave = jest.spyOn(Sauce.prototype, 'save').mockResolvedValue();
 const mockSauceFind = jest.spyOn(Sauce, 'find');
@@ -25,6 +27,10 @@ beforeEach(() => {
     mockSauceUpdateOne.mockReset();
     mockSauceDeleteOne.mockReset();
     mockFsUnlink.mockReset();
+});
+
+afterAll(() => {
+    return emptyDirectory(path.join(__dirname, '..', 'temp', 'img'));
 });
 
 describe('Sauce routes test suite', () => {
