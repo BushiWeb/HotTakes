@@ -3,9 +3,16 @@ import app from '../../src/app.js';
 import User from '../../src/models/User.js';
 import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
+import ConfigManager from '../../src/config/ConfigManager.js';
+import ConfigurationError from '../../src/errors/ConfigurationError.js';
 
 const mockUserSave = jest.spyOn(User.prototype, 'save').mockResolvedValue();
 const mockUserFindOne = jest.spyOn(User, 'findOne');
+const mockConfigManagerGetEnvVariable = jest.spyOn(ConfigManager, 'getEnvVariable');
+
+beforeEach(() => {
+    mockConfigManagerGetEnvVariable.mockReturnValue(1);
+});
 
 describe('Authentication routes test suite', () => {
     describe('POST api/auth/signup', () => {
@@ -105,6 +112,20 @@ describe('Authentication routes test suite', () => {
             expect(response.body).toHaveProperty('error');
             expect(response.body.error).toHaveProperty('type', 'MongooseError');
             expect(response.body.error).toHaveProperty('name', 'ValidationError');
+        });
+
+        test('Responds with an error and status 500 if there is no password encryption salt environment variable', async () => {
+            const error = new ConfigurationError('');
+            mockConfigManagerGetEnvVariable.mockImplementation((param) => {
+                throw error;
+            });
+            const requestBody = { email: 'test@email.com', password: 'P@55w0r$' };
+            const response = await request(app).post('/api/auth/signup').send(requestBody);
+
+            expect(response.status).toBe(500);
+            expect(response.type).toMatch(/json/);
+            expect(response.body).toHaveProperty('error');
+            expect(response.body.error).toHaveProperty('name', 'ConfigurationError');
         });
     });
 

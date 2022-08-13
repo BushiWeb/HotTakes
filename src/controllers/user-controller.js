@@ -4,6 +4,7 @@ import jsonWebToken from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import UnauthorizedError from '../errors/UnauthorizedError.js';
 import debug from 'debug';
+import ConfigManager from '../config/ConfigManager.js';
 
 const userControllerDebug = debug('hottakes:user');
 
@@ -19,7 +20,10 @@ export async function signup(req, res, next) {
     userControllerDebug('User signup controller');
     try {
         // Password hash
-        const passwordHash = await bcrypt.hash(req.body.password, 10);
+        const passwordHash = await bcrypt.hash(
+            req.body.password,
+            ConfigManager.getEnvVariable('PASSWORD_ENCRYPTION_SALT')
+        );
 
         // User creation
         const user = new User({

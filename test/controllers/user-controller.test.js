@@ -5,12 +5,15 @@ import bcrypt from 'bcrypt';
 import jsonWebToken from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import UnauthorizedError from '../../src/errors/UnauthorizedError.js';
+import ConfigManager from '../../src/config/ConfigManager.js';
+import ConfigurationError from '../../src/errors/ConfigurationError.js';
 
 const mockUserSave = jest.spyOn(User.prototype, 'save');
 const mockUserFindOne = jest.spyOn(User, 'findOne');
 const mockBcryptHash = jest.spyOn(bcrypt, 'hash');
 const mockBcryptCompare = jest.spyOn(bcrypt, 'compare');
 const mockJWTSign = jest.spyOn(jsonWebToken, 'sign');
+const mockConfigManagerGetEnvVariable = jest.spyOn(ConfigManager, 'getEnvVariable');
 
 const request = mockRequest({
     email: 'test@email.com',
@@ -27,7 +30,10 @@ beforeEach(() => {
     mockJWTSign.mockReset();
     response.status.mockClear();
     response.json.mockClear();
+    mockConfigManagerGetEnvVariable.mockReset();
     next.mockClear();
+
+    mockConfigManagerGetEnvVariable.mockReturnValue(1);
 });
 
 describe('User controllers test suite', () => {
@@ -65,6 +71,21 @@ describe('User controllers test suite', () => {
 
             expect(next).toHaveBeenCalled();
             expect(next).toHaveBeenCalledWith(hashError);
+
+            expect(mockUserSave).not.toHaveBeenCalled();
+        });
+
+        test('Calls the next middleware with an error if there is no password encryption salt environment variable', async () => {
+            const errorMessage = 'Hash error message';
+            const configurationError = new ConfigurationError(errorMessage);
+            mockConfigManagerGetEnvVariable.mockImplementation((param) => {
+                throw configurationError;
+            });
+
+            await signup(request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next).toHaveBeenCalledWith(configurationError);
 
             expect(mockUserSave).not.toHaveBeenCalled();
         });
