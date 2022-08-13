@@ -1,44 +1,12 @@
 import winston from 'winston';
 import 'winston-daily-rotate-file';
-import ConfigManager from '../config/ConfigManager.js';
+import ConfigManager, { defaultConfigManager } from '../config/ConfigManager.js';
 import process, { exit } from 'node:process';
 import morgan from 'morgan';
 import debug from 'debug';
 
-/* Defines the logging levels. */
-const levels = {
-    fatal: 0,
-    error: 1,
-    warn: 2,
-    info: 3,
-    http: 4,
-    debug: 5,
-};
-
-/*
-   Decides the maximum logging to show depending on the environment.
-   In development, show all logging messages.
-   In productions, only show fatal logs, errors and warnings.
-   In test, only show fatal logs, errors and warnings.
-*/
-const level = () => {
-    if (ConfigManager.compareEnvironment('development')) {
-        return 'debug';
-    }
-
-    return 'warn';
-};
-
-/* Defines the colors to use. */
-const colors = {
-    fatal: 'red bold',
-    error: 'red',
-    warn: 'yellow',
-    info: 'white',
-    http: 'cyan',
-    debug: 'gray',
-};
-winston.addColors(colors);
+/* Creates Winston options object */
+const winstonOptions = { exitOnError: true };
 
 /*
     Defines the format to use for logging.
@@ -71,6 +39,8 @@ let format = winston.format.combine(
     winston.format.printf(printfFormat)
 );
 
+winstonOptions.format = format;
+
 /*
     Create transports. Depending on the environment, the transports will be different:
         In testing, it will be done in files in the test folder.
@@ -80,7 +50,7 @@ let format = winston.format.combine(
 let loggerTransports = [];
 const commonDailyRotateFileTransportsParameters = {
     datePattern: 'YYYY-MM-DD',
-    extension: 'log',
+    extension: '.log',
     maxSize: '20m',
 };
 
@@ -110,14 +80,37 @@ if (ConfigManager.compareEnvironment('test')) {
     );
 }
 
+winstonOptions.transports = loggerTransports;
+
+/* Defines the logging levels, max logging level and colors. */
+let levels;
+let colors;
+let level;
+let levelsError;
+
+try {
+    levels = defaultConfigManager.getConfig('logging.levels.levelsValues');
+    winstonOptions.levels = levels;
+
+    colors = defaultConfigManager.getConfig('logging.levels.levelsColors');
+    winston.addColors(colors);
+
+    if (ConfigManager.compareEnvironment('development')) {
+        level = 'debug';
+    } else if (ConfigManager.compareEnvironment('test')) {
+        level = 'error';
+    } else {
+        level = defaultConfigManager.getConfig('logging.levels.maxLevel');
+    }
+    winstonOptions.level = level;
+} catch (error) {
+    // Errors will be logged after the logger is created.
+    // If the values are not set, Winston will user the default ones.
+    levelsError = error;
+}
+
 /* Creates the logger. */
-const Logger = winston.createLogger({
-    level: level(),
-    levels,
-    format,
-    transports: loggerTransports,
-    exitOnError: true,
-});
+const Logger = winston.createLogger(winstonOptions);
 
 /* Creates the debugger format */
 debug.log = Logger.debug.bind(Logger);
@@ -126,7 +119,6 @@ debug.log = Logger.debug.bind(Logger);
 const stream = {
     write: (message) => Logger.http({ message, label: 'HTTP' }),
 };
-
 export const morganMiddleware = morgan('dev', { stream });
 
 /*
@@ -136,5 +128,32 @@ process.on('uncaughtException', (error, origin) => {
     Logger.fatal(error);
     exit(1);
 });
+
+/* Log printing */
+const loggerDebug = debug('hottakes:logger');
+
+loggerDebug('Loggers created');
+
+if (levelsError) {
+    Logger.error(levelsError);
+}
+
+if (!levels) {
+    Logger.warn("Couldn't set custom loggin levels. Default values will be used.");
+} else {
+    loggerDebug('Custom logging levels: %o', levels);
+}
+
+if (!colors) {
+    Logger.warn("Couldn't set custom colors. Default colors will be used");
+} else {
+    loggerDebug('Custom logging colors: %o', colors);
+}
+
+if (!level) {
+    Logger.warn("Couldn't set the maximum level to log. Default one will be used");
+} else {
+    loggerDebug(`Maximum level to log : "${level}"`);
+}
 
 export default Logger;

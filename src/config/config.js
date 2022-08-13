@@ -16,6 +16,27 @@ const CONFIG = {
         minNumbers: 1,
         minSymbols: 1,
     },
+    logging: {
+        levels: {
+            levelsValues: {
+                fatal: 0,
+                error: 1,
+                warn: 2,
+                info: 3,
+                http: 4,
+                debug: 5,
+            },
+            levelsColors: {
+                fatal: 'red bold',
+                error: 'red',
+                warn: 'yellow',
+                info: 'white',
+                http: 'cyan',
+                debug: 'gray',
+            },
+            maxLevel: 'info',
+        },
+    },
 };
 
 export default CONFIG;
