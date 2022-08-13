@@ -77,10 +77,15 @@ describe('checkAuthentication test suite', () => {
 });
 
 describe('checkOwnership returned middleware  test suite', () => {
-    test('Calls next if the user id is right', async () => {
+    let sauce;
+
+    beforeEach(() => {
         request.auth = { userId: '123' };
         request.params = { id: 'sauceId' };
-        const sauce = { name: 'Tabasco', userId: '123' };
+        sauce = { name: 'Tabasco', userId: '123', _id: request.params.id };
+    });
+
+    test('Calls next if the user id is right', async () => {
         mockFindById.mockResolvedValue(sauce);
 
         await checkOwnership(request, response, next);
@@ -90,9 +95,6 @@ describe('checkOwnership returned middleware  test suite', () => {
     });
 
     test('Saves the sauce in the request if the user id is right', async () => {
-        request.auth = { userId: '123' };
-        request.params = { id: 'sauceId' };
-        const sauce = { name: 'Tabasco', userId: '123', _id: request.params.id };
         mockFindById.mockResolvedValue(sauce);
 
         await checkOwnership(request, response, next);
@@ -103,9 +105,7 @@ describe('checkOwnership returned middleware  test suite', () => {
     });
 
     test('Calls the next function with an error containing the status 403 if the user id is wrong', async () => {
-        request.auth = { userId: '456' };
-        request.params = { id: 'sauceId' };
-        const sauce = { name: 'Tabasco', userId: '123' };
+        request.auth.userId = '456';
         mockFindById.mockResolvedValue(sauce);
 
         await checkOwnership(request, response, next);
@@ -115,8 +115,6 @@ describe('checkOwnership returned middleware  test suite', () => {
     });
 
     test("Calls the next function with a mongoose DocumentNotFoundError if the element doesn't exist", async () => {
-        request.auth = { userId: '456' };
-        request.params = { id: 'sauceId' };
         mockFindById.mockResolvedValue(null);
 
         await checkOwnership(request, response, next);

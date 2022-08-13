@@ -39,15 +39,13 @@ beforeEach(() => {
 describe('Sauce controllers test suite', () => {
     describe('createSauce controller test suite', () => {
         beforeEach(() => {
-            const sauceData = JSON.parse(JSON.stringify(SAUCE_DATA[0]));
-            delete sauceData._id;
-            delete sauceData.userId;
-            delete sauceData.imageUrl;
-            delete sauceData.likes;
-            delete sauceData.dislikes;
-            delete sauceData.usersLiked;
-            delete sauceData.usersDisliked;
-            request.body.sauce = sauceData;
+            request.body = {
+                name: SAUCE_DATA[0].name,
+                manufacturer: SAUCE_DATA[0].manufacturer,
+                description: SAUCE_DATA[0].description,
+                mainPepper: SAUCE_DATA[0].mainPepper,
+                heat: SAUCE_DATA[0].heat,
+            };
             request.file.filename = 'sauceImage.png';
             request.protocol = 'http';
         });
@@ -64,19 +62,7 @@ describe('Sauce controllers test suite', () => {
         });
 
         test('Calls the next middleware with an error if saving fails', async () => {
-            const errorMessage = 'Sauce save error message';
-            const saveError = { message: errorMessage };
-            mockSauceSave.mockRejectedValue(saveError);
-
-            await createSauce(request, response, next);
-
-            expect(next).toHaveBeenCalled();
-            expect(next).toHaveBeenCalledWith(saveError);
-        });
-
-        test('Calls the next middleware with an error if the save method returns an error', async () => {
-            const errorMessage = 'Sauce save error message';
-            const saveError = new mongoose.Error(errorMessage);
+            const saveError = new mongoose.Error('');
             mockSauceSave.mockRejectedValue(saveError);
 
             await createSauce(request, response, next);
@@ -110,8 +96,7 @@ describe('Sauce controllers test suite', () => {
         });
 
         test('Calls the next middleware with an error if fetching fails', async () => {
-            const errorMessage = 'Sauces fetching error message';
-            const fetchError = new mongoose.Error(errorMessage);
+            const fetchError = new mongoose.Error('');
             mockSauceFind.mockRejectedValue(fetchError);
 
             await getAllSauces(request, response, next);
@@ -147,8 +132,7 @@ describe('Sauce controllers test suite', () => {
         });
 
         test('Calls the next middleware with an error if the document if the fetching method throws an error', async () => {
-            const errorMessage = 'Fetch error message';
-            const fetchError = new mongoose.Error(errorMessage);
+            const fetchError = new mongoose.Error('');
             mockSauceFindById.mockRejectedValue(fetchError);
 
             await getSauce(request, response, next);
@@ -160,15 +144,13 @@ describe('Sauce controllers test suite', () => {
 
     describe('updateSauce controller test suite', () => {
         beforeEach(() => {
-            const sauceData = JSON.parse(JSON.stringify(SAUCE_DATA[0]));
-            delete sauceData._id;
-            delete sauceData.userId;
-            delete sauceData.imageUrl;
-            delete sauceData.likes;
-            delete sauceData.dislikes;
-            delete sauceData.usersLiked;
-            delete sauceData.usersDisliked;
-            request.body = sauceData;
+            request.body = {
+                name: SAUCE_DATA[0].name,
+                manufacturer: SAUCE_DATA[0].manufacturer,
+                description: SAUCE_DATA[0].description,
+                mainPepper: SAUCE_DATA[0].mainPepper,
+                heat: SAUCE_DATA[0].heat,
+            };
             request.file = { filename: 'sauceImage.png' };
             request.protocol = 'http';
             request.params.id = '123';

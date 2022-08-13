@@ -35,6 +35,7 @@ describe('Error handlers test suite', () => {
             delete request.files;
             request.file = {};
         });
+
         test('Calls the next function with the error if no file is sent', () => {
             const error = new Error('Error message');
 

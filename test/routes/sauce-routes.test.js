@@ -7,7 +7,6 @@ import jsonWebToken from 'jsonwebtoken';
 import SAUCE_DATA from '../mocks/sauce-data.js';
 import fs from 'node:fs';
 import mongoose from 'mongoose';
-import { MulterError } from 'multer';
 
 const mockSauceSave = jest.spyOn(Sauce.prototype, 'save').mockResolvedValue();
 const mockSauceFind = jest.spyOn(Sauce, 'find');
@@ -17,6 +16,15 @@ const mockSauceDeleteOne = jest.spyOn(Sauce, 'deleteOne');
 const mockFsUnlink = jest.spyOn(fs, 'unlink');
 
 const authenticationTestKey = 'TEST';
+const defaultUserId = '666666';
+
+const createAuthorizationHeaderValue = (userId = defaultUserId, key = authenticationTestKey, invalidData = false) => {
+    const payload = invalidData ? { useless: true } : { userId };
+    const jwt = jsonWebToken.sign(payload, key, {
+        expiresIn: '24h',
+    });
+    return `Bearer ${jwt}`;
+};
 
 beforeEach(() => {
     mockSauceSave.mockReset();
@@ -29,26 +37,20 @@ beforeEach(() => {
 
 describe('Sauce routes test suite', () => {
     describe('POST api/sauces', () => {
-        const sauceData = JSON.parse(JSON.stringify(SAUCE_DATA[0]));
-        delete sauceData._id;
-        delete sauceData.userId;
-        delete sauceData.imageUrl;
-        delete sauceData.likes;
-        delete sauceData.dislikes;
-        delete sauceData.usersLiked;
-        delete sauceData.usersDisliked;
+        const sauceData = {
+            name: SAUCE_DATA[0].name,
+            manufacturer: SAUCE_DATA[0].manufacturer,
+            description: SAUCE_DATA[0].description,
+            mainPepper: SAUCE_DATA[0].mainPepper,
+            heat: SAUCE_DATA[0].heat,
+        };
 
         const imagePath = join(dirname(fileURLToPath(import.meta.url)), '../images/test.png');
-
-        const jwt = jsonWebToken.sign({ userId: '123' }, authenticationTestKey, {
-            expiresIn: '24h',
-        });
-        const authorizationHeader = `Bearer ${jwt}`;
 
         test('Responds with a message in JSON format, and status 201', async () => {
             const response = await request(app)
                 .post('/api/sauces/')
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue())
                 .field('sauce', JSON.stringify(sauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -62,7 +64,7 @@ describe('Sauce routes test suite', () => {
             invalidSauceData.name = true;
             const response = await request(app)
                 .post('/api/sauces/')
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue())
                 .field('sauce', JSON.stringify(invalidSauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -81,7 +83,7 @@ describe('Sauce routes test suite', () => {
             delete invalidSauceData.name;
             const response = await request(app)
                 .post('/api/sauces/')
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue())
                 .field('sauce', JSON.stringify(invalidSauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -100,7 +102,7 @@ describe('Sauce routes test suite', () => {
             invalidSauceData.heat = true;
             const response = await request(app)
                 .post('/api/sauces/')
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue())
                 .field('sauce', JSON.stringify(invalidSauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -119,7 +121,7 @@ describe('Sauce routes test suite', () => {
             delete invalidSauceData.heat;
             const response = await request(app)
                 .post('/api/sauces/')
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue())
                 .field('sauce', JSON.stringify(invalidSauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -138,7 +140,7 @@ describe('Sauce routes test suite', () => {
             invalidSauceData.heat = 13;
             const response = await request(app)
                 .post('/api/sauces/')
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue())
                 .field('sauce', JSON.stringify(invalidSauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -155,7 +157,7 @@ describe('Sauce routes test suite', () => {
         test('Responds with an error and status 400 if the file is missing', async () => {
             const response = await request(app)
                 .post('/api/sauces/')
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue())
                 .field('sauce', JSON.stringify(sauceData), { contentType: 'application/json' });
 
             expect(response.status).toBe(400);
@@ -169,7 +171,7 @@ describe('Sauce routes test suite', () => {
             invalidSauceData.description = true;
             const response = await request(app)
                 .post('/api/sauces/')
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue())
                 .field('sauce', JSON.stringify(invalidSauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -188,7 +190,7 @@ describe('Sauce routes test suite', () => {
             delete invalidSauceData.description;
             const response = await request(app)
                 .post('/api/sauces/')
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue())
                 .field('sauce', JSON.stringify(invalidSauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -207,7 +209,7 @@ describe('Sauce routes test suite', () => {
             invalidSauceData.manufacturer = true;
             const response = await request(app)
                 .post('/api/sauces/')
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue())
                 .field('sauce', JSON.stringify(invalidSauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -226,7 +228,7 @@ describe('Sauce routes test suite', () => {
             delete invalidSauceData.manufacturer;
             const response = await request(app)
                 .post('/api/sauces/')
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue())
                 .field('sauce', JSON.stringify(invalidSauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -245,7 +247,7 @@ describe('Sauce routes test suite', () => {
             invalidSauceData.mainPepper = true;
             const response = await request(app)
                 .post('/api/sauces/')
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue())
                 .field('sauce', JSON.stringify(invalidSauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -264,7 +266,7 @@ describe('Sauce routes test suite', () => {
             delete invalidSauceData.mainPepper;
             const response = await request(app)
                 .post('/api/sauces/')
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue())
                 .field('sauce', JSON.stringify(invalidSauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -279,13 +281,9 @@ describe('Sauce routes test suite', () => {
         });
 
         test('Responds with an error and status 401 if the jwt is invalid', async () => {
-            const invalidJwt = jsonWebToken.sign({ userId: '123' }, 'WRONG_KEY', {
-                expiresIn: '24h',
-            });
-            const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
             const response = await request(app)
                 .post('/api/sauces/')
-                .set('Authorization', invalidAuthorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue('123', 'WRONG_KEY'))
                 .field('sauce', JSON.stringify(sauceData), { contentType: 'application/json' });
 
             expect(response.status).toBe(401);
@@ -295,13 +293,9 @@ describe('Sauce routes test suite', () => {
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
-            const invalidJwt = jsonWebToken.sign({ useless: '123' }, authenticationTestKey, {
-                expiresIn: '24h',
-            });
-            const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
             const response = await request(app)
                 .post('/api/sauces/')
-                .set('Authorization', invalidAuthorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(defaultUserId, authenticationTestKey, true))
                 .field('sauce', JSON.stringify(sauceData), { contentType: 'application/json' });
 
             expect(response.status).toBe(401);
@@ -315,7 +309,7 @@ describe('Sauce routes test suite', () => {
             mockSauceSave.mockRejectedValueOnce(error);
             const response = await request(app)
                 .post('/api/sauces/')
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue())
                 .field('sauce', JSON.stringify(sauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -332,7 +326,7 @@ describe('Sauce routes test suite', () => {
             mockSauceSave.mockRejectedValueOnce(error);
             const response = await request(app)
                 .post('/api/sauces/')
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue())
                 .field('sauce', JSON.stringify(sauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -345,18 +339,15 @@ describe('Sauce routes test suite', () => {
     });
 
     describe('GET api/sauces', () => {
-        const jwt = jsonWebToken.sign({ userId: '123' }, authenticationTestKey, {
-            expiresIn: '24h',
-        });
-        const authorizationHeader = `Bearer ${jwt}`;
-
         beforeEach(() => {
             mockSauceFind.mockReset();
         });
 
         test('Responds with a message in JSON format, and status 200', async () => {
             mockSauceFind.mockResolvedValue(SAUCE_DATA);
-            const response = await request(app).get('/api/sauces/').set('Authorization', authorizationHeader);
+            const response = await request(app)
+                .get('/api/sauces/')
+                .set('Authorization', createAuthorizationHeaderValue());
 
             expect(response.status).toBe(200);
             expect(response.type).toMatch(/json/);
@@ -364,11 +355,9 @@ describe('Sauce routes test suite', () => {
         });
 
         test('Responds with an error and status 401 if the jwt is invalid', async () => {
-            const invalidJwt = jsonWebToken.sign({ userId: '123' }, 'WRONG_KEY', {
-                expiresIn: '24h',
-            });
-            const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
-            const response = await request(app).get('/api/sauces/').set('Authorization', invalidAuthorizationHeader);
+            const response = await request(app)
+                .get('/api/sauces/')
+                .set('Authorization', createAuthorizationHeaderValue(defaultUserId, 'WRONG_KEY'));
 
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
@@ -377,11 +366,9 @@ describe('Sauce routes test suite', () => {
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
-            const invalidJwt = jsonWebToken.sign({ useless: '123' }, authenticationTestKey, {
-                expiresIn: '24h',
-            });
-            const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
-            const response = await request(app).get('/api/sauces/').set('Authorization', invalidAuthorizationHeader);
+            const response = await request(app)
+                .get('/api/sauces/')
+                .set('Authorization', createAuthorizationHeaderValue(defaultUserId, authenticationTestKey, true));
 
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
@@ -392,7 +379,9 @@ describe('Sauce routes test suite', () => {
         test('Responds with an error and status 500 if the fetching fails', async () => {
             const error = new mongoose.Error();
             mockSauceFind.mockRejectedValueOnce(error);
-            const response = await request(app).get('/api/sauces/').set('Authorization', authorizationHeader);
+            const response = await request(app)
+                .get('/api/sauces/')
+                .set('Authorization', createAuthorizationHeaderValue());
 
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
@@ -402,10 +391,6 @@ describe('Sauce routes test suite', () => {
     });
 
     describe('GET api/sauces/:id', () => {
-        const jwt = jsonWebToken.sign({ userId: '123' }, authenticationTestKey, {
-            expiresIn: '24h',
-        });
-        const authorizationHeader = `Bearer ${jwt}`;
         const requestUrl = `/api/sauces/${SAUCE_DATA[0]._id}`;
 
         beforeEach(() => {
@@ -414,7 +399,7 @@ describe('Sauce routes test suite', () => {
 
         test('Responds with a message in JSON format, and status 200', async () => {
             mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
-            const response = await request(app).get(requestUrl).set('Authorization', authorizationHeader);
+            const response = await request(app).get(requestUrl).set('Authorization', createAuthorizationHeaderValue());
 
             expect(response.status).toBe(200);
             expect(response.type).toMatch(/json/);
@@ -422,11 +407,9 @@ describe('Sauce routes test suite', () => {
         });
 
         test('Responds with an error and status 401 if the jwt is invalid', async () => {
-            const invalidJwt = jsonWebToken.sign({ userId: '123' }, 'WRONG_KEY', {
-                expiresIn: '24h',
-            });
-            const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
-            const response = await request(app).get(requestUrl).set('Authorization', invalidAuthorizationHeader);
+            const response = await request(app)
+                .get(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue(defaultUserId, 'WRONG_KEY'));
 
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
@@ -435,11 +418,9 @@ describe('Sauce routes test suite', () => {
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
-            const invalidJwt = jsonWebToken.sign({ useless: '123' }, authenticationTestKey, {
-                expiresIn: '24h',
-            });
-            const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
-            const response = await request(app).get(requestUrl).set('Authorization', invalidAuthorizationHeader);
+            const response = await request(app)
+                .get(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue(defaultUserId, authenticationTestKey, true));
 
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
@@ -450,7 +431,7 @@ describe('Sauce routes test suite', () => {
         test('Responds with an error and status 500 if the fetching fails', async () => {
             const error = new mongoose.Error();
             mockSauceFindById.mockRejectedValueOnce(error);
-            const response = await request(app).get(requestUrl).set('Authorization', authorizationHeader);
+            const response = await request(app).get(requestUrl).set('Authorization', createAuthorizationHeaderValue());
 
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
@@ -461,7 +442,9 @@ describe('Sauce routes test suite', () => {
         test("Responds with an error and status 404 if the document can't be found", async () => {
             const badRequestUrl = '/api/sauces/000000000';
             mockSauceFindById.mockResolvedValueOnce(null);
-            const response = await request(app).get(badRequestUrl).set('Authorization', authorizationHeader);
+            const response = await request(app)
+                .get(badRequestUrl)
+                .set('Authorization', createAuthorizationHeaderValue());
 
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
@@ -474,7 +457,9 @@ describe('Sauce routes test suite', () => {
             const badRequestUrl = '/api/sauces/000000000';
             const error = new mongoose.Error.DocumentNotFoundError();
             mockSauceFindById.mockRejectedValueOnce(error);
-            const response = await request(app).get(badRequestUrl).set('Authorization', authorizationHeader);
+            const response = await request(app)
+                .get(badRequestUrl)
+                .set('Authorization', createAuthorizationHeaderValue());
 
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
@@ -487,7 +472,9 @@ describe('Sauce routes test suite', () => {
             const badRequestUrl = '/api/sauces/000000000';
             const error = new mongoose.Error.CastError();
             mockSauceFindById.mockRejectedValueOnce(error);
-            const response = await request(app).get(badRequestUrl).set('Authorization', authorizationHeader);
+            const response = await request(app)
+                .get(badRequestUrl)
+                .set('Authorization', createAuthorizationHeaderValue());
 
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
@@ -498,21 +485,16 @@ describe('Sauce routes test suite', () => {
     });
 
     describe('PUT api/sauces/:id', () => {
-        const sauceData = JSON.parse(JSON.stringify(SAUCE_DATA[0]));
-        delete sauceData._id;
-        delete sauceData.userId;
-        delete sauceData.imageUrl;
-        delete sauceData.likes;
-        delete sauceData.dislikes;
-        delete sauceData.usersLiked;
-        delete sauceData.usersDisliked;
+        const sauceData = {
+            name: SAUCE_DATA[0].name,
+            manufacturer: SAUCE_DATA[0].manufacturer,
+            description: SAUCE_DATA[0].description,
+            mainPepper: SAUCE_DATA[0].mainPepper,
+            heat: SAUCE_DATA[0].heat,
+        };
 
         const imagePath = join(dirname(fileURLToPath(import.meta.url)), '../images/test.png');
 
-        const jwt = jsonWebToken.sign({ userId: SAUCE_DATA[0].userId }, authenticationTestKey, {
-            expiresIn: '24h',
-        });
-        const authorizationHeader = `Bearer ${jwt}`;
         const requestUrl = `/api/sauces/${SAUCE_DATA[0]._id}`;
 
         test('Responds with a message in JSON format, and status 200 with an image', async () => {
@@ -521,7 +503,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .field('sauce', JSON.stringify(sauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -538,7 +520,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .send(sauceData);
 
             expect(response.status).toBe(200);
@@ -553,7 +535,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .field('sauce', JSON.stringify(sauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -567,7 +549,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .send(sauceData);
 
             expect(mockFsUnlink).not.toHaveBeenCalled();
@@ -580,7 +562,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .field('sauce', JSON.stringify(invalidSauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -601,7 +583,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .send(invalidSauceData);
 
             expect(response.status).toBe(400);
@@ -622,7 +604,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .send(updatedSauceData);
 
             expect(response.status).toBe(200);
@@ -639,7 +621,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .field('sauce', JSON.stringify(invalidSauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -660,7 +642,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .send(invalidSauceData);
 
             expect(response.status).toBe(400);
@@ -681,7 +663,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .send(updatedSauceData);
 
             expect(response.status).toBe(200);
@@ -698,7 +680,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .field('sauce', JSON.stringify(invalidSauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -719,7 +701,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .send(invalidSauceData);
 
             expect(response.status).toBe(400);
@@ -739,7 +721,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .field('sauce', JSON.stringify(invalidSauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -760,7 +742,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .send(invalidSauceData);
 
             expect(response.status).toBe(400);
@@ -781,7 +763,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .send(updatedSauceData);
 
             expect(response.status).toBe(200);
@@ -798,7 +780,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .field('sauce', JSON.stringify(invalidSauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -819,7 +801,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .send(invalidSauceData);
 
             expect(response.status).toBe(400);
@@ -840,7 +822,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .send(updatedSauceData);
 
             expect(response.status).toBe(200);
@@ -857,7 +839,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .field('sauce', JSON.stringify(invalidSauceData), { contentType: 'application/json' })
                 .attach('image', imagePath);
 
@@ -878,7 +860,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .send(invalidSauceData);
 
             expect(response.status).toBe(400);
@@ -899,7 +881,7 @@ describe('Sauce routes test suite', () => {
 
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .send(updatedSauceData);
 
             expect(response.status).toBe(200);
@@ -910,13 +892,9 @@ describe('Sauce routes test suite', () => {
         });
 
         test('Responds with an error and status 401 if the jwt is invalid', async () => {
-            const invalidJwt = jsonWebToken.sign({ userId: '123' }, 'WRONG_KEY', {
-                expiresIn: '24h',
-            });
-            const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', invalidAuthorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId, 'WRONG_KEY'))
                 .send(sauceData);
 
             expect(response.status).toBe(401);
@@ -926,13 +904,9 @@ describe('Sauce routes test suite', () => {
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
-            const invalidJwt = jsonWebToken.sign({ useless: '123' }, authenticationTestKey, {
-                expiresIn: '24h',
-            });
-            const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', invalidAuthorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId, authenticationTestKey, true))
                 .send(sauceData);
 
             expect(response.status).toBe(401);
@@ -949,7 +923,7 @@ describe('Sauce routes test suite', () => {
             mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', invalidAuthorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue())
                 .send(sauceData);
 
             expect(response.status).toBe(403);
@@ -964,7 +938,7 @@ describe('Sauce routes test suite', () => {
             mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .send(sauceData);
 
             expect(response.status).toBe(400);
@@ -980,7 +954,7 @@ describe('Sauce routes test suite', () => {
             mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .send(sauceData);
 
             expect(response.status).toBe(500);
@@ -994,7 +968,7 @@ describe('Sauce routes test suite', () => {
             mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .send(sauceData);
 
             expect(response.status).toBe(500);
@@ -1007,7 +981,7 @@ describe('Sauce routes test suite', () => {
             mockSauceFindById.mockResolvedValue(null);
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .send(sauceData);
 
             expect(response.status).toBe(404);
@@ -1022,7 +996,7 @@ describe('Sauce routes test suite', () => {
             mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .send(sauceData);
 
             expect(response.status).toBe(404);
@@ -1037,7 +1011,7 @@ describe('Sauce routes test suite', () => {
             mockSauceFindById.mockRejectedValueOnce(error);
             const response = await request(app)
                 .put(requestUrl)
-                .set('Authorization', authorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId))
                 .send(sauceData);
 
             expect(response.status).toBe(400);
@@ -1049,17 +1023,15 @@ describe('Sauce routes test suite', () => {
     });
 
     describe('DELETE api/sauces/:id', () => {
-        const jwt = jsonWebToken.sign({ userId: SAUCE_DATA[0].userId }, authenticationTestKey, {
-            expiresIn: '24h',
-        });
-        const authorizationHeader = `Bearer ${jwt}`;
         const requestUrl = `/api/sauces/${SAUCE_DATA[0]._id}`;
 
         test('Responds with a message in JSON format, and status 200', async () => {
             mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
             mockSauceDeleteOne.mockResolvedValue(null);
 
-            const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
+            const response = await request(app)
+                .delete(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId));
 
             expect(response.status).toBe(200);
             expect(response.type).toMatch(/json/);
@@ -1072,18 +1044,18 @@ describe('Sauce routes test suite', () => {
             mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
             mockSauceDeleteOne.mockResolvedValue(null);
 
-            const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
+            const response = await request(app)
+                .delete(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId));
 
             expect(mockFsUnlink).toHaveBeenCalled();
             expect(mockFsUnlink.mock.calls[0][0]).toMatch(new RegExp(SAUCE_DATA[0].imageUrl.split('/images/')[1]));
         });
 
         test('Responds with an error and status 401 if the jwt is invalid', async () => {
-            const invalidJwt = jsonWebToken.sign({ userId: '123' }, 'WRONG_KEY', {
-                expiresIn: '24h',
-            });
-            const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
-            const response = await request(app).delete(requestUrl).set('Authorization', invalidAuthorizationHeader);
+            const response = await request(app)
+                .delete(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId, 'WRONG_KEY'));
 
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
@@ -1092,11 +1064,12 @@ describe('Sauce routes test suite', () => {
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
-            const invalidJwt = jsonWebToken.sign({ useless: '123' }, authenticationTestKey, {
-                expiresIn: '24h',
-            });
-            const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
-            const response = await request(app).delete(requestUrl).set('Authorization', invalidAuthorizationHeader);
+            const response = await request(app)
+                .delete(requestUrl)
+                .set(
+                    'Authorization',
+                    createAuthorizationHeaderValue(SAUCE_DATA[0].userId, authenticationTestKey, true)
+                );
 
             expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
@@ -1105,12 +1078,10 @@ describe('Sauce routes test suite', () => {
         });
 
         test("Responds with an error and status 403 if the user doesn't have the right to manipulate the sauce", async () => {
-            const invalidJwt = jsonWebToken.sign({ userId: '123' }, authenticationTestKey, {
-                expiresIn: '24h',
-            });
-            const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
             mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
-            const response = await request(app).delete(requestUrl).set('Authorization', invalidAuthorizationHeader);
+            const response = await request(app)
+                .delete(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue());
 
             expect(response.status).toBe(403);
             expect(response.type).toMatch(/json/);
@@ -1122,7 +1093,9 @@ describe('Sauce routes test suite', () => {
             const error = new mongoose.Error();
             mockSauceDeleteOne.mockRejectedValueOnce(error);
             mockSauceFindById.mockResolvedValue(SAUCE_DATA[0]);
-            const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
+            const response = await request(app)
+                .delete(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId));
 
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
@@ -1133,7 +1106,9 @@ describe('Sauce routes test suite', () => {
         test('Responds with an error and status 500 if the fetching fails', async () => {
             const error = new mongoose.Error();
             mockSauceFindById.mockRejectedValueOnce(error);
-            const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
+            const response = await request(app)
+                .delete(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId));
 
             expect(response.status).toBe(500);
             expect(response.type).toMatch(/json/);
@@ -1143,7 +1118,9 @@ describe('Sauce routes test suite', () => {
 
         test("Responds with an error and status 404 if the document can't be found", async () => {
             mockSauceFindById.mockResolvedValue(null);
-            const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
+            const response = await request(app)
+                .delete(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId));
 
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
@@ -1155,7 +1132,9 @@ describe('Sauce routes test suite', () => {
         test("Responds with an error and status 404 if the document can't be found and an error is thrown", async () => {
             const error = new mongoose.Error.DocumentNotFoundError();
             mockSauceFindById.mockRejectedValueOnce(error);
-            const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
+            const response = await request(app)
+                .delete(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId));
 
             expect(response.status).toBe(404);
             expect(response.type).toMatch(/json/);
@@ -1167,7 +1146,9 @@ describe('Sauce routes test suite', () => {
         test('Responds with an error and status 400 if the id is incorrect', async () => {
             const error = new mongoose.Error.CastError();
             mockSauceFindById.mockRejectedValueOnce(error);
-            const response = await request(app).delete(requestUrl).set('Authorization', authorizationHeader);
+            const response = await request(app)
+                .delete(requestUrl)
+                .set('Authorization', createAuthorizationHeaderValue(SAUCE_DATA[0].userId));
 
             expect(response.status).toBe(400);
             expect(response.type).toMatch(/json/);
@@ -1178,15 +1159,6 @@ describe('Sauce routes test suite', () => {
     });
 
     describe('POST api/sauces/:id/like', () => {
-        const defaultUserId = '666666';
-
-        const createAuthorizationHeaderValue = (userId = defaultUserId, key = authenticationTestKey) => {
-            const jwt = jsonWebToken.sign({ userId }, key, {
-                expiresIn: '24h',
-            });
-            return `Bearer ${jwt}`;
-        };
-
         const requestUrl = `/api/sauces/${SAUCE_DATA[0]._id}/like`;
 
         let returnedSauce;
@@ -1444,13 +1416,9 @@ describe('Sauce routes test suite', () => {
         });
 
         test("Responds with an error and status 401 if the jwt doesn't contain the userId", async () => {
-            const invalidJwt = jsonWebToken.sign({ useless: '123' }, authenticationTestKey, {
-                expiresIn: '24h',
-            });
-            const invalidAuthorizationHeader = `Bearer ${invalidJwt}`;
             const response = await request(app)
                 .post(requestUrl)
-                .set('Authorization', invalidAuthorizationHeader)
+                .set('Authorization', createAuthorizationHeaderValue(defaultUserId, authenticationTestKey, true))
                 .send({ userId: defaultUserId, like: 1 });
 
             expect(response.status).toBe(401);

@@ -4,6 +4,7 @@ import ConfigManager from '../../src/config/ConfigManager.js';
 import Logger from '../../src/logger/logger.js';
 
 const mockMongooseConnect = jest.spyOn(mongoose, 'connect');
+const mockMongooseSet = jest.spyOn(mongoose, 'set');
 const mockGetEnvVariable = jest.spyOn(ConfigManager, 'getEnvVariable');
 const mockLoggerFatal = jest.spyOn(Logger, 'fatal').mockImplementation(() => {});
 const mockLoggerInfo = jest.spyOn(Logger, 'info').mockImplementation(() => {});
@@ -15,6 +16,7 @@ beforeEach(() => {
     mockLoggerFatal.mockClear();
     mockLoggerInfo.mockClear();
     mockProcessExit.mockClear();
+    mockMongooseSet.mockReset();
 });
 
 afterAll(() => {
@@ -54,6 +56,17 @@ describe('Database utils test suite', () => {
 
             expect(mockLoggerFatal).toHaveBeenCalled();
             expect(mockProcessExit).toHaveBeenCalled();
+        });
+
+        test('Set up mongoose debugging', async () => {
+            mockGetEnvVariable.mockReturnValue('url');
+            mockMongooseConnect.mockResolvedValue('URL');
+
+            await mongoDBConnect();
+
+            expect(mockMongooseSet).toHaveBeenCalled();
+            expect(mockMongooseSet.mock.calls[0][0]).toBe('debug');
+            expect(mockMongooseSet.mock.calls[0][1]).toBeInstanceOf(Function);
         });
     });
 });
