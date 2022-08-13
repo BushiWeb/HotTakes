@@ -2,8 +2,26 @@ import express from 'express';
 import { body } from 'express-validator';
 import { signup, login } from '../controllers/user-controller.js';
 import { validateFields } from '../middlewares/field-validation.js';
+import Logger from '../logger/logger.js';
+import { defaultConfigManager } from '../config/ConfigManager.js';
+import debug from 'debug';
+
+const userRoutesDebug = debug('hottakes:userRoutes');
 
 const router = express.Router();
+
+/*
+ * Get the password strength validation configuration.
+ */
+let passwordStrenghtValidationParameters;
+
+try {
+    passwordStrenghtValidationParameters = defaultConfigManager.getConfig('passwordValidation');
+    userRoutesDebug('Password strenght validation parameters acquired: %o', passwordStrenghtValidationParameters);
+} catch (error) {
+    Logger.error(error);
+    Logger.warn(`Couldn't set the password strength validation parameters. Default values will be used.`);
+}
 
 /**
  * Signup route.
@@ -30,7 +48,7 @@ router.post(
         .isString()
         .withMessage('Password should be a string')
         .bail()
-        .isStrongPassword({ minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1, minSymbols: 1 })
+        .isStrongPassword(passwordStrenghtValidationParameters)
         .withMessage(
             'Password should be at least 8 characters long, with at least 1 lowercase letter, 1 uppercase letter, 1 number and 1 symbol'
         ),
