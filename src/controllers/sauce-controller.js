@@ -179,64 +179,46 @@ export async function likeSauce(req, res, next) {
             throw new mongoose.Error.DocumentNotFoundError(`Can't find the sauce with id ${req.params.id}`);
         }
 
-        // Update the sauce, depending on the like value
+        // Update the sauce liking
+        const { reset, action } = sauce.setLiking(req.body.like, req.auth.userId);
+
+        // Set the response message
         let message = '';
-        switch (req.body.like) {
-            case 1:
-                sauceControllerDebug('Like the sauce');
-                message =
-                    "Votre like n'a pas pu être pris en compte, vous ne pouvez pas liker la même sauce plusieurs fois.";
-                let userDislikeIndex = sauce.usersDisliked.indexOf(req.auth.userId);
-                if (userDislikeIndex >= 0) {
-                    sauce.usersDisliked.splice(userDislikeIndex, 1);
-                    sauce.dislikes--;
-                }
+        let messageLikeInformations = `La sauce a été likée ${sauce.likes} fois, et dislikée ${sauce.dislikes} fois.`;
 
-                if (!sauce.usersLiked.includes(req.auth.userId)) {
-                    sauce.likes++;
-                    sauce.usersLiked.push(req.auth.userId);
-                    message = 'Votre like a bien été pris en compte.';
-                }
-                break;
-
-            case -1:
-                sauceControllerDebug('Dislike the sauce');
-                message =
-                    "Votre dislike n'a pas pu être pris en compte, vous ne pouvez pas disliker la même sauce plusieurs fois.";
-                let userLikeIndex = sauce.usersLiked.indexOf(req.auth.userId);
-                if (userLikeIndex >= 0) {
-                    sauce.usersLiked.splice(userLikeIndex, 1);
-                    sauce.likes--;
-                }
-
-                if (!sauce.usersDisliked.includes(req.auth.userId)) {
-                    sauce.dislikes++;
-                    sauce.usersDisliked.push(req.auth.userId);
-                    message = 'Votre dislike a bien été pris en compte.';
-                }
-                break;
-
-            default:
-                sauceControllerDebug('Reset the liking choice');
-                const userDislikeIndexReset = sauce.usersDisliked.indexOf(req.auth.userId);
-                if (userDislikeIndexReset >= 0) {
-                    sauce.usersDisliked.splice(userDislikeIndexReset, 1);
-                    sauce.dislikes--;
-                    message = "Nous avons bien enregistré votre désir d'annuler votre dislike.";
-                    break;
-                }
-
-                const userLikeIndexReset = sauce.usersLiked.indexOf(req.auth.userId);
-                if (userLikeIndexReset >= 0) {
-                    sauce.usersLiked.splice(userLikeIndexReset, 1);
-                    sauce.likes--;
-                    message = "Nous avons bien enregistré votre désir d'annuler votre like.";
-                    break;
-                }
+        if (reset === action && action !== 0) {
+            /*
+                The user wants to like or dislike the sauce a second time :
+                    {action: 1, reset: 1}
+                    ou
+                    {action: -1, reset: -1}
+            */
+            message = `Vous avez déjà ${action === 1 ? 'liké' : 'disliké'} cette sauce.`;
+        } else if (action !== 0) {
+            /*
+                The user wants to like or dislike the sauce for the first time :
+                    {action: 1, reset: -1 | 0}
+                    ou
+                    {action: -1, reset: 1 | 0}
+            */
+            message = `Votre ${
+                action === 1 ? 'like' : 'dislike'
+            } a bien été pris en compte. ${messageLikeInformations}`;
+        } else if (reset === 0) {
+            /*
+                The user wants to reset his choice, but there is nothing to reset :
+                    {action: 0, reset: 0}
+            */
+            message = 'Aucune action à annuler.';
+        } else {
+            /*
+                The user wants to reset his choice :
+                    {action: 0, reset: 1 | -1}
+            */
+            message = `Votre ${reset === 1 ? 'like' : 'dislike'} a bien été annulé. ${messageLikeInformations}`;
         }
-        await sauce.save();
 
-        message += ` La sauce a donc été likée ${sauce.likes} fois, et dislikée ${sauce.dislikes} fois.`;
+        await sauce.save();
 
         res.status(200).json({ message });
         sauceControllerDebug('Sauce like set: response sent');
