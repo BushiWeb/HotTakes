@@ -1,4 +1,4 @@
-import { bodyJsonParse } from '../../src/middlewares/body-json-parse.js';
+import { bodyPropertyAssignToBody } from '../../src/middlewares/request-body-manipulation.js';
 import { mockResponse, mockRequest, mockNext } from '../mocks/express-mocks.js';
 
 const request = mockRequest();
@@ -16,7 +16,7 @@ describe('bodyJsonParse returned middleware  test suite', () => {
         const propertyValue = true;
         request.body.property = propertyValue;
 
-        const middleware = bodyJsonParse('property');
+        const middleware = bodyPropertyAssignToBody('property');
         middleware(request, response, next);
 
         expect(next).toHaveBeenCalled();
@@ -28,7 +28,7 @@ describe('bodyJsonParse returned middleware  test suite', () => {
         const propertyValue = null;
         request.body.property = propertyValue;
 
-        const middleware = bodyJsonParse('property');
+        const middleware = bodyPropertyAssignToBody('property');
         middleware(request, response, next);
 
         expect(next).toHaveBeenCalled();
@@ -40,7 +40,7 @@ describe('bodyJsonParse returned middleware  test suite', () => {
         const data = { name: 'name' };
         request.body.property = JSON.stringify(data);
 
-        const middleware = bodyJsonParse('property');
+        const middleware = bodyPropertyAssignToBody('property');
         middleware(request, response, next);
 
         expect(next).toHaveBeenCalled();
@@ -53,7 +53,7 @@ describe('bodyJsonParse returned middleware  test suite', () => {
         const data = { name: 'name' };
         request.body.property = data;
 
-        const middleware = bodyJsonParse('property');
+        const middleware = bodyPropertyAssignToBody('property');
         middleware(request, response, next);
 
         expect(next).toHaveBeenCalled();
@@ -65,7 +65,7 @@ describe('bodyJsonParse returned middleware  test suite', () => {
     test("Calls the next function with an error if the property doesn't exist and the second parameter isn't set", () => {
         request.body.property = { name: 'name' };
 
-        const middleware = bodyJsonParse('otherProperty');
+        const middleware = bodyPropertyAssignToBody('otherProperty');
         middleware(request, response, next);
 
         expect(next).toHaveBeenCalled();
@@ -76,7 +76,7 @@ describe('bodyJsonParse returned middleware  test suite', () => {
     test("Calls the next function with an error if the property doesn't exist and the second parameter is true", () => {
         request.body.property = { name: 'name' };
 
-        const middleware = bodyJsonParse('otherProperty', true);
+        const middleware = bodyPropertyAssignToBody('otherProperty', true);
         middleware(request, response, next);
 
         expect(next).toHaveBeenCalled();
@@ -87,7 +87,7 @@ describe('bodyJsonParse returned middleware  test suite', () => {
     test('Calls the next function with no parameters if the property is undefined but the second paramter is false', () => {
         request.body.property = { name: 'name' };
 
-        const middleware = bodyJsonParse('otherProperty', false);
+        const middleware = bodyPropertyAssignToBody('otherProperty', false);
         middleware(request, response, next);
 
         expect(next).toHaveBeenCalled();
@@ -97,7 +97,7 @@ describe('bodyJsonParse returned middleware  test suite', () => {
     test('Calls the next function with an error if the parsing fails', () => {
         request.body.property = 'Random string';
 
-        const middleware = bodyJsonParse('property');
+        const middleware = bodyPropertyAssignToBody('property');
         middleware(request, response, next);
 
         expect(next).toHaveBeenCalled();

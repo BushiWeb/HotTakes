@@ -9,7 +9,7 @@ emptyDirectory(path.join(DIRNAME, '..', 'temp', 'img'))
         console.log('Images deleted');
     })
     .catch((error) => {
-        console.error(error);
+        console.error(`Can't delete images: ${error.message}`);
     });
 
 emptyDirectory(path.join(DIRNAME, '..', 'temp', 'logs'))
@@ -17,5 +17,5 @@ emptyDirectory(path.join(DIRNAME, '..', 'temp', 'logs'))
         console.log('Logs deleted');
     })
     .catch((error) => {
-        console.error(error);
+        console.error(`Can't delete logs: ${error.message}`);
     });

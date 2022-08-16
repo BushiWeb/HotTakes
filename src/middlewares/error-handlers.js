@@ -7,7 +7,7 @@ import { unlink } from 'node:fs';
 import { createDebugNamespace } from '../logger/logger.js';
 import Logger from '../logger/logger.js';
 
-const errorDebug = createDebugNamespace('hottakes:error');
+const errorDebug = createDebugNamespace('hottakes:middleware:error');
 
 /**
  * Middleware handling file deletion in case of an error.
@@ -18,7 +18,7 @@ const errorDebug = createDebugNamespace('hottakes:error');
  * @param next - Next middleware to execute.
  */
 export function deleteFiles(err, req, res, next) {
-    errorDebug('File deletion error middleware');
+    errorDebug('Error middleware execution: file deletion');
     let files = [];
     if (req.file) {
         files.push(req.file);
@@ -36,8 +36,8 @@ export function deleteFiles(err, req, res, next) {
 
     files.forEach((file) => {
         const imagePath = join(req.app.get('root'), '../images', file.filename);
-        errorDebug(`Delete file ${imagePath}`);
         unlink(imagePath, () => {});
+        errorDebug(`File ${imagePath} has been deleted`);
     });
 
     next(err);
@@ -57,16 +57,20 @@ export function multerErrorHandler(err, req, res, next) {
         return next(err);
     }
 
-    errorDebug('Multer error handler middleware');
+    errorDebug('Error middleware execution: Multer errors handling');
+
+    const error = {
+        name: err.name,
+        message: err.message,
+        code: err.code,
+        field: err.field,
+    };
 
     res.status(400).json({
-        error: {
-            name: err.name,
-            message: err.message,
-            code: err.code,
-            field: err.field,
-        },
+        error,
     });
+
+    Logger.error({ message: err, label: 'Multer Error' });
 }
 
 /**
@@ -83,14 +87,12 @@ export function mongooseErrorHandler(err, req, res, next) {
         return next(err);
     }
 
-    errorDebug('Mongoose error handler middleware');
+    errorDebug('Error middleware execution: Mongoose errors handling');
 
-    const errorObject = {
-        error: {
-            type: 'MongooseError',
-            name: err.name,
-            message: err.message,
-        },
+    const error = {
+        type: 'MongooseError',
+        name: err.name,
+        message: err.message,
     };
 
     if (
@@ -98,15 +100,14 @@ export function mongooseErrorHandler(err, req, res, next) {
         err instanceof mongoose.Error.ValidationError ||
         err instanceof mongoose.Error.ValidatorError
     ) {
-        return res.status(400).json(errorObject);
+        res.status(400).json({ error });
+    } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        res.status(404).json({ error });
+    } else {
+        res.status(500).json({ error });
     }
 
-    if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        return res.status(404).json(errorObject);
-    }
-
-    res.status(500).json(errorObject);
-    Logger.error({ message: err, label: 'Mongoose internal error' });
+    Logger.error({ message: err, label: 'Mongoose Error' });
 }
 
 /**
@@ -123,25 +124,25 @@ export function jwtErrorHandler(err, req, res, next) {
         return next(err);
     }
 
-    errorDebug('JsonWebToken error handler middleware');
+    errorDebug('Error middleware execution: Json Web Token errors handling');
 
-    const errorObject = {
-        error: {
-            type: 'JsonWebTokenError',
-            name: err.name,
-            message: err.message,
-        },
+    const error = {
+        type: 'JsonWebTokenError',
+        name: err.name,
+        message: err.message,
     };
 
     if (err instanceof jsonWebToken.NotBeforeError) {
-        errorObject.error.date = err.date;
+        error.date = err.date;
     }
 
     if (err instanceof jsonWebToken.TokenExpiredError) {
-        errorObject.error.expiredAt = err.expiredAt;
+        error.expiredAt = err.expiredAt;
     }
 
-    return res.status(401).json(errorObject);
+    res.status(401).json({ error });
+
+    Logger.error({ message: err, label: 'JsonWebToken Error' });
 }
 
 /**
@@ -158,17 +159,17 @@ export function userInputValidationErrorHandler(err, req, res, next) {
         return next(err);
     }
 
-    errorDebug('User input validation error handler middleware');
+    errorDebug('Error middleware execution: user inputs validation errors handling');
 
-    const errorObject = {
-        error: {
-            name: err.name,
-            message: err.message,
-            fields: err.errors,
-        },
+    const error = {
+        name: err.name,
+        message: err.message,
+        fields: err.errors,
     };
 
-    return res.status(400).json(errorObject);
+    res.status(400).json({ error });
+
+    Logger.error({ message: err, label: 'User input validation error' });
 }
 
 /**
@@ -182,26 +183,28 @@ export function userInputValidationErrorHandler(err, req, res, next) {
  * @param next - Next middleware to execute.
  */
 export function defaultErrorHandler(err, req, res, next) {
-    errorDebug('Default error handler middleware');
-
+    errorDebug('Error middleware execution: default error handler');
     let status = 500;
+    let error;
+    let loggedError;
 
     if (err instanceof Error) {
-        err = {
+        error = {
             message: err.message,
             name: err.name,
-            status: err.status || undefined,
         };
+        loggedError = err;
+    } else {
+        error = { ...err };
+        loggedError = err.message;
     }
 
     if (err.status !== undefined) {
         status = err.status;
     }
 
-    delete err.status;
-    res.status(status).json({ error: err });
+    delete error.status;
+    res.status(status).json({ error });
 
-    if (status >= 500) {
-        Logger.error(err);
-    }
+    Logger.error(loggedError);
 }

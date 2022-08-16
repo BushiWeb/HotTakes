@@ -6,9 +6,10 @@ import Logger from '../logger/logger.js';
 import { defaultConfigManager } from '../config/ConfigManager.js';
 import { createDebugNamespace } from '../logger/logger.js';
 
-const userRoutesDebug = createDebugNamespace('hottakes:userRoutes');
+const userRouterDebug = createDebugNamespace('hottakes:app:sauceRouter');
 
 const router = express.Router();
+userRouterDebug('User router initialization');
 
 /*
  * Get the password strength validation configuration.
@@ -17,7 +18,7 @@ let passwordStrenghtValidationParameters;
 
 try {
     passwordStrenghtValidationParameters = defaultConfigManager.getConfig('passwordValidation');
-    userRoutesDebug({
+    userRouterDebug({
         message: 'Password strenght validation parameters acquired: %o',
         splat: [passwordStrenghtValidationParameters],
     });
@@ -58,6 +59,7 @@ router.post(
     validateFields,
     signup
 );
+userRouterDebug('Use the signup middleware for the /signup endpoint with the POST method');
 
 /**
  * Login route.
@@ -86,5 +88,6 @@ router.post(
     validateFields,
     login
 );
+userRouterDebug('Use the login middleware for the /login endpoint with the POST method');
 
 export default router;

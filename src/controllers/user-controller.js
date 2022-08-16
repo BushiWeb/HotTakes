@@ -6,7 +6,7 @@ import UnauthorizedError from '../errors/UnauthorizedError.js';
 import { createDebugNamespace } from '../logger/logger.js';
 import ConfigManager from '../config/ConfigManager.js';
 
-const userControllerDebug = createDebugNamespace('hottakes:user');
+const userControllerDebug = createDebugNamespace('hottakes:middleware:user');
 
 /**
  * User signup controller.
@@ -17,13 +17,14 @@ const userControllerDebug = createDebugNamespace('hottakes:user');
  * @param next - Next middleware to execute.
  */
 export async function signup(req, res, next) {
-    userControllerDebug('User signup controller');
+    userControllerDebug('Middleware execution: signing up');
     try {
         // Password hash
         const passwordHash = await bcrypt.hash(
             req.body.password,
             ConfigManager.getEnvVariable('PASSWORD_ENCRYPTION_SALT')
         );
+        userControllerDebug('Password hashed');
 
         // User creation
         const user = new User({
@@ -32,8 +33,9 @@ export async function signup(req, res, next) {
         });
 
         await user.save();
+        userControllerDebug('New user saved');
+
         res.status(201).json({ message: 'Nouvel utilisateur créé!' });
-        userControllerDebug('Signup response sent');
     } catch (error) {
         return next(error);
     }
@@ -47,30 +49,34 @@ export async function signup(req, res, next) {
  * @param next - Next middleware to execute.
  */
 export async function login(req, res, next) {
-    userControllerDebug('User loging controller');
+    userControllerDebug('Middleware execution: loging in');
     try {
         // Get the user
         const user = await User.findOne({ email: req.body.email });
+        userControllerDebug(`User ${req.body.email} fetched`);
         if (!user) {
+            userControllerDebug(`User ${req.body.email} doesn't exist, throwing an error`);
             throw new mongoose.Error.DocumentNotFoundError(`Can't find the user with email ${req.body.email}`);
         }
 
         // Password check
         const validPassword = await bcrypt.compare(req.body.password, user.password);
+        userControllerDebug('Sent password checked against stored password');
         if (!validPassword) {
+            userControllerDebug('Invalid password, throwing an error');
             return next(new UnauthorizedError('Invalid password'));
         }
 
         // Sends the json web token
         const jwtKey = req.app.get('config').getJwtKey();
+        userControllerDebug('Token created');
+
         res.status(200).json({
             userId: user._id,
             token: jsonWebToken.sign({ userId: user._id }, jwtKey, {
                 expiresIn: '24h',
             }),
         });
-
-        userControllerDebug('Login response sent');
     } catch (error) {
         return next(error);
     }

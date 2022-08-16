@@ -3,7 +3,7 @@ import { errorFormatter } from '../utils/utils-validation.js';
 import UserInputValidationError from '../errors/UserInputValidationError.js';
 import { createDebugNamespace } from '../logger/logger.js';
 
-const validationDebug = createDebugNamespace('hottakes:validation');
+const validationDebug = createDebugNamespace('hottakes:middleware:validation');
 
 /**
  * Field validation middleware.
@@ -14,9 +14,10 @@ const validationDebug = createDebugNamespace('hottakes:validation');
  * @param next - Next middleware to execute.
  */
 export const validateFields = (req, res, next) => {
-    validationDebug('User input validation');
+    validationDebug('Validation middleware execution: user inputs validation');
     try {
         validationResult(req).throw();
+        validationDebug('All fields are valid');
         next();
     } catch (error) {
         error = error.formatWith(errorFormatter).array();

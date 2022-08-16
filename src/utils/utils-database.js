@@ -44,6 +44,7 @@ export const mongoDBConnect = async () => {
     setupDbDebug();
     try {
         const dbUrl = createDBUrl();
+        mongoDbDebug(`MongoDB connection URL: ${dbUrl}`);
         await mongoose.connect(dbUrl, {
             useNewUrlParser: true,
             useUnifiedTopology: true,

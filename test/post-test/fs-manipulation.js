@@ -6,13 +6,12 @@ import path from 'node:path';
  * @param {string} dirPath - Path to the directory.
  */
 export async function emptyDirectory(dirPath) {
-    try {
-        const files = await fsPromises.readdir(dirPath);
-
-        for (const file of files) {
+    const files = await fsPromises.readdir(dirPath);
+    for (const file of files) {
+        try {
             await fsPromises.unlink(path.join(dirPath, file));
+        } catch (error) {
+            console.error(`Can't delete file ${file}: ${error.message}`);
         }
-    } catch (error) {
-        throw error;
     }
 }

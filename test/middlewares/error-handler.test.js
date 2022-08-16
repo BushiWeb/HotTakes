@@ -345,11 +345,7 @@ describe('Error handlers test suite', () => {
             expect(response.status).toHaveBeenCalled();
             expect(response.status).toHaveBeenCalledWith(404);
             expect(response.json).toHaveBeenCalled();
-            expect(response.json).toHaveBeenCalledWith({
-                error: {
-                    message: error.message,
-                },
-            });
+            expect(response.json).toHaveBeenCalledWith({ error: { message: error.message } });
         });
 
         test('Sends a response containing status 500 and a message in a JSON object if the error is an instance of error', () => {

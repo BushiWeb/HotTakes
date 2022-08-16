@@ -11,7 +11,7 @@ const serverDebug = createDebugNamespace('hottakes:server');
  * @throws Throws an error if the parameter is neither a string nor an number.
  */
 export const normalizePort = (val) => {
-    serverDebug('Normalizing port');
+    serverDebug('Normalizing server port');
     let port = val;
 
     if (typeof val === 'string') {

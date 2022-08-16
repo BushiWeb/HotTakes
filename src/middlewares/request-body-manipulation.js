@@ -1,6 +1,6 @@
 import { createDebugNamespace } from '../logger/logger.js';
 
-const validationDebug = createDebugNamespace('hottakes:validation');
+const bodyManipulationDebug = createDebugNamespace('hottakes:middleware:bodyManipulation');
 
 /**
  * Returns a middleware that populates the body with properties of an object inside of the body.
@@ -11,10 +11,10 @@ const validationDebug = createDebugNamespace('hottakes:validation');
  * @param {string} propertyName - Name of the property to parse.
  * @param {boolean} [throwIfUndefined=true] - Indicates weather or not to throw an error if the parameter is undefined. Useful if the parameter may not exist.
  */
-export const bodyJsonParse = (propertyName, throwIfUndefined = true) => {
-    validationDebug(`Create bodyJsonParse for the ${propertyName} property`);
+export const bodyPropertyAssignToBody = (propertyName, throwIfUndefined = true) => {
+    bodyManipulationDebug(`Create bodyJsonParse for the ${propertyName} property`);
     return (req, res, next) => {
-        validationDebug(`Assign ${propertyName} properties to the body`);
+        bodyManipulationDebug(`Middleware execution: assigning ${propertyName} properties to the body`);
         // Checks that the parameter exists
         if (req.body[propertyName] === undefined && throwIfUndefined) {
             return next(new Error(`The body property ${propertyName} doesn't exist.`));
@@ -24,6 +24,7 @@ export const bodyJsonParse = (propertyName, throwIfUndefined = true) => {
         if (typeof req.body[propertyName] === 'string' || req.body[propertyName] instanceof String) {
             try {
                 req.body[propertyName] = JSON.parse(req.body[propertyName]);
+                bodyManipulationDebug(`The ${propertyName} parameter was a string and is now parsed`);
             } catch (error) {
                 return next(error);
             }
@@ -33,6 +34,7 @@ export const bodyJsonParse = (propertyName, throwIfUndefined = true) => {
         if (!!req.body[propertyName] && typeof req.body[propertyName] === 'object') {
             req.body = Object.assign(req.body, req.body[propertyName]);
             delete req.body[propertyName];
+            bodyManipulationDebug(`The ${propertyName} parameters content has been assigned to the body`);
         }
 
         next();

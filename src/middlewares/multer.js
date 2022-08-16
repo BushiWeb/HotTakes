@@ -15,7 +15,7 @@ const multerDebug = createDebugNamespace('hottakes:multer');
  * @returns {MulterError} Returns an error that
  */
 const createMulterError = (message, code, field = undefined) => {
-    multerDebug('Multer error creation');
+    multerDebug({ message: 'Multer error creation: %o', splat: [{ message, code, field }] });
     const error = new MulterError(code, field);
     error.message = message;
     return error;
@@ -29,6 +29,7 @@ let maxFileSize;
 
 try {
     MIME_TYPES = defaultConfigManager.getConfig('fileUpload.allowedMimeTypes');
+    multerDebug({ message: 'Allowed files mime-types: %o', splat: [MIME_TYPES] });
 } catch (error) {
     Logger.error(error);
     MIME_TYPES = {
@@ -41,6 +42,7 @@ try {
 
 try {
     maxFileSize = defaultConfigManager.getConfig('fileUpload.maxFileSize');
+    multerDebug({ message: 'Allowed maximum file size: %d', splat: [maxFileSize] });
 } catch (error) {
     Logger.error(error);
     maxFileSize = 5242880;
@@ -78,6 +80,7 @@ const storage = multer.diskStorage({
         callback(null, fileName);
     },
 });
+multerDebug('Disk storage initialized');
 
 /*
  * Defines the file filter for multer.
@@ -118,13 +121,14 @@ export default multer({
  * @param next - Next middleware to execute.
  */
 export const multerCheckFileExists = (req, res, next) => {
-    multerDebug('Checks that the file exists');
+    multerDebug('Validation middleware execution: checking that files have been sent');
     if (
         !req.file &&
         (!req.files ||
             (Array.isArray(req.files) && req.files.length === 0) ||
             (typeof req.files === 'object' && Object.keys(req.files).length === 0))
     ) {
+        multerDebug('No files sent, passing an error');
         const fileMissingError = createMulterError('The file is required.', 'FILE_MISSING');
         return next(fileMissingError);
     }

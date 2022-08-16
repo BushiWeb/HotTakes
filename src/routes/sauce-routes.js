@@ -9,12 +9,16 @@ import {
     likeSauce,
 } from '../controllers/sauce-controller.js';
 import { validateFields } from '../middlewares/field-validation.js';
-import { bodyJsonParse } from '../middlewares/body-json-parse.js';
+import { bodyPropertyAssignToBody } from '../middlewares/request-body-manipulation.js';
 import { checkAuthentication, checkOwnership } from '../middlewares/authentication.js';
 import multer from '../middlewares/multer.js';
 import { multerCheckFileExists } from '../middlewares/multer.js';
+import { createDebugNamespace } from '../logger/logger.js';
+
+const sauceRouterDebug = createDebugNamespace('hottakes:app:sauceRouter');
 
 const router = express.Router();
+sauceRouterDebug('Sauce router initialization');
 
 /**
  * Fetches all sauces.
@@ -22,6 +26,7 @@ const router = express.Router();
  * Uses the getAllSauces controller.
  */
 router.get('/', checkAuthentication, getAllSauces);
+sauceRouterDebug('Use the getAllSauces middleware for the / endpoint with the GET method');
 
 /**
  * Fetches one sauce using it's id.
@@ -29,6 +34,7 @@ router.get('/', checkAuthentication, getAllSauces);
  * Uses the getSauce controller.
  */
 router.get('/:id', checkAuthentication, getSauce);
+sauceRouterDebug('Use the getSauce middleware for the /:id endpoint with the GET method');
 
 /**
  * Creates a sauce.
@@ -45,7 +51,7 @@ router.post(
     checkAuthentication,
     multer,
     multerCheckFileExists,
-    bodyJsonParse('sauce'),
+    bodyPropertyAssignToBody('sauce'),
     body(['name', 'manufacturer', 'description', 'mainPepper'])
         .exists({ checkNull: true })
         .withMessage((value, { req, location, path }) => {
@@ -69,6 +75,7 @@ router.post(
     validateFields,
     createSauce
 );
+sauceRouterDebug('Use the createSauce middleware for the / endpoint with the POST method');
 
 /**
  * Updates a sauce.
@@ -85,7 +92,7 @@ router.put(
     checkAuthentication,
     checkOwnership,
     multer,
-    bodyJsonParse('sauce', false),
+    bodyPropertyAssignToBody('sauce', false),
     body(['name', 'manufacturer', 'description', 'mainPepper'])
         .optional()
         .isString()
@@ -103,6 +110,7 @@ router.put(
     validateFields,
     updateSauce
 );
+sauceRouterDebug('Use the updateSauce middleware for the /:id endpoint with the PUT method');
 
 /**
  * Deletes a sauce.
@@ -110,6 +118,7 @@ router.put(
  * Uses the deleteSauce controller.
  */
 router.delete('/:id', checkAuthentication, checkOwnership, deleteSauce);
+sauceRouterDebug('Use the deleteSauce middleware for the /:id endpoint with the DELETE method');
 
 /**
  * Likes or dislikes a sauce.
@@ -134,5 +143,6 @@ router.post(
     validateFields,
     likeSauce
 );
+sauceRouterDebug('Use the likeSauce middleware for the /:id/like endpoint with the POST method');
 
 export default router;
