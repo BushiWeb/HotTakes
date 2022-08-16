@@ -3,7 +3,6 @@ import 'winston-daily-rotate-file';
 import ConfigManager, { defaultConfigManager } from '../config/ConfigManager.js';
 import process, { exit } from 'node:process';
 import morgan from 'morgan';
-import debug from 'debug';
 
 /* Creates Winston options object */
 const winstonOptions = { exitOnError: true };
@@ -112,8 +111,17 @@ try {
 /* Creates the logger. */
 const Logger = winston.createLogger(winstonOptions);
 
-/* Creates the debugger format */
-debug.log = Logger.debug.bind(Logger);
+/**
+ * Returns logging function.
+ * The returned function logs the message with a debug level and the given namespace as a label.
+ * @param {string} namespace - Namespace to use as a label, allowing the grouping of logging messages.
+ * @returns {Function} Returns the logging function.
+ */
+export function createDebugNamespace(namespace) {
+    return (message) => {
+        Logger.debug({ message, label: namespace });
+    };
+}
 
 /* Morgan logger configuration */
 const stream = {
@@ -130,7 +138,7 @@ process.on('uncaughtException', (error, origin) => {
 });
 
 /* Log printing */
-const loggerDebug = debug('hottakes:logger');
+const loggerDebug = createDebugNamespace('hottakes:logger');
 
 loggerDebug('Loggers created');
 

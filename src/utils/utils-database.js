@@ -2,9 +2,9 @@ import { exit } from 'node:process';
 import mongoose from 'mongoose';
 import ConfigManager from '../config/ConfigManager.js';
 import Logger from '../logger/logger.js';
-import debug from 'debug';
+import { createDebugNamespace } from '../logger/logger.js';
 
-const mongoDbDebug = debug('hottakes:mongoDB');
+const mongoDbDebug = createDebugNamespace('hottakes:mongoDB');
 
 /**
  * Creates a mongo DB databasa URl dependong on some environment variables.
@@ -21,7 +21,7 @@ const createDBUrl = () => {
 };
 
 const setupDbDebug = () => {
-    const mongooseDebug = debug('mongoose');
+    const mongooseDebug = createDebugNamespace('mongoose');
     mongoose.set('debug', (collectionName, methodName, ...methodArguments) => {
         let logMessage = `${collectionName}.${methodName}(`;
         for (let i = 0; i < methodArguments.length; i++) {

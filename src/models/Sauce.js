@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
-import debug from 'debug';
+import { createDebugNamespace } from '../logger/logger.js';
 
-const mongooseCustomMethodDebug = debug('mongoose:customMethod');
+const mongooseCustomMethodDebug = createDebugNamespace('mongoose:customMethod');
 
 const sauceSchema = mongoose.Schema(
     {

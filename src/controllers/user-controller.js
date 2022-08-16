@@ -3,10 +3,10 @@ import User from '../models/User.js';
 import jsonWebToken from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import UnauthorizedError from '../errors/UnauthorizedError.js';
-import debug from 'debug';
+import { createDebugNamespace } from '../logger/logger.js';
 import ConfigManager from '../config/ConfigManager.js';
 
-const userControllerDebug = debug('hottakes:user');
+const userControllerDebug = createDebugNamespace('hottakes:user');
 
 /**
  * User signup controller.

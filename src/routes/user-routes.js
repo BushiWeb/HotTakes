@@ -4,9 +4,9 @@ import { signup, login } from '../controllers/user-controller.js';
 import { validateFields } from '../middlewares/field-validation.js';
 import Logger from '../logger/logger.js';
 import { defaultConfigManager } from '../config/ConfigManager.js';
-import debug from 'debug';
+import { createDebugNamespace } from '../logger/logger.js';
 
-const userRoutesDebug = debug('hottakes:userRoutes');
+const userRoutesDebug = createDebugNamespace('hottakes:userRoutes');
 
 const router = express.Router();
 

@@ -2,9 +2,9 @@ import Sauce from '../models/Sauce.js';
 import { unlink } from 'node:fs';
 import { join } from 'node:path';
 import mongoose from 'mongoose';
-import debug from 'debug';
+import { createDebugNamespace } from '../logger/logger.js';
 
-const sauceControllerDebug = debug('hottakes:sauce');
+const sauceControllerDebug = createDebugNamespace('hottakes:sauce');
 
 /**
  * Sauce creation controller.

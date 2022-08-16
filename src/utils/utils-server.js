@@ -1,8 +1,8 @@
 import { exit } from 'node:process';
 import Logger from '../logger/logger.js';
-import debug from 'debug';
+import { createDebugNamespace } from '../logger/logger.js';
 
-const serverDebug = debug('hottakes:server');
+const serverDebug = createDebugNamespace('hottakes:server');
 
 /**
  * Return the port value as a number.

@@ -1,9 +1,9 @@
 import { validationResult } from 'express-validator';
 import { errorFormatter } from '../utils/utils-validation.js';
 import UserInputValidationError from '../errors/UserInputValidationError.js';
-import debug from 'debug';
+import { createDebugNamespace } from '../logger/logger.js';
 
-const validationDebug = debug('hottakes:validation');
+const validationDebug = createDebugNamespace('hottakes:validation');
 
 /**
  * Field validation middleware.

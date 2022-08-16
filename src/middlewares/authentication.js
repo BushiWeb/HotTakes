@@ -3,9 +3,9 @@ import Sauce from '../models/Sauce.js';
 import mongoose from 'mongoose';
 import UnauthorizedError from '../errors/UnauthorizedError.js';
 import ForbiddenError from '../errors/ForbiddenError.js';
-import debug from 'debug';
+import { createDebugNamespace } from '../logger/logger.js';
 
-const authenticationDebug = debug('hottakes:authentication');
+const authenticationDebug = createDebugNamespace('hottakes:authentication');
 
 /**
  * Middleware, checks that the user is authenticated while making the request, by checking that the authentication token is valid.

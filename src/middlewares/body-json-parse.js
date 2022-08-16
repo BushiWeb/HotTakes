@@ -1,6 +1,6 @@
-import debug from 'debug';
+import { createDebugNamespace } from '../logger/logger.js';
 
-const validationDebug = debug('hottakes:validation');
+const validationDebug = createDebugNamespace('hottakes:validation');
 
 /**
  * Returns a middleware that populates the body with properties of an object inside of the body.

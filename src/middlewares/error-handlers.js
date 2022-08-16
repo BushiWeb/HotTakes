@@ -4,10 +4,10 @@ import jsonWebToken from 'jsonwebtoken';
 import UserInputValidationError from '../../src/errors/UserInputValidationError.js';
 import { join } from 'node:path';
 import { unlink } from 'node:fs';
-import debug from 'debug';
+import { createDebugNamespace } from '../logger/logger.js';
 import Logger from '../logger/logger.js';
 
-const errorDebug = debug('hottakes:error');
+const errorDebug = createDebugNamespace('hottakes:error');
 
 /**
  * Middleware handling file deletion in case of an error.

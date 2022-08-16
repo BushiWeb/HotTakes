@@ -3,9 +3,9 @@ import { MulterError } from 'multer';
 import { defaultConfigManager } from '../config/ConfigManager.js';
 import validator from 'validator';
 import Logger from '../logger/logger.js';
-import debug from 'debug';
+import { createDebugNamespace } from '../logger/logger.js';
 
-const multerDebug = debug('hottakes:multer');
+const multerDebug = createDebugNamespace('hottakes:multer');
 
 /**
  * Creates an multer error.
