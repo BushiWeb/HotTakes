@@ -17,7 +17,10 @@ let passwordStrenghtValidationParameters;
 
 try {
     passwordStrenghtValidationParameters = defaultConfigManager.getConfig('passwordValidation');
-    userRoutesDebug('Password strenght validation parameters acquired: %o', passwordStrenghtValidationParameters);
+    userRoutesDebug({
+        message: 'Password strenght validation parameters acquired: %o',
+        splat: [passwordStrenghtValidationParameters],
+    });
 } catch (error) {
     Logger.error(error);
     Logger.warn(`Couldn't set the password strength validation parameters. Default values will be used.`);

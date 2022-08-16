@@ -31,7 +31,7 @@ const setupDbDebug = () => {
             logMessage += '%o';
         }
         logMessage += ')';
-        mongooseDebug(logMessage, ...methodArguments);
+        mongooseDebug({ message: logMessage, splat: methodArguments });
     });
 };
 

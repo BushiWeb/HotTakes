@@ -3,6 +3,7 @@ import 'winston-daily-rotate-file';
 import ConfigManager, { defaultConfigManager } from '../config/ConfigManager.js';
 import process, { exit } from 'node:process';
 import morgan from 'morgan';
+import { validateStringArgument } from '../utils/utils-functions.js';
 
 /* Creates Winston options object */
 const winstonOptions = { exitOnError: true };
@@ -15,7 +16,7 @@ const winstonOptions = { exitOnError: true };
         Displays the level and the date.
         If the stack property is defined, then it is used as a message, otherwise user the message property.
 */
-function printfFormat({ level, message, timestamp, label, stack, ...metadata }) {
+function printfFormat({ level, message, timestamp, label, stack, splat, ...metadata }) {
     let formatedMessage = `${level}\t${timestamp}\t\t`;
 
     if (!stack) {
@@ -35,7 +36,8 @@ function printfFormat({ level, message, timestamp, label, stack, ...metadata }) 
 let format = winston.format.combine(
     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
     winston.format.errors({ stack: true }),
-    winston.format.printf(printfFormat)
+    winston.format.printf(printfFormat),
+    winston.format.splat()
 );
 
 winstonOptions.format = format;
@@ -113,13 +115,21 @@ const Logger = winston.createLogger(winstonOptions);
 
 /**
  * Returns logging function.
- * The returned function logs the message with a debug level and the given namespace as a label.
+ * The returned function logs the message with a debug level and the given namespace as a label. It takes the info object to log as a parameter.
  * @param {string} namespace - Namespace to use as a label, allowing the grouping of logging messages.
  * @returns {Function} Returns the logging function.
  */
 export function createDebugNamespace(namespace) {
-    return (message) => {
-        Logger.debug({ message, label: namespace });
+    return (info) => {
+        let labelledInfo = { label: namespace };
+
+        if (validateStringArgument(info)) {
+            labelledInfo.message = info;
+        } else {
+            Object.assign(labelledInfo, info);
+        }
+
+        Logger.debug(labelledInfo);
     };
 }
 
@@ -149,19 +159,19 @@ if (levelsError) {
 if (!levels) {
     Logger.warn("Couldn't set custom loggin levels. Default values will be used.");
 } else {
-    loggerDebug('Custom logging levels: %o', levels);
+    loggerDebug({ message: 'Custom logging levels: %o', splat: [levels] });
 }
 
 if (!colors) {
     Logger.warn("Couldn't set custom colors. Default colors will be used");
 } else {
-    loggerDebug('Custom logging colors: %o', colors);
+    loggerDebug({ message: 'Custom logging colors: %o', splat: [colors] });
 }
 
 if (!level) {
     Logger.warn("Couldn't set the maximum level to log. Default one will be used");
 } else {
-    loggerDebug(`Maximum level to log : "${level}"`);
+    loggerDebug({ message: 'Maximum level to log : "%s"', splat: [level] });
 }
 
 export default Logger;
