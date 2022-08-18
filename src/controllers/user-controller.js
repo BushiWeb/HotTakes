@@ -20,10 +20,8 @@ export async function signup(req, res, next) {
     userControllerDebug('Middleware execution: signing up');
     try {
         // Password hash
-        const passwordHash = await bcrypt.hash(
-            req.body.password,
-            ConfigManager.getEnvVariable('PASSWORD_ENCRYPTION_SALT')
-        );
+        const hashSalt = parseInt(ConfigManager.getEnvVariable('PASSWORD_ENCRYPTION_SALT'));
+        const passwordHash = await bcrypt.hash(req.body.password, hashSalt);
         userControllerDebug('Password hashed');
 
         // User creation
