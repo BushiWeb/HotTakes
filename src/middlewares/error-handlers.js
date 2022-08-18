@@ -100,12 +100,14 @@ export function mongooseErrorHandler(err, req, res, next) {
         err instanceof mongoose.Error.ValidationError ||
         err instanceof mongoose.Error.ValidatorError
     ) {
-        res.status(400).json({ error });
+        res.status(400);
     } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(404).json({ error });
+        res.status(404);
     } else {
-        res.status(500).json({ error });
+        res.status(500);
     }
+
+    res.json({ error });
 
     Logger.error({ message: err, label: 'Mongoose Error' });
 }
