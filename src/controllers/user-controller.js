@@ -72,7 +72,10 @@ export async function login(req, res, next) {
         res.status(200).json({
             userId: user._id,
             token: jsonWebToken.sign({ userId: user._id }, jwtKey, {
-                expiresIn: '24h',
+                algorithm: 'HS256',
+                expiresIn: '6h',
+                issuer: 'hottakes-api',
+                audience: 'hottakes-front',
             }),
         });
     } catch (error) {
