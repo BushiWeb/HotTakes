@@ -54,7 +54,7 @@ export async function login(req, res, next) {
         userControllerDebug(`User ${req.body.email} fetched`);
         if (!user) {
             userControllerDebug(`User ${req.body.email} doesn't exist, throwing an error`);
-            throw new mongoose.Error.DocumentNotFoundError(`Can't find the user with email ${req.body.email}`);
+            throw new UnauthorizedError('Invalid connection credentials');
         }
 
         // Password check
@@ -62,7 +62,7 @@ export async function login(req, res, next) {
         userControllerDebug('Sent password checked against stored password');
         if (!validPassword) {
             userControllerDebug('Invalid password, throwing an error');
-            return next(new UnauthorizedError('Invalid password'));
+            throw new UnauthorizedError('Invalid connection credentials');
         }
 
         // Sends the json web token

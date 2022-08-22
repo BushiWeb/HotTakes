@@ -189,16 +189,15 @@ describe('Authentication routes test suite', () => {
             expect(response.body.error.fields[0]).toMatchObject({ param: 'password' });
         });
 
-        test("Responds with an error and status 404 if the user doesn't exist", async () => {
+        test("Responds with an error and status 401 if the user doesn't exist", async () => {
             const requestBody = { email: userData.email, password: userData.clearPassword };
             mockUserFindOne.mockResolvedValueOnce(null);
             const response = await request(app).post('/api/auth/login').send(requestBody);
 
-            expect(response.status).toBe(404);
+            expect(response.status).toBe(401);
             expect(response.type).toMatch(/json/);
             expect(response.body).toHaveProperty('error');
-            expect(response.body.error).toHaveProperty('type', 'MongooseError');
-            expect(response.body.error).toHaveProperty('name', 'DocumentNotFoundError');
+            expect(response.body.error).toHaveProperty('name', 'AuthenticationError');
         });
 
         test('Responds with an error and status 401 if the password is wrong', async () => {

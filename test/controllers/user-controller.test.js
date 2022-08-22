@@ -106,14 +106,14 @@ describe('User controllers test suite', () => {
             expect(response.json.mock.calls[0][0]).toHaveProperty('userId');
         });
 
-        test("Calls the next middleware with a mongoose DocumentNotFoundError if the user doesn't exist", async () => {
+        test("Calls the next middleware with an UnauthorizedError if the user doesn't exist", async () => {
             mockBcryptCompare.mockResolvedValue(true);
             mockUserFindOne.mockResolvedValue(null);
 
             await login(request, response, next);
 
             expect(next).toHaveBeenCalled();
-            expect(next.mock.calls[0][0]).toBeInstanceOf(mongoose.Error.DocumentNotFoundError);
+            expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
         });
 
         test('Calls the next middleware with an UnauthorizedError if the password is invalid', async () => {
