@@ -1,5 +1,4 @@
 import express from 'express';
-import { body } from 'express-validator';
 import {
     createSauce,
     getAllSauces,
@@ -8,7 +7,7 @@ import {
     deleteSauce,
     likeSauce,
 } from '../controllers/sauce-controller.js';
-import { validateFields } from '../middlewares/field-validation.js';
+import { validatePayload } from '../middlewares/field-validation.js';
 import { bodyPropertyAssignToBody } from '../middlewares/request-body-manipulation.js';
 import { checkAuthentication, checkOwnership } from '../middlewares/authentication.js';
 import multer from '../middlewares/multer.js';
@@ -52,27 +51,7 @@ router.post(
     multer,
     multerCheckFileExists,
     bodyPropertyAssignToBody('sauce'),
-    body(['name', 'manufacturer', 'description', 'mainPepper'])
-        .exists({ checkNull: true })
-        .withMessage((value, { req, location, path }) => {
-            return `The ${path} parameter is required`;
-        })
-        .bail()
-        .isString()
-        .withMessage((value, { req, location, path }) => {
-            return `The ${path} parameter should be a string`;
-        })
-        .bail()
-        .escape(),
-    body('heat')
-        .exists({ checkNull: true })
-        .withMessage("The sauce's heat is required")
-        .bail()
-        .isInt({ min: 1, max: 10 })
-        .withMessage("The sauce's heat should be a number between 1 and 10")
-        .bail()
-        .toInt(),
-    validateFields,
+    validatePayload('sauceRequired'),
     createSauce
 );
 sauceRouterDebug('Use the createSauce middleware for the / endpoint with the POST method');
@@ -93,21 +72,7 @@ router.put(
     checkOwnership,
     multer,
     bodyPropertyAssignToBody('sauce', false),
-    body(['name', 'manufacturer', 'description', 'mainPepper'])
-        .optional()
-        .isString()
-        .withMessage((value, { req, location, path }) => {
-            return `The ${path} parameter should be a string`;
-        })
-        .bail()
-        .escape(),
-    body('heat')
-        .optional()
-        .isInt({ min: 1, max: 10 })
-        .withMessage("The sauce's heat should be a number between 1 and 10")
-        .bail()
-        .toInt(),
-    validateFields,
+    validatePayload('sauce'),
     updateSauce
 );
 sauceRouterDebug('Use the updateSauce middleware for the /:id endpoint with the PUT method');
@@ -127,22 +92,7 @@ sauceRouterDebug('Use the deleteSauce middleware for the /:id endpoint with the 
  *      heat is required, should be either 0, 1 or -1.
  * Uses the likeSauce controller.
  */
-router.post(
-    '/:id/like',
-    checkAuthentication,
-    body('like')
-        .exists({ checkNull: true })
-        .withMessage('The like value is required')
-        .bail()
-        .isInt({ min: -1, max: 1 })
-        .withMessage(
-            'The like parameter should be 1 if you wish to like the sauce, -1 if you wish to dislike the sauce or 0 if you wish to reset your action.'
-        )
-        .bail()
-        .toInt(),
-    validateFields,
-    likeSauce
-);
+router.post('/:id/like', checkAuthentication, validatePayload('like'), likeSauce);
 sauceRouterDebug('Use the likeSauce middleware for the /:id/like endpoint with the POST method');
 
 export default router;
