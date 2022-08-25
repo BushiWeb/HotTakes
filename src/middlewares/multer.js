@@ -26,6 +26,7 @@ const createMulterError = (message, code, field = undefined) => {
  */
 let MIME_TYPES;
 let maxFileSize;
+let maxFieldSize;
 
 try {
     MIME_TYPES = defaultConfigManager.getConfig('fileUpload.allowedMimeTypes');
@@ -47,6 +48,15 @@ try {
     Logger.error(error);
     maxFileSize = 5242880;
     Logger.warn(`Maximum file size couldn't be set. Using default value : ${maxFileSize}`);
+}
+
+try {
+    maxFieldSize = defaultConfigManager.getConfig('fileUpload.maxFieldSize');
+    multerDebug({ message: 'Allowed maximum field size: %d', splat: [maxFieldSize] });
+} catch (error) {
+    Logger.error(error);
+    maxFieldSize = 10240;
+    Logger.warn(`Maximum field size couldn't be set. Using default value : ${maxFieldSize}`);
 }
 
 /*
@@ -111,6 +121,7 @@ export default multer({
     fileFilter: fileFilter,
     limits: {
         fileSize: maxFileSize,
+        fieldSize: maxFieldSize,
     },
 }).single('image');
 

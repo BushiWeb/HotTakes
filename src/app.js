@@ -43,8 +43,18 @@ appDebug(`Set app root to ${appRoot}`);
 app.use(morganMiddleware);
 appDebug('Use morgan middleware for all routes');
 
-app.use(express.json());
-appDebug('Use express.json middleware for all routes');
+let expressJsonOptions = {};
+
+try {
+    expressJsonOptions.limit = defaultConfigManager.getConfig('payload.maxSize');
+    appDebug(`JSON payload heavier than ${expressJsonOptions.limit} will be rejected`);
+} catch (error) {
+    Logger.error(error);
+    Logger.warn("Couldn't set the payload max size. Use the express default value instead");
+}
+
+app.use(express.json(expressJsonOptions));
+appDebug({ message: 'Use express.json middleware for all routes, with options %o', splat: [expressJsonOptions] });
 
 // CORS Headers settings
 app.use((req, res, next) => {

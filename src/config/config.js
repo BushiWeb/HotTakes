@@ -1,6 +1,10 @@
 const CONFIG = {
+    payload: {
+        maxSize: '10kb',
+    },
     fileUpload: {
         maxFileSize: 5242880,
+        maxFieldSize: 10240,
         allowedMimeTypes: {
             'image/jpg': 'jpg',
             'image/jpeg': 'jpg',
