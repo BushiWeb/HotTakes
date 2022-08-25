@@ -13,26 +13,27 @@ export const sauceSchema = {
     properties: {
         name: {
             type: 'string',
-            maxLength: 255,
+            maxLength: 80,
             description: "Sauce's name",
-            errorMessage: 'The name property must be a string with at most 255 characters',
+            errorMessage: 'The name property must be a string with at most 80 characters',
         },
         manufacturer: {
             type: 'string',
-            maxLength: 255,
+            maxLength: 80,
             description: "Sauce's manufacturer",
-            errorMessage: 'The manufacturer property must be a string with at most 255 characters',
+            errorMessage: 'The manufacturer property must be a string with at most 80 characters',
         },
         description: {
             type: 'string',
             description: "Sauce's description",
-            errorMessage: 'The description property must be a string',
+            maxLength: 1000,
+            errorMessage: 'The description property must be a string with at most 1000 characters',
         },
         mainPepper: {
             type: 'string',
-            maxLength: 255,
+            maxLength: 80,
             description: "Sauce's main pepper",
-            errorMessage: 'The mainPepper property must be a string with at most 255 characters',
+            errorMessage: 'The mainPepper property must be a string with at most 80 characters',
         },
         heat: {
             type: 'integer',
@@ -63,8 +64,8 @@ export const sauceRequiredSchema = {
             name: "The payload must contain the sauce's name",
             manufacturer: "The payload must contain the sauce's manufacturer",
             description: "The payload must contain the sauce's description",
-            mainPepper: "The payload must contain the sauce's main pepper",
-            heat: "The payload must contain the sauce's intensity",
+            mainPepper: "The payload must contain the sauce's mainPepper",
+            heat: "The payload must contain the sauce's heat",
         },
     },
 };

@@ -29,7 +29,7 @@ export const validatePayload = (schemaName) => {
         let errors = [];
         for (const error of validate.errors) {
             errors.push({
-                property: error.instancePath,
+                property: error.instancePath || undefined,
                 message: error.message,
             });
         }

@@ -31,7 +31,7 @@ const likeSchema = {
         type: 'The payload must be a JSON object',
         required: {
             like: 'The payload must contain the like value',
-            userId: 'The payload must contain the user id',
+            userId: 'The payload must contain the userId',
         },
     },
 };
