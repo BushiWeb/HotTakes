@@ -8,7 +8,7 @@ import {
     likeSauce,
 } from '../controllers/sauce-controller.js';
 import { validatePayload } from '../middlewares/field-validation.js';
-import { bodyPropertyAssignToBody } from '../middlewares/request-body-manipulation.js';
+import { bodyPropertyAssignToBody, sanitizeBody } from '../middlewares/request-body-manipulation.js';
 import { checkAuthentication, checkOwnership } from '../middlewares/authentication.js';
 import multer from '../middlewares/multer.js';
 import { multerCheckFileExists } from '../middlewares/multer.js';
@@ -51,6 +51,7 @@ router.post(
     multer,
     multerCheckFileExists,
     bodyPropertyAssignToBody('sauce'),
+    sanitizeBody,
     validatePayload('sauceRequired'),
     createSauce
 );
@@ -72,6 +73,7 @@ router.put(
     checkOwnership,
     multer,
     bodyPropertyAssignToBody('sauce', false),
+    sanitizeBody,
     validatePayload('sauce'),
     updateSauce
 );

@@ -1,4 +1,6 @@
 import { createDebugNamespace } from '../logger/logger.js';
+import { defaultConfigManager } from '../config/ConfigManager.js';
+import { validateStringArgument } from '../utils/utils-functions.js';
 
 const bodyManipulationDebug = createDebugNamespace('hottakes:middleware:bodyManipulation');
 
@@ -39,4 +41,27 @@ export const bodyPropertyAssignToBody = (propertyName, throwIfUndefined = true) 
 
         next();
     };
+};
+
+/**
+ * Sanitizes the body.
+ * @param {Express.Request} req - Express request object.
+ * @param {Express.Response} res - Express response object.
+ * @param next - Next middleware to execute.
+ */
+export const sanitizeBody = (req, res, next) => {
+    try {
+        const blackListedStrings = defaultConfigManager.getConfig('sanitization');
+        for (const property in req.body) {
+            if (!validateStringArgument(req.body[property])) {
+                continue;
+            }
+            for (const string of blackListedStrings) {
+                req.body[property] = req.body[property].replace(new RegExp(string, 'ig'), '');
+            }
+        }
+        return next();
+    } catch (error) {
+        return next(error);
+    }
 };
