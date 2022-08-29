@@ -1,6 +1,7 @@
 import UserInputValidationError from '../errors/UserInputValidationError.js';
 import { createDebugNamespace } from '../logger/logger.js';
 import ajv from '../schemas/json-validator.js';
+import validator from 'validator';
 
 const validationDebug = createDebugNamespace('hottakes:middleware:validation');
 
@@ -35,4 +36,25 @@ export const validatePayload = (schemaName) => {
         }
         return next(new UserInputValidationError(errors));
     };
+};
+
+/**
+ * Id parameter validation middleware. Validates that the received ID is a MongoDB ID.
+ * @param {Express.Request} req - Express request object.
+ * @param {Express.Response} res - Express response object.
+ * @param next - Next middleware to execute.
+ */
+export const validateIdParameter = (req, res, next) => {
+    validationDebug('Validation middleware execution: ID parameter validation');
+    if (req.params.id && validator.isMongoId(req.params.id)) {
+        return next();
+    }
+
+    const error = {
+        location: 'query',
+        parameter: ':id',
+        message: 'The requested ID must be a valid MongoDB ID',
+    };
+
+    next(new UserInputValidationError([error]));
 };

@@ -1,4 +1,4 @@
-import { validatePayload } from '../../src/middlewares/field-validation';
+import { validatePayload, validateIdParameter } from '../../src/middlewares/field-validation';
 import { mockResponse, mockRequest, mockNext } from '../mocks/express-mocks.js';
 import UserInputValidationError from '../../src/errors/UserInputValidationError';
 import ajv from '../../src/schemas/json-validator.js';
@@ -40,32 +40,54 @@ afterAll(() => {
     next.mockRestore();
 });
 
-describe('validatePayload middleware test suite', () => {
-    test('Calls the next function if the body is valid', () => {
-        request.body = {
-            p1: 'test',
-            p2: 3,
-        };
-        validatePayload(testSchemaName)(request, response, next);
+describe('Field validation test suite', () => {
+    describe('validatePayload middleware test suite', () => {
+        test('Calls the next function if the body is valid', () => {
+            request.body = {
+                p1: 'test',
+                p2: 3,
+            };
+            validatePayload(testSchemaName)(request, response, next);
 
-        expect(next).toHaveBeenCalled();
-        expect(next.mock.calls[0].length).toBe(0);
+            expect(next).toHaveBeenCalled();
+            expect(next.mock.calls[0].length).toBe(0);
+        });
+
+        test("Calls the next function with an error if the schema doesn't exist", () => {
+            validatePayload('undefinedSchema')(request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next.mock.calls[0][0]).toBeInstanceOf(Error);
+        });
+
+        test('Calls the next function with a UserInputValidationError if the body is not valid', () => {
+            request.body = {
+                p2: '3',
+            };
+            validatePayload(testSchemaName)(request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next.mock.calls[0][0]).toBeInstanceOf(UserInputValidationError);
+        });
     });
 
-    test("Calls the next function with an error if the schema doesn't exist", () => {
-        validatePayload('undefinedSchema')(request, response, next);
+    describe('validateIdParameter test suite', () => {
+        test('Calls the next function if the id is a mongoDB ID', () => {
+            request.params.id = '507f1f77bcf86cd799439011';
 
-        expect(next).toHaveBeenCalled();
-        expect(next.mock.calls[0][0]).toBeInstanceOf(Error);
-    });
+            validateIdParameter(request, response, next);
 
-    test('Calls the next function with a UserInputValidationError if the body is not valid', () => {
-        request.body = {
-            p2: '3',
-        };
-        validatePayload(testSchemaName)(request, response, next);
+            expect(next).toHaveBeenCalled();
+            expect(next.mock.calls[0]).toHaveLength(0);
+        });
 
-        expect(next).toHaveBeenCalled();
-        expect(next.mock.calls[0][0]).toBeInstanceOf(UserInputValidationError);
+        test('Calls the next function with an error if the id is not a mongoDB ID', () => {
+            request.params.id = '123';
+
+            validateIdParameter(request, response, next);
+
+            expect(next).toHaveBeenCalled();
+            expect(next.mock.calls[0][0]).toBeInstanceOf(UserInputValidationError);
+        });
     });
 });

@@ -7,7 +7,7 @@ import {
     deleteSauce,
     likeSauce,
 } from '../controllers/sauce-controller.js';
-import { validatePayload } from '../middlewares/field-validation.js';
+import { validatePayload, validateIdParameter } from '../middlewares/field-validation.js';
 import { bodyPropertyAssignToBody, sanitizeBody } from '../middlewares/request-body-manipulation.js';
 import { checkAuthentication, checkOwnership } from '../middlewares/authentication.js';
 import multer from '../middlewares/multer.js';
@@ -32,7 +32,7 @@ sauceRouterDebug('Use the getAllSauces middleware for the / endpoint with the GE
  * Checks that the user is authenticated.
  * Uses the getSauce controller.
  */
-router.get('/:id', checkAuthentication, getSauce);
+router.get('/:id', validateIdParameter, checkAuthentication, getSauce);
 sauceRouterDebug('Use the getSauce middleware for the /:id endpoint with the GET method');
 
 /**
@@ -69,6 +69,7 @@ sauceRouterDebug('Use the createSauce middleware for the / endpoint with the POS
  */
 router.put(
     '/:id',
+    validateIdParameter,
     checkAuthentication,
     checkOwnership,
     multer,
@@ -84,7 +85,7 @@ sauceRouterDebug('Use the updateSauce middleware for the /:id endpoint with the 
  * Checks that the user is authenticated and owns the sauce.
  * Uses the deleteSauce controller.
  */
-router.delete('/:id', checkAuthentication, checkOwnership, deleteSauce);
+router.delete('/:id', validateIdParameter, checkAuthentication, checkOwnership, deleteSauce);
 sauceRouterDebug('Use the deleteSauce middleware for the /:id endpoint with the DELETE method');
 
 /**
@@ -94,7 +95,7 @@ sauceRouterDebug('Use the deleteSauce middleware for the /:id endpoint with the 
  *      heat is required, should be either 0, 1 or -1.
  * Uses the likeSauce controller.
  */
-router.post('/:id/like', checkAuthentication, validatePayload('like'), likeSauce);
+router.post('/:id/like', validateIdParameter, checkAuthentication, validatePayload('like'), likeSauce);
 sauceRouterDebug('Use the likeSauce middleware for the /:id/like endpoint with the POST method');
 
 export default router;
