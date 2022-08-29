@@ -66,7 +66,13 @@ export function multerErrorHandler(err, req, res, next) {
         field: err.field,
     };
 
-    res.status(400).json({
+    let status = 400;
+
+    if (err.code === 'LIMIT_FILE_SIZE' || err.code === 'LIMIT_FIELD_VALUE') {
+        status = 413;
+    }
+
+    res.status(status).json({
         error,
     });
 
