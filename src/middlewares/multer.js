@@ -98,16 +98,17 @@ multerDebug('Disk storage initialized');
  * The maximum file size is specified in the limits option and is checked by multer
  */
 const fileFilter = (req, file, callback) => {
-    multerDebug('File filtering');
-    if (!MIME_TYPES[file.mimetype]) {
+    multerDebug({ message: 'File filtering: %o', splat: [file] });
+    if (!Object.hasOwn(MIME_TYPES, file.mimetype)) {
+        multerDebug('The file is refused');
         const fileTypeError = createMulterError(
             'This file type is not accepted. Please, use one of the following format: jpeg, png, webp, avif',
             'INVALID_FILE_TYPE',
             file.fieldName
         );
-        callback(fileTypeError);
+        return callback(fileTypeError);
     }
-
+    multerDebug('The file is accepted');
     callback(null, true);
 };
 
