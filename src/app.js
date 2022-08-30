@@ -16,6 +16,7 @@ import ConfigManager from './config/ConfigManager.js';
 import { defaultConfigManager } from './config/ConfigManager.js';
 import Logger, { morganMiddleware, createDebugNamespace } from './logger/logger.js';
 import { contentTypeFilter } from './middlewares/headers.js';
+import helmet from 'helmet';
 
 const appDebug = createDebugNamespace('hottakes:app');
 
@@ -77,6 +78,11 @@ app.use((req, res, next) => {
     next();
 });
 appDebug('Use the CORS Headers setting middleware on all routes');
+
+// Other headers
+app.use(helmet.noSniff(), helmet.frameguard({ action: 'deny' }));
+appDebug('Use helmet.noSniff to set the X-Content-Type-Options to nosniff');
+appDebug('Use helmet.framegard to set the X-Frame-Options to DENY');
 
 // Static routes
 const imagesPath = path.join(app.get('root'), '../images');
