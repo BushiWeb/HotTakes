@@ -15,6 +15,7 @@ import {
 import ConfigManager from './config/ConfigManager.js';
 import { defaultConfigManager } from './config/ConfigManager.js';
 import Logger, { morganMiddleware, createDebugNamespace } from './logger/logger.js';
+import { contentTypeFilter } from './middlewares/headers.js';
 
 const appDebug = createDebugNamespace('hottakes:app');
 
@@ -40,11 +41,19 @@ const appRoot = path.dirname(fileURLToPath(import.meta.url));
 app.set('root', appRoot);
 appDebug(`Set app root to ${appRoot}`);
 
+// remove X-Powered-By header
+app.disable('x-powered-by');
+
+// Add the Morgan middleware to log requests
 app.use(morganMiddleware);
 appDebug('Use morgan middleware for all routes');
 
-let expressJsonOptions = {};
+// Filter the Content-Type to only accept multipart/form-data and application/json
+app.use(contentTypeFilter);
+appDebug('Use content type filter middleware on all routes');
 
+// Add the express.json middleware with it's options
+let expressJsonOptions = {};
 try {
     expressJsonOptions.limit = defaultConfigManager.getConfig('payload.maxSize');
     appDebug(`JSON payload heavier than ${expressJsonOptions.limit} will be rejected`);
@@ -52,7 +61,6 @@ try {
     Logger.error(error);
     Logger.warn("Couldn't set the payload max size. Use the express default value instead");
 }
-
 app.use(express.json(expressJsonOptions));
 appDebug({ message: 'Use express.json middleware for all routes, with options %o', splat: [expressJsonOptions] });
 

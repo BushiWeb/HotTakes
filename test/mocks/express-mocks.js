@@ -15,7 +15,14 @@ export const mockRequest = (body = {}, headers = {}, file = {}, protocol = '', p
                 return parameter;
         }
     });
-    req.get = jest.fn().mockImplementation((parameter) => parameter);
+    req.get = jest.fn().mockImplementation((parameter) => {
+        switch (parameter) {
+            case 'Content-Type':
+                return req['Content-Type'];
+            default:
+                return parameter;
+        }
+    });
     return req;
 };
 

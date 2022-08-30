@@ -1,4 +1,7 @@
 const CONFIG = {
+    headers: {
+        allowedContentTypes: ['application/json', 'multipart/form-data'],
+    },
     payload: {
         maxSize: '10kb',
     },
