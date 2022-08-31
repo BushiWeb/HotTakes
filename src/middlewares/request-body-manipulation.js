@@ -50,19 +50,33 @@ export const bodyPropertyAssignToBody = (propertyName, throwIfUndefined = true) 
  * @param next - Next middleware to execute.
  */
 export const sanitizeBody = (req, res, next) => {
-    try {
-        const blackListedStrings = defaultConfigManager.getConfig('payload.sanitization');
-        for (const property in req.body) {
-            // Don't bother sanitizing numbers, null or booleans
-            if (!validateStringArgument(req.body[property])) {
-                continue;
+    /**
+     * Recursive function to sanitize any parsed JSON object.
+     * @param {*} value - Value to sanitize. Can be any type.
+     * @param {string[]} blacklist - Array of strings to delete from the value.
+     * @returns Return the sanitized value.
+     *
+     * Proof:
+     *      If the value type is anything but an object or an array, then end the recursion and return the value. If it is a string, sanitize the string before returning.
+     *      If the value is an object or an array, loop through all the values and sanitize them.
+     */
+    function sanitizeValue(value, blacklist) {
+        if (validateStringArgument(value)) {
+            for (const string of blacklist) {
+                value = value.replace(new RegExp(string, 'ig'), '');
             }
-
-            // Remove blacklisted strings
-            for (const string of blackListedStrings) {
-                req.body[property] = req.body[property].replace(new RegExp(string, 'ig'), '');
+        } else if (typeof value === 'object' && value) {
+            for (const subvalue in value) {
+                value[subvalue] = sanitizeValue(value[subvalue], blacklist);
             }
         }
+
+        return value;
+    }
+
+    try {
+        const blackListedStrings = defaultConfigManager.getConfig('payload.sanitization');
+        sanitizeValue(req.body, blackListedStrings);
         return next();
     } catch (error) {
         return next(error);

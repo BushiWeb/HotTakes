@@ -137,7 +137,7 @@ describe('Body manipualtion test suite', () => {
             expect(next).toHaveBeenCalled();
         });
 
-        test("Don't change the body if there is no string", () => {
+        test("Don't change the body if there is no dirty string", () => {
             request.body = {
                 p1: 3,
                 p2: true,
@@ -149,6 +149,46 @@ describe('Body manipualtion test suite', () => {
             sanitizeBody(request, response, next);
 
             expect(request.body).toEqual(previousBody);
+            expect(next).toHaveBeenCalled();
+        });
+
+        test('Sanitize strings in arrays', () => {
+            request.body = {
+                p1: 3,
+                p2: 'Another </script dirty string -->',
+                p3: [
+                    "The <script tag and it's friend </script",
+                    'The characters <!-- and --> allows the developper to insert HTML comments',
+                    "I don't know what CDATA are but they make use of those characters: ]]>",
+                ],
+            };
+
+            sanitizeBody(request, response, next);
+
+            expect(request.body.p2).not.toMatch(/(<\/script|-->)/);
+            expect(request.body.p3[0]).not.toMatch(/(<script|<\/script)/);
+            expect(request.body.p3[1]).not.toMatch(/(<!--|-->)/);
+            expect(request.body.p3[2]).not.toMatch(/\]\]>/);
+            expect(next).toHaveBeenCalled();
+        });
+
+        test('Sanitize strings in objects', () => {
+            request.body = {
+                p1: 3,
+                p2: 'Another </script dirty string -->',
+                p3: {
+                    p1: "The <script tag and it's friend </script",
+                    p2: 'The characters <!-- and --> allows the developper to insert HTML comments',
+                    p3: "I don't know what CDATA are but they make use of those characters: ]]>",
+                },
+            };
+
+            sanitizeBody(request, response, next);
+
+            expect(request.body.p2).not.toMatch(/(<\/script|-->)/);
+            expect(request.body.p3.p1).not.toMatch(/(<script|<\/script)/);
+            expect(request.body.p3.p2).not.toMatch(/(<!--|-->)/);
+            expect(request.body.p3.p3).not.toMatch(/\]\]>/);
             expect(next).toHaveBeenCalled();
         });
 

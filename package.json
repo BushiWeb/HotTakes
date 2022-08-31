@@ -6,7 +6,6 @@
     "type": "module",
     "scripts": {
         "test": "jest",
-        "posttest": "node test/post-test/index.js",
         "start": "node -r dotenv/config src/server.js",
         "dev": "nodemon -r dotenv/config src/server.js"
     },
