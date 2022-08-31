@@ -19,11 +19,14 @@ export const checkAuthentication = (req, res, next) => {
     authenticationDebug('Middleware execution: check user authentication');
     try {
         authenticationDebug('Authorization header presence test');
+
+        // Check if there is a Authorization header
         if (!req.headers.authorization) {
             authenticationDebug('Authorization header missing, throwing an error');
             throw new UnauthorizedError();
         }
 
+        // Check the JWT
         authenticationDebug('JsonWebToken verification');
         const token = req.headers.authorization.split(' ')[1];
         const jwtKey = req.app.get('config').getJwtKey();
@@ -37,8 +40,11 @@ export const checkAuthentication = (req, res, next) => {
             throw new UnauthorizedError();
         }
         authenticationDebug('Valid JsonWebToken.');
+
+        // Save the User ID
         req.auth = { userId: decodedToken.userId };
         authenticationDebug('Save the userId in the request');
+
         next();
     } catch (error) {
         return next(error);
@@ -58,11 +64,13 @@ export const checkOwnership = async (req, res, next) => {
     try {
         const sauce = await Sauce.findById(req.params.id);
         authenticationDebug('Query the sauce from the database');
+        // Checks if the sauce exists
         if (!sauce) {
             authenticationDebug("The desired sauce doesn't exist, throwing an error");
             throw new mongoose.Error.DocumentNotFoundError(`Can't find the sauce with id ${req.params.id}`);
         }
 
+        // Checks the sauce owner against the request user id
         authenticationDebug("Check the sauce's userId against the user's user id");
         if (sauce.userId !== req.auth.userId) {
             authenticationDebug("The user doesn't own the sauce, throwing an error");

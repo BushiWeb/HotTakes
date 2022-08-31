@@ -116,22 +116,25 @@ export default class ConfigManager {
             throw new ConfigurationError('The setting name must be a valid string.');
         }
 
-        //Return all the settings if the value is an empty string
+        // Return all the settings if the value is an empty string
         if (setting === '') {
             return this.#configurationSettings;
         }
 
-        //Parse the setting path and return the setting, or an error.
+        // Parse the setting path and return the setting, or an error.
+        // Separate the setting path into the different properties
         const settingPath = setting.split('.');
         let currentSetting = this.#configurationSettings;
 
         for (let settingPathNode of settingPath) {
+            // Separate the property name from the index, if there is one
             let settingNodeDetails = settingPathNode.split('[');
 
             if (!currentSetting[settingNodeDetails[0]]) {
                 throw new ConfigurationError(`The setting or environment variable ${setting} doesn't exist.`);
             }
 
+            // Set the current setting to the property name value
             currentSetting = currentSetting[settingNodeDetails[0]];
 
             if (settingNodeDetails[1]) {
@@ -141,6 +144,7 @@ export default class ConfigManager {
                         `The index of the setting node ${settingNodeDetails[0]} must be a valid number.`
                     );
                 }
+                // Set the current setting to the value behind the index of the property name
                 currentSetting = currentSetting[settingIndex];
             }
         }

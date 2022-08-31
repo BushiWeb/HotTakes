@@ -1,8 +1,7 @@
 import { exit } from 'node:process';
 import mongoose from 'mongoose';
 import ConfigManager from '../config/ConfigManager.js';
-import Logger from '../logger/logger.js';
-import { createDebugNamespace } from '../logger/logger.js';
+import Logger, { createDebugNamespace } from '../logger/logger.js';
 
 const mongoDbDebug = createDebugNamespace('hottakes:mongoDB');
 
@@ -20,6 +19,9 @@ const createDBUrl = () => {
     )}?retryWrites=true&w=majority`;
 };
 
+/**
+ * Add debugging configuration to mongoose with a custom logger.
+ */
 const setupDbDebug = () => {
     const mongooseDebug = createDebugNamespace('mongoose');
     mongoose.set('debug', (collectionName, methodName, ...methodArguments) => {

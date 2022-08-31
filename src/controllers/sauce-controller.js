@@ -69,6 +69,7 @@ export async function getSauce(req, res, next) {
     try {
         const sauce = await Sauce.findById(req.params.id, '-__v');
         sauceControllerDebug(`Sauce ${req.params.id} fetched`);
+        // Check if the sauce exists
         if (sauce === null) {
             sauceControllerDebug(`Sauce ${req.params.id} doesn't exist, throwing an error`);
             throw new mongoose.Error.DocumentNotFoundError(`Can't find the sauce with id ${req.params.id}`);
@@ -107,6 +108,7 @@ export async function updateSauce(req, res, next) {
         if (req.file) {
             let sauce = req.cache?.sauces?.[req.params.id] || (await Sauce.findById(req.params.id));
             sauceControllerDebug(`A file has been sent, sauce ${req.params.id} fetched`);
+            // Check if the sauce exists
             if (sauce === null) {
                 sauceControllerDebug(`Sauce ${req.params.id} doesn't exist, throwing an error`);
                 throw new mongoose.Error.DocumentNotFoundError(`Can't find the sauce with id ${req.params.id}`);
@@ -153,6 +155,7 @@ export async function deleteSauce(req, res, next) {
         // Get the previous image URL from the request cache or from the database
         let sauce = req.cache?.sauces?.[req.params.id] || (await Sauce.findById(req.params.id));
         sauceControllerDebug(`Sauce ${req.params.id} fetched`);
+        // Check if the sauce exist
         if (sauce === null) {
             sauceControllerDebug(`Sauce ${req.params.id} doesn't exist, throwing an error`);
             throw new mongoose.Error.DocumentNotFoundError(`Can't find the sauce with id ${req.params.id}`);
@@ -194,6 +197,7 @@ export async function likeSauce(req, res, next) {
         // Fetch the sauce to update it
         const sauce = await Sauce.findById(req.params.id);
         sauceControllerDebug(`Sauce ${req.params.id} fetched`);
+        // Check if the sauce exists
         if (sauce === null) {
             sauceControllerDebug(`Sauce ${req.params.id} doesn't exist, throwing an error`);
             throw new mongoose.Error.DocumentNotFoundError(`Can't find the sauce with id ${req.params.id}`);

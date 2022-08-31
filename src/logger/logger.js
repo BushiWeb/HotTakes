@@ -112,6 +112,7 @@ try {
 
 /* Creates the logger. */
 const Logger = winston.createLogger(winstonOptions);
+export default Logger;
 
 /**
  * Returns logging function.
@@ -140,7 +141,7 @@ const stream = {
 export const morganMiddleware = morgan('dev', { stream });
 
 /*
-    Handles uncaught exceptions and unhandled rejections.
+    Handles uncaught exceptions and unhandled rejections. Prints those exceptions and exit the program.
 */
 process.on('uncaughtException', (error, origin) => {
     Logger.fatal(error);
@@ -173,5 +174,3 @@ if (!level) {
 } else {
     loggerDebug({ message: 'Maximum level to log : "%s"', splat: [level] });
 }
-
-export default Logger;

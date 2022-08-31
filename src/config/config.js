@@ -4,9 +4,9 @@ const CONFIG = {
     },
     payload: {
         maxSize: '10kb',
+        // Strings to blacklist form the data. These will be used in Regex, please escape them
+        sanitization: ['<script', '<\\/script', '<!--', '-->', '\\]\\]>'],
     },
-    // Strings to blacklist form the data. These will be used in Regex, please escape them
-    sanitization: ['<script', '<\\/script', '<!--', '-->', '\\]\\]>'],
     fileUpload: {
         maxFileSize: 5242880,
         maxFieldSize: 10240,

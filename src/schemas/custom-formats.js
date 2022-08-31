@@ -25,6 +25,10 @@ try {
 export const passwordFormat = (value) => {
     return validator.isStrongPassword(value, passwordStrenghtValidationParameters);
 };
+
+/**
+ * Custom error message for passwords, with informations about what a strong password is depending on the rules defined in the configuration.
+ */
 export const passwordErrorMessage = `must be a valid strong password, i.e. a string containing at least ${
     passwordStrenghtValidationParameters.minLength || 8
 } caracters including ${passwordStrenghtValidationParameters.minLowercase || 1} lowercase letters, ${

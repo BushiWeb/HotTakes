@@ -12,8 +12,7 @@ import {
     userInputValidationErrorHandler,
     deleteFiles,
 } from './middlewares/error-handlers.js';
-import ConfigManager from './config/ConfigManager.js';
-import { defaultConfigManager } from './config/ConfigManager.js';
+import ConfigManager, { defaultConfigManager } from './config/ConfigManager.js';
 import Logger, { morganMiddleware, createDebugNamespace } from './logger/logger.js';
 import { contentTypeFilter } from './middlewares/headers.js';
 import helmet from 'helmet';
@@ -34,7 +33,8 @@ if (!ConfigManager.compareEnvironment('test')) {
     Logger.info('Testing environment, no database connection required.');
 }
 
-/* Store the root folder absolute path in the app.
+/*
+ * Store the root folder absolute path in the app.
  * Since we are using ES modules, __dirname is unavailable.
  * by storing it in the app, all middleware will have access to its value.
  */

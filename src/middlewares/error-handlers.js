@@ -19,6 +19,8 @@ const errorDebug = createDebugNamespace('hottakes:middleware:error');
  */
 export function deleteFiles(err, req, res, next) {
     errorDebug('Error middleware execution: file deletion');
+
+    // Gets the list of all the files
     let files = [];
     if (req.file) {
         files.push(req.file);
@@ -34,6 +36,7 @@ export function deleteFiles(err, req, res, next) {
         }
     }
 
+    // Deletes those files
     files.forEach((file) => {
         const imagePath = join(req.app.get('root'), '../images', file.filename);
         unlink(imagePath, () => {});

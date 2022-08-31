@@ -1,9 +1,7 @@
-import multer from 'multer';
-import { MulterError } from 'multer';
+import multer, { MulterError } from 'multer';
 import { defaultConfigManager } from '../config/ConfigManager.js';
 import validator from 'validator';
-import Logger from '../logger/logger.js';
-import { createDebugNamespace } from '../logger/logger.js';
+import Logger, { createDebugNamespace } from '../logger/logger.js';
 
 const multerDebug = createDebugNamespace('hottakes:multer');
 
@@ -79,6 +77,13 @@ const storage = multer.diskStorage({
         callback(null, folderName);
     },
     filename: (req, file, callback) => {
+        /* To generate a safe and (hopefully) unique file name:
+         *      - Remove the surrounding whitespaces
+         *      - Replace spaces with underscores
+         *      - Keep only alphanumerical characters, periods, underscores and dashes
+         *      - Remove the extension
+         *      - Append the current timestamp and the extension
+         */
         let name = file.originalname;
         name = validator.trim(name);
         name = name.split(' ').join('_');
@@ -99,6 +104,8 @@ multerDebug('Disk storage initialized');
  */
 const fileFilter = (req, file, callback) => {
     multerDebug({ message: 'File filtering: %o', splat: [file] });
+
+    // Check the file extension
     if (!Object.hasOwn(MIME_TYPES, file.mimetype)) {
         multerDebug('The file is refused');
         const fileTypeError = createMulterError(
@@ -108,6 +115,7 @@ const fileFilter = (req, file, callback) => {
         );
         return callback(fileTypeError);
     }
+
     multerDebug('The file is accepted');
     callback(null, true);
 };

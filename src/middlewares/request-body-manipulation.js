@@ -51,11 +51,14 @@ export const bodyPropertyAssignToBody = (propertyName, throwIfUndefined = true) 
  */
 export const sanitizeBody = (req, res, next) => {
     try {
-        const blackListedStrings = defaultConfigManager.getConfig('sanitization');
+        const blackListedStrings = defaultConfigManager.getConfig('payload.sanitization');
         for (const property in req.body) {
+            // Don't bother sanitizing numbers, null or booleans
             if (!validateStringArgument(req.body[property])) {
                 continue;
             }
+
+            // Remove blacklisted strings
             for (const string of blackListedStrings) {
                 req.body[property] = req.body[property].replace(new RegExp(string, 'ig'), '');
             }
