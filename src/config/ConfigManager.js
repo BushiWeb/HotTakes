@@ -61,19 +61,31 @@ export default class ConfigManager {
     }
 
     /**
-     * Static method to return the value of the JsonWebToken key, depending on the environment.
-     * The key is stored in the .env file, but in the test environment, the key is simply TEST.
-     * @returns {string} Returns the JsonWebToken key.
-     * @throws Throws an error if the key doesn't exist.
+     * Static method to return the configuration of the Json web token, depending on the environment.
+     * The configuration is stored in the .env file, but in the test environment, simple default values are used.
+     * @returns {Object} Returns the JsonWebToken configuration.
+     * @throws Throws an error if the parameter don't exist.
      * @static
      */
-    static getJwtKey() {
+    static getJwtConfig() {
         if (ConfigManager.compareEnvironment('test')) {
-            return 'TEST';
+            return {
+                key: 'TEST',
+                iss: 'issuer',
+                aud: 'audience',
+                alg: 'HS256',
+                exp: '24h',
+            };
         }
 
         try {
-            return ConfigManager.getEnvVariable('JWT_KEY');
+            let jwtConfig = {};
+            jwtConfig.key = ConfigManager.getEnvVariable('JWT_KEY');
+            jwtConfig.iss = ConfigManager.getEnvVariable('JWT_ISS');
+            jwtConfig.aud = ConfigManager.getEnvVariable('JWT_AUD');
+            jwtConfig.alg = ConfigManager.getEnvVariable('JWT_ALG');
+            jwtConfig.exp = ConfigManager.getEnvVariable('JWT_EXP');
+            return jwtConfig;
         } catch (error) {
             throw new ConfigurationError(
                 'The JsonWebToken key is not defined in the environment variables. Make sure to create a secure key and to give it the right variable name.'
@@ -98,11 +110,11 @@ export default class ConfigManager {
     }
 
     /**
-     * Non static version of the ConfigManager.getJwtKey method.
-     * @see ConfigManager.getJwtKey
+     * Non static version of the ConfigManager.getJwtConfig method.
+     * @see ConfigManager.getJwtConfig
      */
-    getJwtKey(variableName) {
-        return ConfigManager.getJwtKey();
+    getJwtConfig() {
+        return ConfigManager.getJwtConfig();
     }
 
     /**

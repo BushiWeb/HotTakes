@@ -72,23 +72,43 @@ describe('ConfigManager Test Suite', () => {
             });
         });
 
-        describe('Static getJwtKey test suite', () => {
+        describe('Static getJwtConfig test suite', () => {
             test('Returns TEST in the testing environment', () => {
-                expect(ConfigManager.getJwtKey()).toBe('TEST');
+                expect(ConfigManager.getJwtConfig()).toEqual({
+                    key: 'TEST',
+                    iss: 'issuer',
+                    aud: 'audience',
+                    alg: 'HS256',
+                    exp: '24h',
+                });
             });
 
             test('Returns the right value if not in the testing environment', () => {
                 process.env.NODE_ENV = 'development';
                 process.env.JWT_KEY = 'KEY';
-                expect(ConfigManager.getJwtKey()).toBe(process.env.JWT_KEY);
+                process.env.JWT_ISS = 'test_iss';
+                process.env.JWT_AUD = 'test_aud';
+                process.env.JWT_ALG = 'HS512';
+                process.env.JWT_EXP = '6h';
+                expect(ConfigManager.getJwtConfig()).toEqual({
+                    key: process.env.JWT_KEY,
+                    iss: process.env.JWT_ISS,
+                    aud: process.env.JWT_AUD,
+                    alg: process.env.JWT_ALG,
+                    exp: process.env.JWT_EXP,
+                });
 
                 delete process.env.JWT_KEY;
+                delete process.env.JWT_ISS;
+                delete process.env.JWT_AUD;
+                delete process.env.JWT_ALG;
+                delete process.env.JWT_EXP;
             });
 
             test('Throws an error if not in the testing environment and the JWT key is not set', () => {
                 process.env.NODE_ENV = 'development';
                 expect(() => {
-                    ConfigManager.getJwtKey();
+                    ConfigManager.getJwtConfig();
                 }).toThrow(ConfigurationError);
             });
         });
@@ -165,23 +185,43 @@ describe('ConfigManager Test Suite', () => {
             });
         });
 
-        describe('getJwtKey test suite', () => {
+        describe('getJwtConfig test suite', () => {
             test('Returns TEST in the testing environment', () => {
-                expect(configManager.getJwtKey()).toBe('TEST');
+                expect(configManager.getJwtConfig()).toEqual({
+                    key: 'TEST',
+                    iss: 'issuer',
+                    aud: 'audience',
+                    alg: 'HS256',
+                    exp: '24h',
+                });
             });
 
             test('Returns the right value if not in the testing environment', () => {
                 process.env.NODE_ENV = 'development';
                 process.env.JWT_KEY = 'KEY';
-                expect(configManager.getJwtKey()).toBe(process.env.JWT_KEY);
+                process.env.JWT_ISS = 'test_iss';
+                process.env.JWT_AUD = 'test_aud';
+                process.env.JWT_ALG = 'HS512';
+                process.env.JWT_EXP = '6h';
+                expect(configManager.getJwtConfig()).toEqual({
+                    key: process.env.JWT_KEY,
+                    iss: process.env.JWT_ISS,
+                    aud: process.env.JWT_AUD,
+                    alg: process.env.JWT_ALG,
+                    exp: process.env.JWT_EXP,
+                });
 
                 delete process.env.JWT_KEY;
+                delete process.env.JWT_ISS;
+                delete process.env.JWT_AUD;
+                delete process.env.JWT_ALG;
+                delete process.env.JWT_EXP;
             });
 
             test('Throws an error if not in the testing environment and the JWT key is not set', () => {
                 process.env.NODE_ENV = 'development';
                 expect(() => {
-                    configManager.getJwtKey();
+                    configManager.getJwtConfig();
                 }).toThrow(ConfigurationError);
             });
         });

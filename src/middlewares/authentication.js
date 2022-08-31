@@ -29,11 +29,11 @@ export const checkAuthentication = (req, res, next) => {
         // Check the JWT
         authenticationDebug('JsonWebToken verification');
         const token = req.headers.authorization.split(' ')[1];
-        const jwtKey = req.app.get('config').getJwtKey();
-        const decodedToken = jsonWebToken.verify(token, jwtKey, {
-            algorithms: ['HS256'],
-            issuer: 'hottakes-api',
-            audience: 'hottakes-front',
+        const jwtConfig = req.app.get('config').getJwtConfig();
+        const decodedToken = jsonWebToken.verify(token, jwtConfig.key, {
+            algorithms: [jwtConfig.alg],
+            issuer: jwtConfig.iss,
+            audience: jwtConfig.aud,
         });
         if (!decodedToken.userId) {
             authenticationDebug("JsonWebToken is valid but doesn't contain the userId, throwing an error");

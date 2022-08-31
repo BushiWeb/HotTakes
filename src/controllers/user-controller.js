@@ -65,16 +65,16 @@ export async function login(req, res, next) {
         }
 
         // Sends the json web token
-        const jwtKey = req.app.get('config').getJwtKey();
+        const jwtConfig = req.app.get('config').getJwtConfig();
         userControllerDebug('Token created');
 
         res.status(200).json({
             userId: user._id,
-            token: jsonWebToken.sign({ userId: user._id }, jwtKey, {
-                algorithm: 'HS256',
-                expiresIn: '6h',
-                issuer: 'hottakes-api',
-                audience: 'hottakes-front',
+            token: jsonWebToken.sign({ userId: user._id }, jwtConfig.key, {
+                algorithm: jwtConfig.alg,
+                expiresIn: jwtConfig.exp,
+                issuer: jwtConfig.iss,
+                audience: jwtConfig.aud,
             }),
         });
     } catch (error) {
