@@ -95,6 +95,13 @@ appDebug('Use the user router for the /api/auth endpoints');
 app.use('/api/sauces', sauceRouter);
 appDebug('Use the sauce router for the /api/sauces endpoints');
 
+// Customize 404 errors
+app.use((req, res, next) => {
+    const error = new Error("Sorry, but we can't find the ressource you're looking for");
+    error.status = 404;
+    next(error);
+});
+
 // Error handling
 app.use(deleteFiles);
 appDebug('Use the deleteFiles middleware when handling errors');
