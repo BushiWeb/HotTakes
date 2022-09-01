@@ -48,7 +48,7 @@ router.post(
     '/',
     checkAuthentication,
     multer,
-    multerCheckFile,
+    multerCheckFile(),
     bodyPropertyAssignToBody('sauce'),
     sanitizeBody,
     validatePayload('sauceRequired'),
@@ -59,7 +59,7 @@ sauceRouterDebug('Use the createSauce middleware for the / endpoint with the POS
 /**
  * Updates a sauce.
  * Checks that the user is authenticated and owns the sauce.
- * Use the multer middleware to parse the request body and save the image.
+ * Use the multer middleware to parse the request body and save the image. The image is optionnal.
  * Parses the body to JSON, but don't throw if the paramter is undefined.
  * Validates and sanitize data:
  *      name, manufacturer, description and mainPepper should be strings and are escaped;
@@ -72,6 +72,7 @@ router.put(
     checkAuthentication,
     checkOwnership,
     multer,
+    multerCheckFile(false),
     bodyPropertyAssignToBody('sauce', false),
     sanitizeBody,
     validatePayload('sauce'),

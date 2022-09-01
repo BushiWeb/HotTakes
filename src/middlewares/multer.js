@@ -132,34 +132,37 @@ export default multer({
 }).single('image');
 
 /**
- * Validator middleware checking that a file has been sent and accepted. If has been sent and accepted, then calls the next middleware, and calls the error middleware otherwise.
- * @param {Express.Request} req - Express request object.
- * @param {Express.Response} res - Express response object.
- * @param next - Next middleware to execute.
+ * Function returning a validator middleware checking that a file has been sent and accepted. If has been sent and accepted, then calls the next middleware, and calls the error middleware otherwise.
+ * This middleware is set up depending on the function parameters.
+ * @param {boolean} [required=true] - Tells if the file(s) is(are) required or not.
  */
-export const multerCheckFile = (req, res, next) => {
-    multerDebug('Validation middleware execution: checking that files have been sent');
-    // Checking for filtering errors
-    if (req.fileRefused) {
-        multerDebug('Invalid files sent, throwing an error');
-        const fileTypeError = createMulterError(
-            'This file type is not accepted. Please, use one of the following format: jpeg, png, webp, avif',
-            'INVALID_FILE_TYPE'
-        );
-        return next(fileTypeError);
-    }
+export const multerCheckFile = (required = true) => {
+    multerDebug(`Create multerCheckFile middleware, the files are ${required ? '' : 'not '}required`);
+    return (req, res, next) => {
+        multerDebug('Validation middleware execution: checking that files have been sent');
+        // Checking for filtering errors
+        if (req.fileRefused) {
+            multerDebug('Invalid files sent, throwing an error');
+            const fileTypeError = createMulterError(
+                'This file type is not accepted. Please, use one of the following format: jpeg, png, webp, avif',
+                'INVALID_FILE_TYPE'
+            );
+            return next(fileTypeError);
+        }
 
-    // Checking that files have been sent
-    if (
-        !req.file &&
-        (!req.files ||
-            (Array.isArray(req.files) && req.files.length === 0) ||
-            (typeof req.files === 'object' && Object.keys(req.files).length === 0))
-    ) {
-        multerDebug('No files sent, passing an error');
-        const fileMissingError = createMulterError('The file is required.', 'FILE_MISSING');
-        return next(fileMissingError);
-    }
+        // Checking that files have been sent if required is true
+        if (
+            required &&
+            !req.file &&
+            (!req.files ||
+                (Array.isArray(req.files) && req.files.length === 0) ||
+                (typeof req.files === 'object' && Object.keys(req.files).length === 0))
+        ) {
+            multerDebug('No files sent, passing an error');
+            const fileMissingError = createMulterError('The file is required.', 'FILE_MISSING');
+            return next(fileMissingError);
+        }
 
-    next();
+        next();
+    };
 };
