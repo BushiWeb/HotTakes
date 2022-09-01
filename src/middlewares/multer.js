@@ -108,12 +108,9 @@ const fileFilter = (req, file, callback) => {
     // Check the file extension
     if (!Object.hasOwn(MIME_TYPES, file.mimetype)) {
         multerDebug('The file is refused');
-        const fileTypeError = createMulterError(
-            'This file type is not accepted. Please, use one of the following format: jpeg, png, webp, avif',
-            'INVALID_FILE_TYPE',
-            file.fieldName
-        );
-        return callback(fileTypeError);
+        // Refuse the file and tell the request we've refused it
+        req.fileRefused = true;
+        return callback(null, false);
     }
 
     multerDebug('The file is accepted');
@@ -135,13 +132,24 @@ export default multer({
 }).single('image');
 
 /**
- * Validator middleware checking that a file has been sent. If has been sent, then calls the next middleware, and calls the error middleware otherwise.
+ * Validator middleware checking that a file has been sent and accepted. If has been sent and accepted, then calls the next middleware, and calls the error middleware otherwise.
  * @param {Express.Request} req - Express request object.
  * @param {Express.Response} res - Express response object.
  * @param next - Next middleware to execute.
  */
-export const multerCheckFileExists = (req, res, next) => {
+export const multerCheckFile = (req, res, next) => {
     multerDebug('Validation middleware execution: checking that files have been sent');
+    // Checking for filtering errors
+    if (req.fileRefused) {
+        multerDebug('Invalid files sent, throwing an error');
+        const fileTypeError = createMulterError(
+            'This file type is not accepted. Please, use one of the following format: jpeg, png, webp, avif',
+            'INVALID_FILE_TYPE'
+        );
+        return next(fileTypeError);
+    }
+
+    // Checking that files have been sent
     if (
         !req.file &&
         (!req.files ||

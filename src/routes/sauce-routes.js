@@ -10,7 +10,7 @@ import {
 import { validatePayload, validateIdParameter } from '../middlewares/field-validation.js';
 import { bodyPropertyAssignToBody, sanitizeBody } from '../middlewares/request-body-manipulation.js';
 import { checkAuthentication, checkOwnership } from '../middlewares/authentication.js';
-import multer, { multerCheckFileExists } from '../middlewares/multer.js';
+import multer, { multerCheckFile } from '../middlewares/multer.js';
 import { createDebugNamespace } from '../logger/logger.js';
 
 const sauceRouterDebug = createDebugNamespace('hottakes:app:sauceRouter');
@@ -48,7 +48,7 @@ router.post(
     '/',
     checkAuthentication,
     multer,
-    multerCheckFileExists,
+    multerCheckFile,
     bodyPropertyAssignToBody('sauce'),
     sanitizeBody,
     validatePayload('sauceRequired'),
