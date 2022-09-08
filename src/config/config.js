@@ -3,13 +3,13 @@ const CONFIG = {
         allowedContentTypes: ['application/json', 'multipart/form-data'],
     },
     payload: {
-        maxSize: '10kb',
+        maxSize: '10kb', // Chaîne de charactères avec unité
         // Strings to blacklist form the data. These will be used in Regex, please escape them
         sanitization: ['<script', '<\\/script', '<!--', '-->', '\\]\\]>'],
     },
     fileUpload: {
-        maxFileSize: 5242880,
-        maxFieldSize: 10240,
+        maxFileSize: 5242880, // 5Mo, entier, nombre d'octets
+        maxFieldSize: 10240, // 10ko, entier, nombres d'octets
         allowedMimeTypes: {
             'image/jpg': 'jpg',
             'image/jpeg': 'jpg',

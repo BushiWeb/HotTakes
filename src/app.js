@@ -69,10 +69,7 @@ appDebug({ message: 'Use express.json middleware for all routes, with options %o
 app.use((req, res, next) => {
     appDebug('Starting CORS Headers setting middleware');
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader(
-        'Access-Control-Allow-Headers',
-        'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization'
-    );
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Accept, Content-Type, Authorization');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     appDebug({ message: 'CORS Headers set: %o', splat: [res.getHeaders()] });
     next();
@@ -80,9 +77,14 @@ app.use((req, res, next) => {
 appDebug('Use the CORS Headers setting middleware on all routes');
 
 // Other headers
-app.use(helmet.noSniff(), helmet.frameguard({ action: 'deny' }));
+app.use(
+    helmet.noSniff(),
+    helmet.frameguard({ action: 'deny' }),
+    helmet.contentSecurityPolicy({ directives: { 'frame-ancestors': 'none' } })
+);
 appDebug('Use helmet.noSniff to set the X-Content-Type-Options to nosniff');
 appDebug('Use helmet.framegard to set the X-Frame-Options to DENY');
+appDebug('Use helmet.contentSecurityPpolicy to set the Content-Security-Policy frame-ancestors to none');
 
 // Static routes
 const imagesPath = path.join(app.get('root'), '../images');
