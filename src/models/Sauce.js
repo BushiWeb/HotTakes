@@ -41,51 +41,89 @@ const sauceSchema = mongoose.Schema(
 
             /**
              * Reset the liking of the sauce instance for a user.
-             * @param {string} userId - Id of the user reseting it's decision.
-             * @returns {number} Returns 1 if a like has been reset, -1 if a dislike has been reset and 0 if nothing has been reset.
+             * @param {number} likeType - Type of like to reset (0 for nothing, 1 for like, -1 for dislike)
+             * @param {number} userArrayIndex - Index of the user in the array corresponding to the like to reset
              */
-            resetLiking(userId) {
-                mongooseCustomMethodDebug(`Sauce instance method resetLiking(${userId})`);
+            resetLiking(likeType, userArrayIndex) {
+                mongooseCustomMethodDebug(`Sauce instance method resetLiking(${likeType}, ${userArrayIndex})`);
 
-                // Remove the user's dislike if the user disliked the sauce
-                const userDislikeIndex = this.usersDisliked.indexOf(userId);
-                if (userDislikeIndex >= 0) {
-                    this.usersDisliked.splice(userDislikeIndex, 1);
+                if (likeType === 0) return;
+
+                // Remove the user from the array
+                let arrayToUse = likeType === 1 ? this.usersLiked : this.usersDisliked;
+                arrayToUse.splice(userArrayIndex, 1);
+
+                // Decrement the counter
+                if (likeType === 1) {
+                    this.likes--;
+                } else {
                     this.dislikes--;
-                    return -1;
+                }
+            },
+
+            /**
+             * Finds if the user liked or disliked the sauce.
+             * @param {string} userId - Id of the user reseting it's decision.
+             * @returns {{action:number, index:number}} Returns an object containing the action the user has done (1 for like, -1 for dislike and 0 for nothing) and it's index in the corresponding array.
+             */
+            findUserLike(userId) {
+                mongooseCustomMethodDebug(`Sauce instance method findUserLike(${userId})`);
+
+                let returnObject = {
+                    action: 0,
+                    index: -1,
+                };
+
+                // Search the user in the dislike array
+                returnObject.index = this.usersDisliked.indexOf(userId);
+                if (returnObject.index >= 0) {
+                    returnObject.action = -1;
+                    return returnObject;
                 }
 
                 // Remove the user's like if the user liked the sauce
-                const userLikeIndex = this.usersLiked.indexOf(userId);
-                if (userLikeIndex >= 0) {
-                    this.usersLiked.splice(userLikeIndex, 1);
-                    this.likes--;
-                    return 1;
+                returnObject.index = this.usersLiked.indexOf(userId);
+                if (returnObject.index >= 0) {
+                    returnObject.action = 1;
+                    return returnObject;
                 }
 
-                return 0;
+                return returnObject;
             },
 
             /**
              * Like, dislike or reset the like of the sauce instance. Reset first to make sure the user can't do the same action multiple times, or can't like and dislike at the same time.
              * @param {number} likeType - Number representing the type of liking: 0 to reset, 1 to like and -1 to dislike.
              * @param {string} userId - Id of the user liking the sauce.
-             * @returns {{reset: number, action: number}} Returns an object describing the actions that has been done. The reset parameter describes if anything has been reset, and the action parameter describe if the user liked (1), disliked (-1) or did nothing but reset (0).
+             * @returns {{previousAction: number, newAction: number}} Returns an object describing the changes that has been done: what was the previous action done by the user (-1, 1 or 0) and what is the new action (-1, 1, or 0).
              */
             setLiking(likeType, userId) {
                 mongooseCustomMethodDebug(`Sauce instance method setLiking(${likeType}, ${userId})`);
 
-                // Reset previous choice
-                const resultObject = { reset: this.resetLiking(userId), action: likeType };
+                // Find the user
+                const { action: previousAction, index: actionIndex } = this.findUserLike(userId);
+
+                // Create the return object
+                const resultObject = { previousAction, newAction: likeType };
 
                 // Apply the like or dislike
                 switch (likeType) {
                     case 1:
+                        if (previousAction === 1) break;
+                        if (previousAction === -1) {
+                            this.resetLiking(previousAction, actionIndex);
+                        }
                         this.like(userId);
                         break;
                     case -1:
+                        if (previousAction === -1) break;
+                        if (previousAction === 1) {
+                            this.resetLiking(previousAction, actionIndex);
+                        }
                         this.dislike(userId);
                         break;
+                    default:
+                        this.resetLiking(previousAction, actionIndex);
                 }
 
                 return resultObject;
